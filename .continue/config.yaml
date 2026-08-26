@@ -1,0 +1,14 @@
+name: Lyra local
+version: 1.0.0
+schema: v1
+models:
+  - name: local-v1
+    provider: openai
+    model: local-v1
+    apiBase: http://127.0.0.1:4040/v1/
+    apiKey: ignored-local-token
+  - name: local-v1-concise
+    provider: openai
+    model: local-v1-concise
+    apiBase: http://127.0.0.1:4040/v1/
+    apiKey: ignored-local-token

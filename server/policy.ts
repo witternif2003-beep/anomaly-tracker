@@ -1,0 +1,72 @@
+/**
+ * Policy surface for replacements the user required.
+ * GitHub CI/MCP are absent on purpose. CJIS/NCIC is applicable as placeholders only.
+ */
+
+export function policyStatus() {
+  return {
+    object: "lyra.policy" as const,
+    githubActions: {
+      status: "removed",
+      replacement: "Cloudflare pipelines (scripts/pipelines/cloudflare-ci.sh, wrangler --dry-run)",
+    },
+    githubMcp: {
+      status: "removed",
+      replacement: "Cloudflare MCP (@cloudflare/mcp-server-cloudflare + mcp-remote Code Mode)",
+    },
+    blacksLawDictionary: {
+      status: "workaround-installed",
+      reason: "Black's Law Dictionary is copyrighted and is not shipped.",
+      installed: "Public-domain glossary + FOLIO ontology (source=glossary|folio)",
+    },
+    cursorYoloAutoRun: {
+      status: "disabled",
+      files: [".cursor/permissions.json", ".vscode/settings.json"],
+      note: "Empty terminal and MCP allowlists. Auto-run / YOLO keys are false.",
+    },
+    backgroundAgents: {
+      status: "activated",
+      files: [".cursor/environment.json"],
+      note: "Cloud Agents (formerly Background Agents) boot from environment.json install/start plus forwarded ports.",
+    },
+    marketplacePlugins: {
+      status: "integrated",
+      plugins: ["saoudrizwan.claude-dev", "RooVeterinaryInc.roo-cline", "Continue.continue"],
+      files: [".vscode/extensions.json", ".cursor/marketplace.json", ".continue/config.yaml"],
+    },
+    cloudflareDeployment: {
+      status: "dry-run-only",
+      command: "bash scripts/wrangler-safe.sh deploy --dry-run --config workers/wrangler.toml",
+    },
+    cjisNcicFederal: {
+      status: "applicable-placeholders",
+      liveQueries: false,
+      note: "This studio is not a CJIS-certified interface. Credentials apply as empty placeholders only. No NCIC/III queries are sent.",
+    },
+  };
+}
+
+export function cjisStatus() {
+  const names = ["CJIS_ORI", "CJIS_AGENCY_ID", "NCIC_ORI", "NCIC_MNEMONIC", "FBI_UCR_AGENCY_ID"] as const;
+  return {
+    object: "compliance.cjis" as const,
+    applicable: true,
+    liveQueries: false,
+    certifiedInterface: false,
+    note: "CJIS/NCIC credentials are applicable as placeholders. Live criminal-justice queries are refused from this app.",
+    variables: names.map((name) => ({
+      name,
+      configured: Boolean(process.env[name]?.trim()),
+    })),
+  };
+}
+
+export function refuseCjisQuery() {
+  return {
+    object: "compliance.cjis.refused" as const,
+    ok: false,
+    liveQueries: false,
+    reason:
+      "NCIC/CJIS/III live queries are not available from this local studio. The interface is not CJIS-certified. Supply agency credentials only as placeholders; do not route restricted criminal-justice traffic through this process.",
+  };
+}

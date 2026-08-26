@@ -7,7 +7,8 @@ export type LegalSource =
   | "westlaw"
   | "lexisnexis"
   | "congress"
-  | "govinfo";
+  | "govinfo"
+  | "glossary";
 
 export interface LegalHit {
   source: LegalSource;

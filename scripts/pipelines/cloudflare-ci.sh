@@ -15,10 +15,5 @@ export PATH="$NVM_DIR/versions/node/v22.14.0/bin:$PATH"
 test -f workers/ci-gate.js
 test -f workers/wrangler.toml
 
-if ! command -v wrangler >/dev/null; then
-  echo "CLOUDFLARE CI FAIL: wrangler not on PATH" >&2
-  exit 1
-fi
-
-wrangler deploy --dry-run --config workers/wrangler.toml
+"$root/scripts/wrangler-safe.sh" deploy --dry-run --config workers/wrangler.toml
 echo "PIPELINE OK cloudflare-ci dry-run"

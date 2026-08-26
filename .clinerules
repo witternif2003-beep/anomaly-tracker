@@ -1,0 +1,7 @@
+# Cline workspace rules for Lyra
+- Use local-v1 at http://127.0.0.1:4040. Do not call hosted LLM APIs.
+- GitHub Actions and GitHub MCP are removed; use Cloudflare dry-run scripts.
+- Never wrangler deploy without --dry-run.
+- Black's Law Dictionary is not shipped; use FOLIO plus the public-domain glossary.
+- CJIS/NCIC credentials are placeholders only. Do not send live NCIC queries.
+- YOLO / Auto-Run is disabled. Ask before destructive commands.

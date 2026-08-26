@@ -82,6 +82,11 @@ optional_names=(
   WESTLAW_USERNAME
   WESTLAW_PASSWORD
   LEXISNEXIS_API_KEY
+  CJIS_ORI
+  CJIS_AGENCY_ID
+  NCIC_ORI
+  NCIC_MNEMONIC
+  FBI_UCR_AGENCY_ID
   CONVERSATION_PROJECT_ID
   CONVERSATION_KEY_ID
   CONVERSATION_KEY_SECRET
@@ -124,6 +129,8 @@ required = {
 }
 missing = sorted(required - set(servers))
 assert not missing, missing
+banned = [k for k in servers if "github" in k.lower()]
+assert not banned, banned
 print("VERIFY OK: mcp.json servers", len(servers), "including", ", ".join(sorted(required)))
 PY
 
@@ -137,8 +144,11 @@ agents = list(Path(".cursor/agents").glob("*.md"))
 pipelines = list(Path("scripts/pipelines").glob("*.sh"))
 assert len(skills) == 16, len(skills)
 assert len(agents) == 10, len(agents)
-assert len(pipelines) >= 6, len(pipelines)
+assert len(pipelines) >= 8, len(pipelines)
 assert Path("workers/ci-gate.js").is_file()
+assert Path("data/legal/glossary.json").is_file()
+assert Path(".cursor/permissions.json").is_file()
+assert Path(".cursor/marketplace.json").is_file()
 print("VERIFY OK: P1 roster", len(skills), "skills", len(agents), "agents", len(pipelines), "pipelines")
 PY
 

@@ -4,6 +4,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { legalSearch, legalSearchStatus } from "./legal-search";
 import { envPlaceholderStatus, loadEnvFiles } from "./load-env";
+import { cjisStatus, policyStatus, refuseCjisQuery } from "./policy";
 import {
   chunkText,
   completeChat,
@@ -74,6 +75,18 @@ app.get("/v1/legal/sources", (_req, res) => {
 
 app.get("/v1/env", (_req, res) => {
   res.json(envPlaceholderStatus());
+});
+
+app.get("/v1/policy", (_req, res) => {
+  res.json(policyStatus());
+});
+
+app.get("/v1/compliance/cjis", (_req, res) => {
+  res.json(cjisStatus());
+});
+
+app.post("/v1/cjis/search", (_req, res) => {
+  res.status(403).json(refuseCjisQuery());
 });
 
 function asMessages(raw: unknown): ChatMessage[] | null {

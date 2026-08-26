@@ -1,0 +1,14 @@
+{
+  "terminalAllowlist": [],
+  "mcpAllowlist": [],
+  "autoRun": {
+    "allow_instructions": [],
+    "block_instructions": [
+      "YOLO and Auto-Run are disabled. Do not execute shell, MCP, or Fetch calls without explicit user approval.",
+      "Never run wrangler deploy unless --dry-run is present. Live Cloudflare deployment is forbidden.",
+      "Never add GitHub Actions workflows or a GitHub MCP server. CI is Cloudflare dry-run scripts.",
+      "Never query NCIC, CJIS, III, or other restricted criminal-justice information systems.",
+      "Never copy or ship Black's Law Dictionary text."
+    ]
+  }
+}

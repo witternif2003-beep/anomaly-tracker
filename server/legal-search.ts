@@ -1,11 +1,12 @@
 import { searchCongress, searchGovInfo, searchLexisNexis, searchOpenLaws, searchWestlaw, legalSourceStatus } from "./legal/clients";
 import { searchFre } from "./legal/fre";
+import { searchGlossary } from "./legal/glossary";
 import type { LegalHit, LegalSearchResult, LegalSource } from "./legal/types";
 import { searchP1, type P1Slot } from "./p1-catalog";
 
 export type { LegalHit, LegalSearchResult, LegalSource };
 
-const DEFAULT_SOURCES: LegalSource[] = ["folio", "courtlistener", "fre", "p1"];
+const DEFAULT_SOURCES: LegalSource[] = ["folio", "glossary", "courtlistener", "fre", "p1"];
 
 interface FolioDoc {
   id: string;
@@ -232,7 +233,9 @@ function normalizeSource(raw: string): LegalSource | "blacks" | null {
   if (s === "congress.gov" || s === "congressgov") return "congress";
   if (s === "govinfo.gov") return "govinfo";
   if (s === "open-laws") return "openlaws";
-  if (s === "blacks" || s === "black's" || s.includes("black's law")) return "blacks";
+  if (s === "blacks" || s === "black's" || s.includes("black's law") || s === "bouvier" || s === "glossary") {
+    return s === "glossary" || s === "bouvier" ? "glossary" : "blacks";
+  }
   const known: LegalSource[] = [
     "folio",
     "courtlistener",
@@ -243,6 +246,7 @@ function normalizeSource(raw: string): LegalSource | "blacks" | null {
     "lexisnexis",
     "congress",
     "govinfo",
+    "glossary",
   ];
   return known.includes(s as LegalSource) ? (s as LegalSource) : null;
 }
@@ -272,13 +276,17 @@ export async function legalSearch(input: {
       "lexisnexis",
       "congress",
       "govinfo",
+      "glossary",
     );
   }
   for (const item of raw) {
     if (item === "all") continue;
     const mapped = normalizeSource(item);
     if (mapped === "blacks") {
-      warnings.push("Black's Law Dictionary is excluded (copyright). Use FOLIO instead.");
+      warnings.push(
+        "Black's Law Dictionary is copyrighted and is not installed. Using the public-domain glossary plus FOLIO.",
+      );
+      if (!requested.includes("glossary")) requested.push("glossary");
       if (!requested.includes("folio")) requested.push("folio");
       continue;
     }
@@ -305,6 +313,7 @@ export async function legalSearch(input: {
   if (requested.includes("folio")) results.push(...searchFolio(query, limit));
   if (requested.includes("p1")) results.push(...p1Hits(query, Math.min(limit, 6)));
   if (requested.includes("fre")) results.push(...searchFre(query, limit));
+  if (requested.includes("glossary")) results.push(...searchGlossary(query, limit));
   if (requested.includes("courtlistener")) pushRemote(await searchCourtListener(query, limit));
   if (requested.includes("openlaws")) pushRemote(await searchOpenLaws(query, limit));
   if (requested.includes("westlaw")) pushRemote(await searchWestlaw(query, limit));

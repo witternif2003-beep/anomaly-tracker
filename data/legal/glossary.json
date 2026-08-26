@@ -1,0 +1,147 @@
+{
+  "title": "Public-domain legal glossary (Bouvier-style)",
+  "source": "Original restatements of well-known common-law terms for offline use. Not Black's Law Dictionary. Black's remains copyrighted; this file plus FOLIO is the installed workaround.",
+  "license": "CC0 / public-domain restatement",
+  "entries": [
+    {
+      "id": "gl-habeas",
+      "term": "habeas corpus",
+      "text": "A writ directing a custodian to produce the body of a detained person before a court so the lawfulness of the detention may be examined. It tests custody, not guilt."
+    },
+    {
+      "id": "gl-standing",
+      "term": "standing",
+      "text": "The right to be heard in court. In federal cases it requires a concrete and particularized injury, fairly traceable to the defendant, and likely redressable by a favorable decision."
+    },
+    {
+      "id": "gl-injunction",
+      "term": "injunction",
+      "text": "An equitable order directing a party to do or refrain from doing a specified act. Preliminary relief typically requires likelihood of success, irreparable harm, balance of equities, and public interest."
+    },
+    {
+      "id": "gl-hearsay",
+      "term": "hearsay",
+      "text": "An out-of-court statement offered to prove the truth of the matter asserted. It is generally excluded unless a statute, the evidence rules, or a listed exception provides otherwise."
+    },
+    {
+      "id": "gl-jurisdiction",
+      "term": "jurisdiction",
+      "text": "The power of a court to hear a class of cases (subject matter) and to bind the parties (personal). Without it, a judgment is void."
+    },
+    {
+      "id": "gl-venue",
+      "term": "venue",
+      "text": "The proper geographic place for trial within a court system that already has jurisdiction. Venue may be waived; jurisdiction over the subject usually may not."
+    },
+    {
+      "id": "gl-plaintiff",
+      "term": "plaintiff",
+      "text": "The party who commences a civil action seeking a remedy. The plaintiff bears the initial burden of stating and proving the claim unless a statute reallocates it."
+    },
+    {
+      "id": "gl-defendant",
+      "term": "defendant",
+      "text": "The party against whom a claim, charge, or petition is brought. In civil cases the defendant may admit, deny, or raise affirmative defenses."
+    },
+    {
+      "id": "gl-mens-rea",
+      "term": "mens rea",
+      "text": "The mental state required for a crime, such as purpose, knowledge, recklessness, or negligence. Strict-liability offenses are the exception."
+    },
+    {
+      "id": "gl-actus-reus",
+      "term": "actus reus",
+      "text": "The prohibited act or omission. Crime ordinarily requires a voluntary act (or legal duty plus omission) joined with the required mental state."
+    },
+    {
+      "id": "gl-stare",
+      "term": "stare decisis",
+      "text": "The doctrine that courts follow prior holdings of the same court, and of courts they must obey, on the same point of law, absent a special justification to overrule."
+    },
+    {
+      "id": "gl-res-judicata",
+      "term": "res judicata",
+      "text": "Claim preclusion: a final judgment on the merits bars the parties from relitigating the same claim. Issue preclusion (collateral estoppel) bars relitigation of decided issues."
+    },
+    {
+      "id": "gl-certiorari",
+      "term": "certiorari",
+      "text": "A discretionary writ by which a higher court elects to review a lower-court decision. The U.S. Supreme Court uses it as the ordinary path to review."
+    },
+    {
+      "id": "gl-holding",
+      "term": "holding",
+      "text": "The proposition of law necessary to the court's decision on the facts before it. Dictum is a statement not necessary to that decision and is not binding."
+    },
+    {
+      "id": "gl-dictum",
+      "term": "obiter dictum",
+      "text": "A judicial remark that is not essential to the outcome. It may persuade later courts but does not control them as precedent."
+    },
+    {
+      "id": "gl-burden",
+      "term": "burden of proof",
+      "text": "The duty to produce evidence and to persuade. Civil cases usually require proof by a preponderance; criminal conviction requires proof beyond a reasonable doubt."
+    },
+    {
+      "id": "gl-probable-cause",
+      "term": "probable cause",
+      "text": "A fair probability, based on reasonably trustworthy information, that a crime has been committed or that evidence of crime will be found in the place to be searched."
+    },
+    {
+      "id": "gl-due-process",
+      "term": "due process",
+      "text": "The constitutional requirement of fair procedures (procedural) and of limits on arbitrary government deprivations of life, liberty, or property (substantive)."
+    },
+    {
+      "id": "gl-equal-protection",
+      "term": "equal protection",
+      "text": "The requirement that similarly situated persons be treated alike under the law, subject to the applicable level of scrutiny for the classification at issue."
+    },
+    {
+      "id": "gl-consideration",
+      "term": "consideration",
+      "text": "A bargained-for exchange of legal value that makes a promise enforceable as a contract, as distinct from a bare gift promise."
+    },
+    {
+      "id": "gl-negligence",
+      "term": "negligence",
+      "text": "The failure to use the care a reasonably prudent person would use under like circumstances. The elements are duty, breach, causation, and damages."
+    },
+    {
+      "id": "gl-proximate",
+      "term": "proximate cause",
+      "text": "A legal-cause limit on liability: the harm must be a reasonably foreseeable result of the breach, not a remote or highly extraordinary consequence."
+    },
+    {
+      "id": "gl-qi",
+      "term": "qualified immunity",
+      "text": "A defense in certain civil-rights damages actions. Officials are shielded unless they violated a constitutional right that was clearly established at the time."
+    },
+    {
+      "id": "gl-sj",
+      "term": "summary judgment",
+      "text": "Judgment without trial when there is no genuine dispute of material fact and the movant is entitled to judgment as a matter of law."
+    },
+    {
+      "id": "gl-discovery",
+      "term": "discovery",
+      "text": "The pretrial process for exchanging information: disclosures, interrogatories, document requests, depositions, and related tools, limited by relevance, privilege, and proportionality."
+    },
+    {
+      "id": "gl-sol",
+      "term": "statute of limitations",
+      "text": "A statute fixing the time within which an action must be commenced. Accrual, tolling, and repose rules determine when the clock starts and whether it pauses."
+    },
+    {
+      "id": "gl-privilege",
+      "term": "privilege",
+      "text": "A rule that shields certain communications or information from disclosure or use, such as attorney-client communications or, in some settings, a spousal privilege."
+    },
+    {
+      "id": "gl-precedent",
+      "term": "precedent",
+      "text": "A prior decision that a later court must follow (binding) or may follow (persuasive) when the later case presents the same legal question."
+    }
+  ]
+}

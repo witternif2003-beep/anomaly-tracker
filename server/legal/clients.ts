@@ -199,7 +199,8 @@ export async function searchGovInfo(query: string, limit: number): Promise<{ hit
 export function legalSourceStatus() {
   const present = (name: string) => Boolean(process.env[name]?.trim());
   return [
-    { id: "folio", name: "FOLIO Ontology", install: "npm i -g folio-mcp@0.4.1", credentials: "none", status: "live", notes: "CC-BY local cards; remote pulls need folio login. Replaces Black's Law Dictionary." },
+    { id: "glossary", name: "Public-domain glossary (Black's workaround)", install: "data/legal/glossary.json + FOLIO", credentials: "none", status: "live", notes: "Black's Law Dictionary is copyrighted. This glossary plus FOLIO is the installed workaround." },
+    { id: "folio", name: "FOLIO Ontology", install: "npm i -g folio-mcp@0.4.1", credentials: "none", status: "live", notes: "CC-BY local cards; remote pulls need folio login." },
     { id: "courtlistener", name: "CourtListener", install: "pip install court-listener (requested courtlistener is unpublished)", credentials: "optional COURTLISTENER_TOKEN", status: "live", notes: "Public REST v4; Python client used when token is set." },
     { id: "fre", name: "FRE excerpts", install: "data/legal/fre-excerpts.json", credentials: "none", status: "offline-fallback", notes: "Public-domain Federal Rules of Evidence excerpts." },
     { id: "openlaws", name: "OpenLaws", install: "REST client (pip openlaws unpublished; openlaw on PyPI is unrelated)", credentials: "OPENLAWS_API_KEY", status: present("OPENLAWS_API_KEY") ? "live" : "wired-awaiting-key" },
@@ -207,5 +208,6 @@ export function legalSourceStatus() {
     { id: "lexisnexis", name: "LexisNexis", install: "REST stub (no public SDK on PyPI)", credentials: "LEXISNEXIS_*", status: present("LEXISNEXIS_API_KEY") || present("LEXISNEXIS_CLIENT_ID") ? "live" : "wired-dev-portal-needed" },
     { id: "congress", name: "Congress.gov", install: "REST https://api.congress.gov (PyPI congress is alpha)", credentials: "optional CONGRESS_GOV_API_KEY", status: "optional" },
     { id: "govinfo", name: "GovInfo", install: "REST https://api.govinfo.gov (PyPI govinfo needs Python 3.13)", credentials: "optional GOVINFO_API_KEY", status: "optional" },
+    { id: "cjis", name: "CJIS / NCIC / federal", install: "placeholders only (not a CJIS-certified interface)", credentials: "CJIS_ORI / NCIC_ORI / NCIC_MNEMONIC", status: "applicable-placeholders", notes: "Live NCIC/III queries are refused." },
   ];
 }

@@ -1,0 +1,24 @@
+{
+  "integrated": true,
+  "source": "Open VSX when the VS Marketplace CLI is unavailable",
+  "plugins": [
+    {
+      "id": "saoudrizwan.claude-dev",
+      "name": "Cline",
+      "install": "code --install-extension saoudrizwan.claude-dev",
+      "config": ".clinerules"
+    },
+    {
+      "id": "RooVeterinaryInc.roo-cline",
+      "name": "Roo Code",
+      "install": "code --install-extension RooVeterinaryInc.roo-cline",
+      "config": ".roo/rules.md"
+    },
+    {
+      "id": "Continue.continue",
+      "name": "Continue",
+      "install": "code --install-extension Continue.continue",
+      "config": ".continue/config.yaml"
+    }
+  ]
+}

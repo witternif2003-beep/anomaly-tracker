@@ -49,6 +49,31 @@ export const ENV_PLACEHOLDERS = [
     requiredFor: "LexisNexis dev portal",
     closest: "LEXISNEXIS_API_KEY (REST stub; no public SDK on PyPI)",
   },
+  {
+    name: "CJIS_ORI",
+    requiredFor: "CJIS originating agency identifier",
+    closest: "Applicable placeholder only; this app is not a CJIS-certified interface",
+  },
+  {
+    name: "CJIS_AGENCY_ID",
+    requiredFor: "CJIS agency identifier",
+    closest: "FBI_UCR_AGENCY_ID",
+  },
+  {
+    name: "NCIC_ORI",
+    requiredFor: "NCIC originating agency identifier",
+    closest: "Same ORI family as CJIS_ORI when an authorized agency injects it",
+  },
+  {
+    name: "NCIC_MNEMONIC",
+    requiredFor: "NCIC mnemonic",
+    closest: "Applicable placeholder; live NCIC queries are refused",
+  },
+  {
+    name: "FBI_UCR_AGENCY_ID",
+    requiredFor: "Federal UCR / NIBRS agency id",
+    closest: "Public Crime Data Explorer identifiers, not NCIC live access",
+  },
 ] as const;
 
 export type EnvPlaceholderName = (typeof ENV_PLACEHOLDERS)[number]["name"];

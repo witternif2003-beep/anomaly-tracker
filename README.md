@@ -42,7 +42,8 @@ npm run local-api
 | `/v1/models` | GET | Lists `local-v1` and `local-v1-concise` | None |
 | `/v1/legal/search` | POST | FOLIO, FRE, CourtListener, P1; OpenLaws/Westlaw/Lexis when keys are set | None |
 | `/v1/legal/sources` | GET | Install/credential status for legal research clients | None |
-| `/v1/env` | GET | Placeholder names and whether each is configured (never values) | None |
+| `/v1/policy` | GET | GitHub-removed / YOLO-off / dry-run / CJIS applicability | None |
+| `/v1/compliance/cjis` | GET | CJIS/NCIC placeholder status (never values) | None |
 | `/v1/p1` | GET | 1,280 P1 catalog slots (`q`, `limit`, `offset`) | None |
 | `/v1/playground` | GET | Streaming chat UI | None |
 
@@ -132,7 +133,7 @@ Local P1 files. No extra packages.
 | --- | --- | --- |
 | Skills | 16 | `.cursor/skills/*/skill.yaml` (Cursor-readable `SKILL.md` alongside) |
 | Agents | 10 | `.cursor/agents/*.md` |
-| Pipelines | 5 | `scripts/pipelines/` |
+| Pipelines | 8 | `scripts/pipelines/` |
 | Cloudflare Worker | 1 | `workers/ci-gate.js` |
 | Catalog slots | 1,280 | `GET /v1/p1` maps each slot to a skill, agent, pipeline, and the CI worker |
 
@@ -140,7 +141,22 @@ Local P1 files. No extra packages.
 npm run pipelines
 ```
 
-Named pipelines: `cloudflare-ci.sh` (Wrangler **dry-run only**), `cloudflare-p1-health.sh`, `env-placeholders.sh`.
+Named pipelines: `cloudflare-ci.sh` (Wrangler **dry-run only**), `cloudflare-p1-health.sh`, `env-placeholders.sh`, `no-github-actions.sh`, `policy-guard.sh`.
+
+## Policy replacements
+
+| Requested | Status | Closest match installed |
+| --- | --- | --- |
+| GitHub Actions | Removed | Cloudflare scripts (`scripts/pipelines/cloudflare-ci.sh`, `npm run cf:dry-run`) |
+| GitHub MCP | Removed | Cloudflare MCP (`cloudflare` + `cloudflare-code-mode`) |
+| Black's Law Dictionary | Workaround | Public-domain glossary + FOLIO (`source=glossary`) |
+| Cursor YOLO / Auto-Run | Disabled | Empty allowlists in `.cursor/permissions.json`; `cursor.agent.autoRun: false` |
+| Background Agents | Activated | `.cursor/environment.json` install/start + ports 43127/4040 (Cloud Agents) |
+| Marketplace plugins | Integrated | Cline, Roo Code, Continue (Open VSX) + Continue/Cline/Roo config files |
+| Live Cloudflare deploy | Dry-run only | `scripts/wrangler-safe.sh` refuses deploy without `--dry-run` |
+| CJIS / NCIC / federal credentials | Applicable placeholders | `CJIS_*` / `NCIC_*` empty in git; live queries return 403 |
+
+`GET /v1/policy` reports this table. `POST /v1/cjis/search` is always refused.
 
 ## Environment variables (placeholders)
 
@@ -157,6 +173,11 @@ No values are stored in git. Copy `.env.example` to `.env.local` or inject Cloud
 | `WESTLAW_USERNAME` | Westlaw | `WESTLAW_CLIENT_ID` / `WESTLAW_API_KEY` | empty |
 | `WESTLAW_PASSWORD` | Westlaw | `WESTLAW_CLIENT_SECRET` | empty |
 | `LEXISNEXIS_API_KEY` | LexisNexis | REST stub; `LEXISNEXIS_CLIENT_ID` | empty |
+| `CJIS_ORI` | CJIS applicability | Placeholder only; not a certified interface | empty |
+| `CJIS_AGENCY_ID` | CJIS applicability | `FBI_UCR_AGENCY_ID` | empty |
+| `NCIC_ORI` | NCIC applicability | Same ORI family; live queries refused | empty |
+| `NCIC_MNEMONIC` | NCIC applicability | Placeholder only | empty |
+| `FBI_UCR_AGENCY_ID` | Federal UCR / NIBRS id | Public Crime Data Explorer, not NCIC | empty |
 
 ```bash
 npm run env:check

@@ -1,0 +1,11 @@
+{
+  "cursor.agent.autoRun": false,
+  "cursor.agent.yoloMode": false,
+  "cursor.agent.enableYoloMode": false,
+  "cursor.agent.enableAutoRun": false,
+  "cursor.composer.shouldAutoContinue": false,
+  "cursor.composer.shouldChime": false,
+  "cursor.agent.backgroundComposer.enabled": true,
+  "cursor.cpp.enablePartialAccepts": true,
+  "cursor.terminal.enableAutoRun": false
+}

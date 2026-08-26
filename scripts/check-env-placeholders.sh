@@ -19,6 +19,11 @@ required = [
     "WESTLAW_USERNAME",
     "WESTLAW_PASSWORD",
     "LEXISNEXIS_API_KEY",
+    "CJIS_ORI",
+    "CJIS_AGENCY_ID",
+    "NCIC_ORI",
+    "NCIC_MNEMONIC",
+    "FBI_UCR_AGENCY_ID",
 ]
 missing = [name for name in required if not re.search(rf"^{re.escape(name)}=", example, re.M)]
 if missing:

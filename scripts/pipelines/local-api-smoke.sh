@@ -11,4 +11,5 @@ curl -fsS --max-time 5 "${base}/health" >/dev/null
 curl -fsS --max-time 5 "${base}/v1/models" >/dev/null
 curl -fsS --max-time 5 "${base}/v1/p1?limit=1" >/dev/null
 curl -fsS --max-time 5 "${base}/v1/env" >/dev/null
+curl -fsS --max-time 5 "${base}/v1/policy" >/dev/null
 echo "PIPELINE OK local-api-smoke ${base}"
