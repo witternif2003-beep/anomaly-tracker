@@ -207,7 +207,9 @@ scan_req = urllib.request.Request(
 scan = json.load(urllib.request.urlopen(scan_req, timeout=8))
 assert scan["simulated"] is False
 assert scan["verdict"] == "review", scan
-assert scan["highCount"] >= 1, scan
+kinds = {f["kind"] for f in scan["flags"]}
+assert {"invented_citation", "unsourced_statistic", "unsourced_case_name"} <= kinds, kinds
+assert scan["highCount"] >= 3, scan
 grounded_req = urllib.request.Request(
     base + "/v1/aip/scan",
     data=json.dumps({
