@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, type ReactNode } from "react";
+import Link from "next/link";
 import {
   ArrowRightIcon,
   LoaderCircleIcon,
@@ -30,6 +31,7 @@ import type {
   Platform,
   RequestTypeChoice,
 } from "@/lib/optimize";
+import type { AipScan } from "@/lib/aip-sigma0/scanner";
 import { cn } from "@/lib/utils";
 
 const PHASES: FourDPhase[] = ["deconstruct", "diagnose", "develop", "deliver"];
@@ -117,7 +119,10 @@ export function Studio() {
             <div>
               <p className="font-heading text-2xl leading-none tracking-tight">Lyra</p>
               <p className="mt-1 text-xs tracking-[0.14em] text-muted-foreground uppercase">
-                GHOST-HAND detailed · AIP-Σ0 full spectrum
+                GHOST-HAND detailed ·{" "}
+                <Link href="/aip" className="underline-offset-4 hover:underline">
+                  AIP-Σ0 full spectrum
+                </Link>
               </p>
             </div>
           </div>
@@ -411,6 +416,8 @@ function QuestionsPanel({
 
 function ResultPanel({ result }: { result: OptimizeResult }) {
   const [view, setView] = useState<"prompt" | "trace">("prompt");
+  const aip = result.aipSigma0;
+  const aipFlagged = Boolean(aip && (aip.briefScan.flags.length || aip.promptScan.flags.length));
   const diagTone = useMemo(() => {
     if (result.diagnose.specificity === "low") return "Needs structure";
     if (result.diagnose.completeness === "low") return "Incomplete brief";
@@ -513,25 +520,25 @@ function ResultPanel({ result }: { result: OptimizeResult }) {
         </p>
       ) : null}
 
-      {result.aipSigma0?.briefScan.flags.length ? (
+      {aipFlagged && aip ? (
         <Card size="sm">
           <CardHeader>
-            <CardTitle>AIP-Σ0 brief scan</CardTitle>
+            <CardTitle>AIP-Σ0 scans</CardTitle>
             <CardDescription>
-              Real scanner (not simulated). These spans in your draft are not grounded.
+              Real scanner (not simulated). Brief flags are unsourced spans in your draft. Prompt
+              flags are claims the optimizer added that were not in the brief.
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <ul className="flex flex-col gap-2">
-              {result.aipSigma0.briefScan.flags.map((flag) => (
-                <li key={`${flag.kind}-${flag.span}`} className="text-sm leading-6">
-                  <span className="font-medium">{flag.kind}</span>
-                  <span className="text-muted-foreground"> — {flag.span}</span>
-                </li>
-              ))}
-            </ul>
+          <CardContent className="grid gap-4 sm:grid-cols-2">
+            <ScanFlags title="Brief" scan={aip.briefScan} />
+            <ScanFlags title="Prompt" scan={aip.promptScan} />
           </CardContent>
         </Card>
+      ) : aip ? (
+        <p className="text-xs leading-5 text-muted-foreground">
+          AIP-Σ0 brief {aip.briefScan.verdict} · prompt {aip.promptScan.verdict} · no ungrounded
+          claims.
+        </p>
       ) : null}
     </div>
   );
@@ -616,6 +623,29 @@ function Trace({ result }: { result: OptimizeResult }) {
           ))}
         </CardContent>
       </Card>
+    </div>
+  );
+}
+
+function ScanFlags({ title, scan }: { title: string; scan: AipScan }) {
+  return (
+    <div>
+      <p className="text-xs tracking-[0.14em] text-muted-foreground uppercase">{title}</p>
+      <p className="mt-1 text-xs text-muted-foreground">
+        {scan.verdict} · high {scan.highCount} · medium {scan.mediumCount}
+      </p>
+      {scan.flags.length ? (
+        <ul className="mt-2 flex flex-col gap-2">
+          {scan.flags.map((flag) => (
+            <li key={`${flag.kind}-${flag.span}`} className="text-sm leading-6">
+              <span className="font-medium">{flag.kind}</span>
+              <span className="text-muted-foreground"> — {flag.span}</span>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="mt-2 text-sm text-muted-foreground">No ungrounded claims.</p>
+      )}
     </div>
   );
 }

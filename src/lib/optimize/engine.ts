@@ -734,6 +734,7 @@ export function optimize(request: OptimizeRequest): OptimizeResult {
 
   const built = buildPrompt(input, type, request.platform, d, answers, request.mode);
   const briefScan = scanText(input);
+  const promptScan = scanText(built.prompt, [input]);
 
   return {
     status: "complete",
@@ -761,6 +762,7 @@ export function optimize(request: OptimizeRequest): OptimizeResult {
       deployed: true,
       simulated: false,
       briefScan,
+      promptScan,
     },
   };
 }

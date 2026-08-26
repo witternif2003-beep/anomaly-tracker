@@ -55,7 +55,7 @@ export function policyStatus() {
       spectrum: "full",
       simulated: false,
       cloudflareLiveDeploy: false,
-      note: "Anchor Inventory Protocol Σ0: real claim scan, tool receipts, chat footers. Not a live Cloudflare deploy.",
+      note: "Anchor Inventory Protocol Σ0: live claim scan, tool receipts, chat footers, deep-dive fixtures. Not a live Cloudflare deploy.",
     },
   };
 }

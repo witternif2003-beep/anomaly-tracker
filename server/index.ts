@@ -18,6 +18,7 @@ import { listP1Slots } from "./p1-catalog";
 import { ghostHandStatus } from "../src/lib/optimize/ghost-hand";
 import { aipSigma0Status } from "../src/lib/aip-sigma0/protocol";
 import { scanText } from "../src/lib/aip-sigma0/scanner";
+import { runAipDeepDive } from "../src/lib/aip-sigma0/dive";
 
 loadEnvFiles();
 
@@ -81,14 +82,24 @@ app.get("/v1/aip", (_req, res) => {
   res.json(aipSigma0Status());
 });
 
+app.get("/v1/aip/dive", async (_req, res) => {
+  res.json(await runAipDeepDive());
+});
+
 app.post("/v1/aip/scan", (req, res) => {
-  const body = (req.body ?? {}) as { text?: unknown; anchors?: unknown };
+  const body = (req.body ?? {}) as { text?: unknown; anchors?: unknown; receipts?: unknown };
   const text = String(body.text ?? "").trim();
   if (!text) {
     res.status(400).json({ error: "text is required" });
     return;
   }
   const anchors = Array.isArray(body.anchors) ? body.anchors.map(String) : [];
+  if (Array.isArray(body.receipts)) {
+    for (const row of body.receipts) {
+      if (typeof row === "string") anchors.push(row);
+      else if (row && typeof row === "object" && "text" in row) anchors.push(String((row as { text: unknown }).text));
+    }
+  }
   res.json({ object: "aip.scan", ...scanText(text, anchors) });
 });
 

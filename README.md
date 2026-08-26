@@ -7,7 +7,7 @@ It does not call ChatGPT, Claude, or Gemini. The optimizer runs locally in this 
 ## What you get
 
 - **GHOST-HAND detailed mode (default)** — GHOST intake (Goal, Handoffs, Output, Stakes, Taboos) asks clarifying questions, then HAND hardening writes Hypotheses, Anchors, Negatives, and Done-when into the prompt so the model cannot invent facts.
-- **AIP-Σ0 full spectrum** — real anti-hallucination hardening on prompts, legal-search receipts, local-v1 completions, and `POST /v1/aip/scan`. Not simulated. Not a live Cloudflare deploy.
+- **AIP-Σ0 full spectrum** — real anti-hallucination hardening: claim scanner, legal-search receipts, local-v1 completions, optimizer self-scan, and a live deep dive at `/aip`. Not simulated. Not a live Cloudflare deploy.
 - **Basic mode** — immediate rewrite using core techniques (role, constraints, output contract).
 - **Request types** — auto-detect, or lock Creative, Technical, Educational, or Complex.
 - **Platform formatting** — markdown sections for ChatGPT, XML-style tags for Claude, numbered comparative structure for Gemini.
@@ -20,7 +20,7 @@ npm install
 npm run dev
 ```
 
-Open [http://localhost:43127](http://localhost:43127).
+Open [http://localhost:43127](http://localhost:43127) for the studio, or [http://localhost:43127/aip](http://localhost:43127/aip) for the AIP-Σ0 live deep dive.
 
 ```bash
 npm run build
@@ -51,6 +51,7 @@ npm run local-api
 | `/v1/mode` | GET | GHOST-HAND detailed mode status (default on) | None |
 | `/v1/aip` | GET | AIP-Σ0 full-spectrum status (real, not simulated) | None |
 | `/v1/aip/scan` | POST | Scan text for unsourced citations, percents, URLs, case names | None |
+| `/v1/aip/dive` | GET | Live fixture suite + optimizer self-scan (not a canned boolean) | None |
 | `/v1/playground` | GET | Streaming chat UI | None |
 
 ```bash
@@ -162,7 +163,7 @@ Named pipelines: `cloudflare-ci.sh` (Wrangler **dry-run only**), `cloudflare-p1-
 | Live Cloudflare deploy | Dry-run only | `scripts/wrangler-safe.sh` refuses deploy without `--dry-run` |
 | CJIS / NCIC / federal credentials | Applicable placeholders | `CJIS_*` / `NCIC_*` empty in git; live queries return 403 |
 | GHOST-HAND detailed mode | Activated (default) | Detail mode on; GHOST intake + HAND anti-hallucination rules |
-| AIP-Σ0 full spectrum | Deployed locally | Real claim scanner, tool receipts, chat footers. Not a live Cloudflare deploy |
+| AIP-Σ0 full spectrum | Deployed locally | Live fixtures, tool receipts, chat footers, optimizer self-scan. Not a live Cloudflare deploy |
 
 `GET /v1/policy` reports this table. `POST /v1/cjis/search` is always refused.
 

@@ -21,15 +21,24 @@ export interface AipScan {
   verdict: "pass" | "review";
   highCount: number;
   mediumCount: number;
+  checkedCount: number;
+  groundedCount: number;
   flags: AipFlag[];
 }
 
 const REPORTER =
-  /\b\d{1,3}\s+(?:U\.S\.|S\.\s*Ct\.|F\.(?:2d|3d|4th)|F\.\s*Supp\.(?:\s*2d|\s*3d)?)\s+\d{1,4}\b/g;
+  /\b\d{1,3}\s+(?:U\.S\.|S\.\s*Ct\.|L\.\s*Ed\.(?:\s*2d)?|F\.(?:2d|3d|4th)|F\.\s*Supp\.(?:\s*2d|\s*3d)?)\s+\d{1,4}\b/g;
+const USC = /\b\d{1,2}\s+U\.S\.C\.\s*§+\s*\d+[a-z0-9()-]*/gi;
+const CFR = /\b\d{1,2}\s+C\.F\.R\.\s*§*\s*\d+(?:\.\d+)*/gi;
+const FRCP = /\b(?:Fed\.\s*R\.\s*(?:Civ|Crim|App)\.\s*P\.|F\.R\.C\.P\.)\s*\d+[a-z]?/gi;
+const FRE_RULE = /\b(?:FRE|Fed\.\s*R\.\s*Evid\.)\s*\d{3,4}\b/gi;
+const PUB_L = /\bPub\.\s*L\.\s*No\.\s*\d+-\d+\b/gi;
 // `%` is non-word, so a trailing `\b` never fires before space/punctuation.
 const PERCENT = /\b\d{1,3}(?:\.\d+)?%/g;
+const PERCENT_WORD = /\b\d{1,3}(?:\.\d+)?\s+per\s*cents?\b/gi;
+const RATIO = /\b\d{1,3}\s+(?:out of|in)\s+\d{1,3}\b/gi;
 const WEASEL =
-  /\b(?:studies show|research (?:shows|proves|suggests)|scientists say|experts agree|it is well[- ]known|according to (?:experts|scientists|reports))\b/gi;
+  /\b(?:studies show|research (?:shows|proves|suggests)|scientists say|experts agree|it is well[- ]known|according to (?:experts|scientists|reports|a \d{4} study))\b/gi;
 const URL = /\bhttps?:\/\/[^\s)>\]]+/gi;
 const QUOTE = /[“"]([^”"]{12,180})[”"]/g;
 const CASE_NAME =
@@ -78,11 +87,26 @@ export function scanText(text: string, anchors: string[] = []): AipScan {
     });
   };
 
-  for (const span of collect(REPORTER, text)) {
-    push("invented_citation", "high", span, "Reporter-style citation must appear in supplied anchors or a tool receipt.");
+  for (const span of [
+    ...collect(REPORTER, text),
+    ...collect(USC, text),
+    ...collect(CFR, text),
+    ...collect(FRCP, text),
+    ...collect(FRE_RULE, text),
+    ...collect(PUB_L, text),
+  ]) {
+    push(
+      "invented_citation",
+      "high",
+      span,
+      "Reporter, code, rule, or public-law citation must appear in supplied anchors or a tool receipt.",
+    );
   }
-  for (const span of collect(PERCENT, text)) {
+  for (const span of [...collect(PERCENT, text), ...collect(PERCENT_WORD, text)]) {
     push("unsourced_statistic", "high", span, "Numeric rate or percent needs a source in the brief or a retrieved hit.");
+  }
+  for (const span of collect(RATIO, text)) {
+    push("unsourced_statistic", "medium", span, "Ratio or 'N out of M' claim needs a source.");
   }
   for (const span of collect(WEASEL, text)) {
     push("weasel_authority", "medium", span, "Vague appeal to authority with no named source.");
@@ -100,6 +124,7 @@ export function scanText(text: string, anchors: string[] = []): AipScan {
     push("unsourced_statistic", "medium", span, "Time-bounded factual claim needs a source.");
   }
 
+  const groundedCount = flags.filter((f) => f.grounded).length;
   const ungrounded = flags.filter((f) => !f.grounded);
   const highCount = ungrounded.filter((f) => f.severity === "high").length;
   const mediumCount = ungrounded.filter((f) => f.severity === "medium").length;
@@ -107,15 +132,17 @@ export function scanText(text: string, anchors: string[] = []): AipScan {
   return {
     protocol: "AIP-Σ0",
     simulated: false,
-    verdict: highCount === 0 ? "pass" : "review",
+    verdict: ungrounded.length === 0 ? "pass" : "review",
     highCount,
     mediumCount,
+    checkedCount: flags.length,
+    groundedCount,
     flags: ungrounded,
   };
 }
 
 export function formatScanFooter(scan: AipScan): string {
-  const head = `AIP-Σ0 ${scan.verdict.toUpperCase()} · high ${scan.highCount} · medium ${scan.mediumCount} · real scan (not simulated)`;
+  const head = `AIP-Σ0 ${scan.verdict.toUpperCase()} · high ${scan.highCount} · medium ${scan.mediumCount} · checked ${scan.checkedCount} · real scan (not simulated)`;
   if (!scan.flags.length) return head;
   const lines = scan.flags.slice(0, 8).map((f) => `- [${f.severity}] ${f.kind}: ${f.span}`);
   return [head, ...lines].join("\n");

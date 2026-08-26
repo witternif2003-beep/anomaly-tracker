@@ -69,6 +69,12 @@
         </form>
       </section>
       <aside>
+        <h2>AIP-Σ0</h2>
+        <div class="card">
+          <strong>Anti-hallucination deep dive</strong>
+          <div id="aip-meta" class="muted">Loading live fixtures…</div>
+          <div id="aip-out"></div>
+        </div>
         <h2>Legal search</h2>
         <div class="card">
           <input id="legal-q" type="search" placeholder="Search FOLIO / FRE / CourtListener" />
@@ -123,6 +129,17 @@
         } catch {
           status.textContent = "API unreachable";
         }
+        const dive = await fetch("/v1/aip/dive").then((r) => r.json());
+        document.getElementById("aip-meta").innerHTML =
+          (dive.ok ? "<span class='ok'>PASS</span>" : "<span>FAIL</span>") +
+          " · " + (dive.fixtureCount || 0) + " fixtures · simulated=" + String(dive.simulated);
+        document.getElementById("aip-out").innerHTML = (dive.fixtureResults || [])
+          .map((f) => {
+            const mark = f.ok ? "<span class='ok'>ok</span>" : "<span>fail</span>";
+            return "<div><strong>" + f.id + "</strong> " + mark +
+              "<div class='muted'>" + (f.scan && f.scan.verdict) + " · " + f.detail + "</div></div>";
+          })
+          .join("");
         const env = await fetch("/v1/env").then((r) => r.json());
         document.getElementById("env-out").innerHTML = (env.variables || [])
           .map((v) => {

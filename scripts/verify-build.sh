@@ -170,7 +170,9 @@ if curl -fsS -o /dev/null --max-time 3 "${base}/"; then
   echo "${body}" | python3 -c "import json,sys; d=json.load(sys.stdin); assert d.get('status')=='complete' and d.get('optimizedPrompt'); assert d.get('ghostHand',{}).get('active') is False; print('VERIFY OK: optimize API', d['status'], len(d['optimizedPrompt']), 'chars')"
   detail='{"input":"write a launch email for our headphones. Make it good.","mode":"detail","skipQuestions":true,"requestType":"auto","platform":"chatgpt"}'
   dbody="$(curl -fsS --max-time 10 -H "Content-Type: application/json" -d "${detail}" "${base}/api/optimize")"
-  echo "${dbody}" | python3 -c "import json,sys; d=json.load(sys.stdin); assert d.get('status')=='complete'; assert d.get('ghostHand',{}).get('active') is True; assert d.get('ghostHand',{}).get('protocol')=='GHOST-HAND'; assert 'GHOST-HAND / Anchors' in d.get('optimizedPrompt',''); assert 'AIP-Σ0' in d.get('optimizedPrompt',''); print('VERIFY OK: GHOST-HAND detailed', d['ghostHand']['mode'], len(d['optimizedPrompt']), 'chars')"
+  echo "${dbody}" | python3 -c "import json,sys; d=json.load(sys.stdin); assert d.get('status')=='complete'; assert d.get('ghostHand',{}).get('active') is True; assert d.get('ghostHand',{}).get('protocol')=='GHOST-HAND'; assert 'GHOST-HAND / Anchors' in d.get('optimizedPrompt',''); assert 'AIP-Σ0' in d.get('optimizedPrompt',''); assert d.get('aipSigma0',{}).get('simulated') is False; assert d['aipSigma0']['promptScan']['verdict'] in ('pass','review'); print('VERIFY OK: GHOST-HAND detailed', d['ghostHand']['mode'], len(d['optimizedPrompt']), 'chars')"
+  dip="$(curl -fsS --max-time 15 "${base}/api/aip/dive")"
+  echo "${dip}" | python3 -c "import json,sys; d=json.load(sys.stdin); assert d.get('ok') is True and d.get('simulated') is False; assert d.get('fixturesOk') is True; print('VERIFY OK: AIP-Σ0 deep dive', d['proofHash'][:12], d['elapsedMs'], 'ms')"
 else
   echo "VERIFY WARN: ${base} is not up; skipped live API check"
 fi
@@ -221,7 +223,14 @@ grounded_req = urllib.request.Request(
 )
 grounded = json.load(urllib.request.urlopen(grounded_req, timeout=8))
 assert grounded["highCount"] == 0, grounded
-print("VERIFY OK: AIP-Σ0 scan review/pass", scan["highCount"], "ungrounded high")
+assert grounded["verdict"] == "pass", grounded
+dive = json.load(urllib.request.urlopen(base + "/v1/aip/dive", timeout=20))
+assert dive["simulated"] is False and dive["ok"] is True, dive
+assert dive["fixturesOk"] is True, dive
+assert all(row["ok"] for row in dive["fixtureResults"]), dive["fixtureResults"]
+assert dive["optimizer"]["briefScan"]["verdict"] == "review"
+assert dive["optimizer"]["promptScan"]["verdict"] == "pass"
+print("VERIFY OK: AIP-Σ0 scan review/pass", scan["highCount"], "ungrounded high; dive", dive["proofHash"][:12])
 req = urllib.request.Request(
     base + "/v1/chat/completions",
     data=json.dumps({

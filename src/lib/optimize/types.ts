@@ -86,6 +86,7 @@ export interface OptimizeResult {
     deployed: true;
     simulated: false;
     briefScan: AipScan;
+    promptScan: AipScan;
   };
 }
 
