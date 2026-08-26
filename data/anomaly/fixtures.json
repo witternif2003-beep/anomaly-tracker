@@ -1,10 +1,10 @@
 {
-  "title": "Advanced Business Anomaly 3D Realtime Tracker",
-  "product": "Lyra local studio — unclassified compliance demo",
+  "title": "Advanced Business Anomaly 3D Realtime Tracker — 24/7 fixture-clock",
+  "product": "Lyra local studio — unclassified corporate LE compliance demo",
   "classified": false,
   "governmentProgram": false,
   "simulated": true,
-  "note": "Hard-coded fixture entities and anomalies for internal-investigation rehearsal. Not a law-enforcement field collection system. No intercepts, SIGINT, live NCIC, or mass surveillance of U.S. businesses.",
+  "note": "Hard-coded fixture entities, anomalies, and FBI→corporate evidence narrative for internal-investigation rehearsal. Fixture-clock telemetry runs 24/7 across every business entity. Not a law-enforcement field collection system. No intercepts, SIGINT, live NCIC, or mass surveillance of U.S. businesses.",
   "entityTypes": [
     { "id": "sole-proprietorship", "label": "Sole proprietorship" },
     { "id": "partnership", "label": "Partnership" },
@@ -414,7 +414,7 @@
         "title": "Visualize",
         "proposed": "Render 3D geospatial map with entity nodes, anomaly heatmaps, and real-time alert feeds.",
         "status": "shipped",
-        "shipped": "/tracker CSS 3D nodes + P1 pulse + event queue tick",
+        "shipped": "/tracker CSS 3D + R3F globe + 24/7 fixture-clock P1 telemetry across every business entity",
         "live": false
       },
       {

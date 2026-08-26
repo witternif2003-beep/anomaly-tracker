@@ -2,6 +2,7 @@ import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import fixtures from "../data/anomaly/fixtures.json";
+import evidenceCorpus from "../data/anomaly/evidence-corpus.json";
 import inventoryLedger from "../data/anomaly/inventory-ledger.json";
 import dependencyStrategyDoc from "../data/anomaly/dependency-strategy.json";
 import mcpAuditDoc from "../data/anomaly/mcp-audit.json";
@@ -17,7 +18,32 @@ import { oneShotStatus } from "./install-status";
 import { cjisStatus, policyStatus } from "./policy";
 
 const IMPROVEMENT_COUNT = 10080;
+const TELEMETRY_TICK_MS = 1200;
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
+
+type EvidenceElement = (typeof evidenceCorpus.elements)[number];
+type CollectionStatus = "fixture" | "constrained" | "wont-do";
+
+type CompiledAnomalyBase = {
+  id: string;
+  entityId: string;
+  priority: "P1" | "P2" | "P3";
+  title: string;
+  categoryId: string;
+  indicator: string;
+  doctrine: string[];
+  source: string;
+  geo: boolean;
+  action: string;
+  fbiCategory?: string;
+  artifact?: string;
+  collectionStatus?: CollectionStatus;
+  wontDo?: string | null;
+  narrativeTimestamp?: string;
+  lat?: number;
+  lon?: number;
+  fromCorpus?: boolean;
+};
 
 function listMcpServers(): string[] {
   const mcpPath = path.join(root, ".cursor/mcp.json");
@@ -77,6 +103,139 @@ type EntityType = (typeof fixtures.entityTypes)[number];
 type City = (typeof fixtures.cities)[number];
 type FixtureEntity = (typeof fixtures.entities)[number];
 type FixtureAnomaly = (typeof fixtures.anomalies)[number];
+
+function corpusToAnomaly(el: EvidenceElement, index: number): CompiledAnomalyBase {
+  const constrained = el.collectionStatus === "constrained";
+  const wontDo =
+    "wontDo" in el && typeof el.wontDo === "string"
+      ? el.wontDo
+      : constrained
+        ? "sigint-intercepts"
+        : null;
+  const lat = "lat" in el && typeof el.lat === "number" ? el.lat : undefined;
+  const lon = "lon" in el && typeof el.lon === "number" ? el.lon : undefined;
+  return {
+    id: `anom-corpus-${el.id}`,
+    entityId: el.entityBias,
+    priority: el.priority as "P1" | "P2" | "P3",
+    title: el.title,
+    categoryId: el.corporateCategoryId,
+    indicator: constrained
+      ? `Corporate LE narrative · ${el.fbiCategory} · constrained (not live collection)`
+      : `Corporate LE typology · ${el.fbiCategory} · fixture clock (not live FBI feed)`,
+    doctrine: el.doctrine,
+    source: `evidence-corpus:${el.id} · artifact=${el.artifact}`,
+    geo: typeof lat === "number" && typeof lon === "number",
+    action: constrained
+      ? `Record typology only. Do not execute intercept/SIGINT. Closest path: company-held stores under counsel hold. ${el.detail}`
+      : `Preserve company-held artifact under legal hold; privilege-screen; map to ${el.corporateCategoryId}. ${el.detail}`,
+    fbiCategory: el.fbiCategory,
+    artifact: el.artifact,
+    collectionStatus: (el.collectionStatus as CollectionStatus) ?? "fixture",
+    wontDo,
+    narrativeTimestamp: el.timestamp,
+    lat,
+    lon,
+    fromCorpus: true,
+  };
+}
+
+function mergeAnomalyCatalog(): CompiledAnomalyBase[] {
+  const base: CompiledAnomalyBase[] = fixtures.anomalies.map((a: FixtureAnomaly) => ({
+    ...a,
+    priority: a.priority as "P1" | "P2" | "P3",
+    fbiCategory: undefined,
+    artifact: undefined,
+    collectionStatus: "fixture" as const,
+    wontDo: null,
+    narrativeTimestamp: undefined,
+    fromCorpus: false,
+  }));
+  const corpus = evidenceCorpus.elements.map((el, i) => corpusToAnomaly(el, i));
+  // Preserve original fixtures first; append corpus without dropping anything.
+  const seen = new Set(base.map((a) => a.id));
+  for (const row of corpus) {
+    if (!seen.has(row.id)) {
+      base.push(row);
+      seen.add(row.id);
+    }
+  }
+  return base;
+}
+
+function buildTelemetryStream(
+  anomalies: ReturnType<typeof enrichAnomaly>[],
+  entities: ReturnType<typeof enrichEntity>[],
+) {
+  const p1 = anomalies.filter((a) => a.priority === "P1");
+  const totalTicks = entities.length * anomalies.length;
+  const p1Ticks = entities.length * p1.length;
+  // Compact recipe — client expands the full cross-product so every business
+  // rotates through every evidence/anomaly tick without bloating static HTML.
+  const preview: Array<{
+    id: string;
+    seq: number;
+    entityId: string;
+    entityName: string;
+    entityType: string;
+    city: string;
+    anomalyId: string;
+    priority: string;
+    title: string;
+    categoryId: string;
+    categoryLabel: string;
+    fbiCategory: string | null;
+    artifact: string | null;
+    collectionStatus: string;
+    narrativeTimestamp: string | null;
+    position: { x: number; y: number; z: number };
+    active: true;
+  }> = [];
+  let seq = 0;
+  for (const entity of entities) {
+    for (const anomaly of p1.slice(0, 3)) {
+      seq += 1;
+      preview.push({
+        id: `tel-${entity.id}-${anomaly.id}-${seq}`,
+        seq,
+        entityId: entity.id,
+        entityName: entity.name,
+        entityType: entity.entityType,
+        city: entity.city.label,
+        anomalyId: anomaly.id,
+        priority: anomaly.priority,
+        title: anomaly.title,
+        categoryId: anomaly.categoryId,
+        categoryLabel: anomaly.categoryLabel,
+        fbiCategory: anomaly.fbiCategory ?? null,
+        artifact: anomaly.artifact ?? null,
+        collectionStatus: anomaly.collectionStatus ?? "fixture",
+        narrativeTimestamp: anomaly.narrativeTimestamp ?? null,
+        position: project3d(
+          anomaly.lat ?? entity.city.lat,
+          anomaly.lon ?? entity.city.lon,
+          anomaly.priority,
+          seq,
+        ),
+        active: true,
+      });
+    }
+  }
+  return {
+    mode: "fixture-clock-24x7" as const,
+    tickMs: TELEMETRY_TICK_MS,
+    active: true,
+    liveSurveillance: false,
+    intercepts: false,
+    crossProduct: true as const,
+    note: "Simulated 24/7 fixture-clock telemetry. Every business entity rotates through the full anomaly + evidence corpus. Not live device tracking, SIGINT, or CJIS.",
+    totalTicks,
+    p1Ticks,
+    entityCount: entities.length,
+    anomalyCount: anomalies.length,
+    stream: preview,
+  };
+}
 
 function cityById(id: string): City {
   const found = fixtures.cities.find((c) => c.id === id);
@@ -224,10 +383,10 @@ export function listImprovements(opts?: {
   };
 }
 
-function enrichEntity(entity: FixtureEntity, index: number) {
+function enrichEntity(entity: FixtureEntity, index: number, anomalyCatalog: CompiledAnomalyBase[]) {
   const city = cityById(entity.cityId);
   const type = entityTypeById(entity.entityType);
-  const related = fixtures.anomalies.filter((a) => a.entityId === entity.id);
+  const related = anomalyCatalog.filter((a) => a.entityId === entity.id);
   const topPriority = related.some((a) => a.priority === "P1")
     ? "P1"
     : related.some((a) => a.priority === "P2")
@@ -245,21 +404,32 @@ function enrichEntity(entity: FixtureEntity, index: number) {
   };
 }
 
-function enrichAnomaly(anomaly: FixtureAnomaly, index: number) {
+function enrichAnomaly(anomaly: CompiledAnomalyBase, index: number) {
   const entity = fixtures.entities.find((e) => e.id === anomaly.entityId);
   if (!entity) throw new Error(`Unknown entity ${anomaly.entityId}`);
   const city = cityById(entity.cityId);
+  const lat = anomaly.lat ?? city.lat;
+  const lon = anomaly.lon ?? city.lon;
   return {
     ...anomaly,
     categoryLabel: categoryLabel(anomaly.categoryId),
     entityName: entity.name,
     entityType: entity.entityType,
     entityTypeLabel: entityTypeById(entity.entityType).label,
-    city,
-    position: project3d(city.lat, city.lon, anomaly.priority, index),
+    city: {
+      ...city,
+      lat,
+      lon,
+      label:
+        anomaly.lat != null
+          ? `${city.label} · fixture ${anomaly.lat.toFixed(4)}, ${anomaly.lon?.toFixed(4)}`
+          : city.label,
+    },
+    position: project3d(lat, lon, anomaly.priority, index),
     classified: false,
     liveFbiFeed: false,
-    intercept: false,
+    intercept: anomaly.collectionStatus === "constrained",
+    telemetryActive: true,
   };
 }
 
@@ -285,13 +455,20 @@ export function compileAnomalyTracker(opts?: {
     offset: opts?.improvementOffset ?? 0,
   });
 
-  const entities = fixtures.entities.map((e, i) => enrichEntity(e, i));
-  const anomalies = fixtures.anomalies.map((a, i) => enrichAnomaly(a, i));
+  const anomalyCatalog = mergeAnomalyCatalog();
+  const entities = fixtures.entities.map((e, i) => enrichEntity(e, i, anomalyCatalog));
+  const anomalies = anomalyCatalog.map((a, i) => enrichAnomaly(a, i));
   const p1Events = anomalies.filter((a) => a.priority === "P1");
+  const telemetry = buildTelemetryStream(anomalies, entities);
 
   const byCategory: Record<string, number> = {};
   for (const a of anomalies) {
     byCategory[a.categoryId] = (byCategory[a.categoryId] ?? 0) + 1;
+  }
+
+  const byFbiCategory: Record<string, number> = {};
+  for (const a of anomalies) {
+    if (a.fbiCategory) byFbiCategory[a.fbiCategory] = (byFbiCategory[a.fbiCategory] ?? 0) + 1;
   }
 
   const priorityCounts = {
@@ -346,6 +523,11 @@ export function compileAnomalyTracker(opts?: {
       entities: entities.length,
       anomalies: anomalies.length,
       p1Events: p1Events.length,
+      evidenceElements: evidenceCorpus.elements.length,
+      fbiCategoryMaps: evidenceCorpus.fbiToCorporate.length,
+      telemetryTicks: telemetry.totalTicks,
+      telemetryP1Ticks: telemetry.p1Ticks,
+      telemetryActive: true,
       improvements: IMPROVEMENT_COUNT,
       improvementSeeds: improvementSeeds.seedCount,
       researchQuestions: researchAgendaDoc.questions.length,
@@ -367,9 +549,12 @@ export function compileAnomalyTracker(opts?: {
     },
     priorityCounts,
     byCategory,
+    byFbiCategory,
     scene: {
       kind: "css-perspective-3d",
-      realtime: "fixture-clock",
+      realtime: "fixture-clock-24x7",
+      telemetryActive: true,
+      tickMs: TELEMETRY_TICK_MS,
       nodes: entities.map((e) => ({
         id: e.id,
         label: e.name,
@@ -386,7 +571,22 @@ export function compileAnomalyTracker(opts?: {
         title: a.title,
         position: a.position,
         categoryId: a.categoryId,
+        fbiCategory: a.fbiCategory ?? null,
+        artifact: a.artifact ?? null,
+        collectionStatus: a.collectionStatus ?? "fixture",
       })),
+    },
+    telemetry,
+    evidenceMap: {
+      object: "lyra.evidence-map" as const,
+      title: evidenceCorpus.title,
+      note: evidenceCorpus.note,
+      fbiToCorporate: evidenceCorpus.fbiToCorporate,
+      elements: evidenceCorpus.elements,
+      elementCount: evidenceCorpus.elements.length,
+      fixtureCount: evidenceCorpus.elements.filter((e) => e.collectionStatus === "fixture").length,
+      constrainedCount: evidenceCorpus.elements.filter((e) => e.collectionStatus === "constrained")
+        .length,
     },
     entities,
     anomalies,

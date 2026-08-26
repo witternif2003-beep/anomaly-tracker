@@ -23,6 +23,8 @@ async function loadSource(file: string): Promise<TaxonomySource> {
     let summary = `${Object.keys(entries).length} top-level keys`;
     if (Array.isArray(entries.categories)) {
       summary = `${entries.categories.length} taxonomy categories`;
+    } else if (Array.isArray(entries.fbiToCorporate)) {
+      summary = `${entries.fbiToCorporate.length} FBI→corporate maps · ${(entries.elements as unknown[] | undefined)?.length ?? 0} evidence elements`;
     } else if (Array.isArray(entries.entityTypes)) {
       summary = `${entries.entityTypes.length} entity types · ${(entries.entities as unknown[] | undefined)?.length ?? 0} fixtures`;
     } else if (entries.mcpServers && typeof entries.mcpServers === "object") {
@@ -47,6 +49,7 @@ export default async function CorporatePage(): Promise<ReactElement> {
   const sources = [
     "data/legal/corporate-taxonomy.json",
     "data/anomaly/fixtures.json",
+    "data/anomaly/evidence-corpus.json",
     "data/anomaly/improvement-seeds.json",
     "data/anomaly/inventory-ledger.json",
     ".cursor/mcp.json",
@@ -54,6 +57,7 @@ export default async function CorporatePage(): Promise<ReactElement> {
 
   const compiled = await Promise.all(sources.map((file) => loadSource(file)));
   const taxonomy = compiled.find((s) => s.name.includes("corporate-taxonomy.json"));
+  const evidence = compiled.find((s) => s.name.includes("evidence-corpus.json"));
   const categories =
     taxonomy?.status === "loaded" &&
     taxonomy.entries &&
@@ -64,6 +68,23 @@ export default async function CorporatePage(): Promise<ReactElement> {
             .categories
         )
       : [];
+
+  const fbiMap =
+    evidence?.status === "loaded" &&
+    evidence.entries &&
+    Array.isArray((evidence.entries as { fbiToCorporate?: unknown }).fbiToCorporate)
+      ? (
+          (evidence.entries as {
+            fbiToCorporate: Array<{
+              fbiCategory: string;
+              corporateLabel: string;
+              businessLawHook: string;
+            }>;
+            elements?: unknown[];
+            note?: string;
+          })
+        )
+      : null;
 
   return (
     <main className="relative mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 p-6">
@@ -111,6 +132,28 @@ export default async function CorporatePage(): Promise<ReactElement> {
           ))}
         </div>
       </section>
+
+      {fbiMap ? (
+        <section className="glass-panel space-y-3 p-5">
+          <h2 className="font-display text-lg">
+            FBI typology → corporate business law ({fbiMap.fbiToCorporate.length})
+          </h2>
+          <p className="text-sm text-muted-foreground">{fbiMap.note}</p>
+          <div className="grid gap-2 md:grid-cols-2">
+            {fbiMap.fbiToCorporate.map((row) => (
+              <div key={row.fbiCategory} className="rounded-lg border border-border/40 bg-background/20 px-3 py-2">
+                <p className="text-[10px] tracking-[0.16em] text-primary/80 uppercase">{row.fbiCategory}</p>
+                <p className="mt-1 text-sm font-medium">{row.corporateLabel}</p>
+                <p className="mt-1 text-xs text-muted-foreground">{row.businessLawHook}</p>
+              </div>
+            ))}
+          </div>
+          <p className="text-xs text-muted-foreground">
+            {(fbiMap.elements?.length ?? 0)} narrative evidence elements baked from{" "}
+            <code className="text-[11px]">data/anomaly/evidence-corpus.json</code>
+          </p>
+        </section>
+      ) : null}
     </main>
   );
 }

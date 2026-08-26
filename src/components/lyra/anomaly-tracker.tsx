@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { fetchJsonWithStaticFallback } from "@/lib/static-data";
+import { LiveTelemetryFeed, type TelemetryPayload } from "@/components/lyra/live-telemetry-feed";
 
 interface SceneNode {
   id: string;
@@ -25,11 +26,17 @@ interface Anomaly {
   priority: string;
   title: string;
   entityName: string;
+  categoryId?: string;
   categoryLabel: string;
   action: string;
   indicator: string;
   doctrine: string[];
   source: string;
+  fbiCategory?: string;
+  artifact?: string;
+  collectionStatus?: string;
+  narrativeTimestamp?: string;
+  wontDo?: string | null;
 }
 
 interface Improvement {
@@ -73,12 +80,44 @@ interface TrackerBook {
     p1Events: number;
     improvements: number;
     improvementSeeds?: number;
+    evidenceElements?: number;
+    telemetryTicks?: number;
+    telemetryP1Ticks?: number;
+    telemetryActive?: boolean;
+    fbiCategoryMaps?: number;
     taxonomyCategories: number;
     p1InventorySlots: number;
     mcpServers: number;
     intercepts: boolean;
     cjisLiveQueries: boolean;
   };
+  telemetry?: TelemetryPayload;
+  evidenceMap?: {
+    title: string;
+    note: string;
+    fbiToCorporate: Array<{
+      fbiCategory: string;
+      corporateCategoryId: string;
+      corporateLabel: string;
+      businessLawHook: string;
+    }>;
+    elements: Array<{
+      id: string;
+      fbiCategory: string;
+      corporateCategoryId: string;
+      priority: string;
+      title: string;
+      artifact: string;
+      detail: string;
+      timestamp: string;
+      collectionStatus: string;
+      wontDo?: string;
+    }>;
+    elementCount: number;
+    fixtureCount: number;
+    constrainedCount: number;
+  };
+  byFbiCategory?: Record<string, number>;
   improvementAnnex?: {
     title: string;
     note: string;
@@ -126,7 +165,13 @@ interface TrackerBook {
       live: boolean;
     }>;
   };
-  scene: { nodes: SceneNode[] };
+  scene: { nodes: SceneNode[]; realtime?: string; telemetryActive?: boolean };
+  entities: Array<{
+    id: string;
+    name: string;
+    entityType: string;
+    city: { label: string };
+  }>;
   anomalies: Anomaly[];
   p1Queue: Anomaly[];
   improvements: { total: number; generated: number; data: Improvement[] };
@@ -274,7 +319,7 @@ export function AnomalyTracker({ initialData }: { initialData?: TrackerBook }) {
   }, []);
 
   useEffect(() => {
-    const id = window.setInterval(() => setTick((t) => t + 1), 2400);
+    const id = window.setInterval(() => setTick((t) => t + 1), 1200);
     return () => window.clearInterval(id);
   }, []);
 
@@ -314,11 +359,12 @@ export function AnomalyTracker({ initialData }: { initialData?: TrackerBook }) {
           <div>
             <p className="flex items-center gap-2 text-[10px] tracking-[0.22em] text-primary/80 uppercase">
               <span className="hud-beacon" aria-hidden />
-              3D fixture map · taxonomy-bound · unclassified
+              24/7 fixture-clock telemetry · taxonomy-bound · unclassified
             </p>
             <p className="font-display text-3xl leading-none tracking-tight">Anomaly tracker</p>
             <p className="mt-2 max-w-2xl text-xs text-muted-foreground">
-              Futuristic glass HUD over hard-coded fixtures. Not live device tracking, intercepts, or NCIC.
+              Active P1 incident stream over every fixture business. Corporate LE narrative — not live
+              device tracking, intercepts, or NCIC.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -364,13 +410,61 @@ export function AnomalyTracker({ initialData }: { initialData?: TrackerBook }) {
               <Badge variant="secondary">classified={String(book.classified)}</Badge>
               <Badge variant="outline">simulated={String(book.simulated)}</Badge>
               <Badge variant="outline">liveSurveillance={String(book.liveSurveillance)}</Badge>
+              <Badge className="bg-emerald-500/20 text-emerald-200">
+                telemetry={book.summary.telemetryActive ? "ACTIVE 24/7" : "off"}
+              </Badge>
               <Badge variant="outline">
                 {book.summary.p1Events} P1 · {book.summary.anomalies} events
+              </Badge>
+              <Badge variant="outline">
+                {(book.summary.telemetryTicks ?? 0).toLocaleString()} telemetry ticks
+              </Badge>
+              <Badge variant="outline">
+                {book.summary.evidenceElements ?? 0} evidence elements
               </Badge>
               <Badge variant="outline">{book.summary.improvements.toLocaleString()} improvements</Badge>
               <Badge variant="outline">{book.summary.entityTypes} entity types</Badge>
               <Badge variant="outline">tick {tick}</Badge>
             </div>
+
+            {book.telemetry ? (
+              <LiveTelemetryFeed
+                telemetry={book.telemetry}
+                entities={book.entities}
+                anomalies={book.anomalies}
+                onSelectAnomaly={(id) => setSelected(id)}
+                preferP1
+              />
+            ) : null}
+
+            {book.evidenceMap ? (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">FBI typology → corporate business-law map</CardTitle>
+                  <CardDescription>{book.evidenceMap.note}</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid gap-2 md:grid-cols-2">
+                    {book.evidenceMap.fbiToCorporate.map((row) => (
+                      <div key={row.fbiCategory} className="hud-stat !items-start gap-1">
+                        <p className="text-[10px] tracking-[0.16em] text-primary/80 uppercase">
+                          {row.fbiCategory}
+                        </p>
+                        <p className="font-display text-sm leading-snug">{row.corporateLabel}</p>
+                        <p className="text-xs leading-5 text-muted-foreground">{row.businessLawHook}</p>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+                    <span>{book.evidenceMap.elementCount} narrative elements</span>
+                    <span>·</span>
+                    <span>{book.evidenceMap.fixtureCount} fixture-collectable</span>
+                    <span>·</span>
+                    <span>{book.evidenceMap.constrainedCount} constrained / wont-do</span>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : null}
 
             <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
               <div className="flex-1">
@@ -494,27 +588,38 @@ export function AnomalyTracker({ initialData }: { initialData?: TrackerBook }) {
                           {selectedAnomaly.priority}
                         </Badge>
                         <Badge variant="outline">{selectedAnomaly.categoryLabel}</Badge>
+                        {selectedAnomaly.fbiCategory ? (
+                          <Badge variant="secondary">{selectedAnomaly.fbiCategory}</Badge>
+                        ) : null}
+                        {selectedAnomaly.collectionStatus ? (
+                          <Badge variant="outline">{selectedAnomaly.collectionStatus}</Badge>
+                        ) : null}
                       </div>
                       <p className="font-medium">{selectedAnomaly.title}</p>
-                      <p className="text-muted-foreground">{selectedAnomaly.entityName}</p>
-                      <p>
-                        <span className="text-muted-foreground">Indicator: </span>
-                        {selectedAnomaly.indicator}
+                      <p className="text-muted-foreground">
+                        {selectedAnomaly.entityName} · {selectedAnomaly.indicator}
                       </p>
-                      <p>
-                        <span className="text-muted-foreground">Action: </span>
-                        {selectedAnomaly.action}
-                      </p>
-                      <p>
-                        <span className="text-muted-foreground">Source: </span>
-                        {selectedAnomaly.source}
-                      </p>
+                      {selectedAnomaly.artifact ? (
+                        <p className="rounded-md border border-primary/20 bg-primary/5 px-3 py-2 font-mono text-xs text-primary">
+                          {selectedAnomaly.artifact}
+                        </p>
+                      ) : null}
+                      {selectedAnomaly.narrativeTimestamp ? (
+                        <p className="text-xs text-muted-foreground">
+                          Narrative clock · {selectedAnomaly.narrativeTimestamp}
+                        </p>
+                      ) : null}
+                      <p>{selectedAnomaly.action}</p>
+                      {selectedAnomaly.wontDo ? (
+                        <p className="text-xs text-amber-200/90">wont-do: {selectedAnomaly.wontDo}</p>
+                      ) : null}
                       <p className="text-xs text-muted-foreground">
                         Doctrine: {selectedAnomaly.doctrine.join(" · ")}
                       </p>
+                      <p className="text-xs text-muted-foreground">Source: {selectedAnomaly.source}</p>
                     </>
                   ) : (
-                    <p className="text-muted-foreground">Select an event from the queue.</p>
+                    <p className="text-muted-foreground">Select an event from the queue or telemetry feed.</p>
                   )}
                 </CardContent>
               </Card>
