@@ -2,9 +2,9 @@
   "title": "Post-doctoral forensic query catalog (tracker §8.1)",
   "classified": false,
   "governmentProgram": false,
-  "total": 725500,
+  "total": 815500,
   "top500": 500,
-  "note": "725,500 unclassified post-doctoral forensic queries for /tracker (+90,000). TRACKER-TAB · Live P1 telemetry · Black-owned scan bot auto-queue · 3D anomaly chamber CRISP labels. TOP 500 are SOTA DFIR / SOC-telemetry / supplier-diversity / decision-focused 3D chamber improvements (Magnet DFIR 2026, AI SOC P1, AI supplier diversity discovery, Vectra decision dashboards, SIMURG realtime 3D threat viz). Virtual expand on /tracker — bake ships TOP 500 + seed. Additive only. No live CERT/SBA queries, intercepts, CJIS, or SIGINT.",
+  "note": "815,500 unclassified post-doctoral forensic queries for /tracker (+90,000). TRACKER-TAB · Live P1 telemetry · Digital Evidence / ESI classes (FRCP 34/37(e), mobile MDM, removable media, financial/PAC, e-comms, geolocation fixtures, SIGINT typology-only, physical, documentary FRE 803(6), metadata FRE 901). TOP 500 SOTA grounded in 2026 legal-hold / ESI preservation research + prior DFIR / Live P1 axes. Virtual expand — bake ships TOP 500 + seed. Additive only. No live intercepts, SWIFT sessions, CJIS, or SIGINT collection.",
   "sotaSources": [
     {
       "id": "magnet-dfir-2026",
@@ -107,6 +107,30 @@
       "title": "ThreatStream — interactive 3D threat globe UX patterns",
       "url": "https://github.com/aadithya-vimal/threatstream",
       "themes": ["crisp labels vs arcs", "zoom/pan controls", "feed + globe coupling", "performance caps"]
+    },
+    {
+      "id": "esi-legal-hold-2026",
+      "title": "Digital evidence preservation 2026 — legal hold for security incidents",
+      "url": "https://www.decryptiondigest.com/blog/digital-evidence-preservation-security-incidents-legal-hold",
+      "themes": ["FRCP 37(e)", "ESI hold notices", "immutable log export", "BMS/OT under hold"]
+    },
+    {
+      "id": "esi-legal-hold-best-practices",
+      "title": "Legal hold best practices for managing digital evidence",
+      "url": "https://www.rev.com/blog/legal-hold-best-practices",
+      "themes": ["custodian notice", "auto-delete pause", "defensible ESI", "audit trail"]
+    },
+    {
+      "id": "esi-frcp-37e-spoliation",
+      "title": "FRCP 37(e) and spoliation sanctions",
+      "url": "https://www.veniosystems.com/blog/frcp-37e-and-spoliation-sanctions",
+      "themes": ["reasonable steps", "intent vs negligence", "hold trigger timing", "metadata provenance"]
+    },
+    {
+      "id": "esi-litigation-hold-2026-guide",
+      "title": "Litigation hold complete 2026 guide",
+      "url": "https://lawclaimcorner.com/litigation-hold/",
+      "themes": ["FRCP 34 production", "Purview/Vault holds", "company-controlled ESI", "mail/chat under hold"]
     }
   ],
   "axes": [
@@ -502,6 +526,76 @@
       "prompt": "How should the 3D anomaly chamber reflect Live P1 ticks and Black-owned auto-queue admissions with CRISP labels while staying fixture-attested?",
       "sota": true,
       "sourceId": "chamber-simurg-3d-threat-viz"
+    },
+    {
+      "id": "sota-esi-frcp-ot-hold",
+      "label": "SOTA ESI · FRCP 34/37(e) BMS/HMI/VPN/OT under hold",
+      "prompt": "How should /tracker Live P1 map company-controlled BMS, HMI, VPN, and OT logs under FRCP 34 / 37(e) legal hold without treating fixtures as live plant taps?",
+      "sota": true,
+      "sourceId": "esi-legal-hold-2026"
+    },
+    {
+      "id": "sota-esi-mobile-mdm",
+      "label": "SOTA mobile device evidence · MDM inventory only",
+      "prompt": "How should Mobile Device Evidence on /tracker use company MDM / asset inventory fields while refusing carrier IMEI triangulation as wont-do?",
+      "sota": true,
+      "sourceId": "esi-legal-hold-best-practices"
+    },
+    {
+      "id": "sota-esi-removable-media",
+      "label": "SOTA removable media · DLP + chain-of-custody",
+      "prompt": "What DLP + chain-of-custody checklist proves Removable Media / Portable Storage seized under company policy stays FRE 901-ready on /tracker?",
+      "sota": true,
+      "sourceId": "esi-frcp-37e-spoliation"
+    },
+    {
+      "id": "sota-esi-financial-pac",
+      "label": "SOTA financial evidence · bank/ERP/PAC no SWIFT",
+      "prompt": "How should Financial Records / Accounting Evidence bind company-held bank/ERP/PAC exports on Live P1 without opening a live SWIFT gateway?",
+      "sota": true,
+      "sourceId": "esi-litigation-hold-2026-guide"
+    },
+    {
+      "id": "sota-esi-ecomms-hold",
+      "label": "SOTA electronic communications under hold",
+      "prompt": "How should company-administered mail/chat under hold appear in Live P1 while decrypt/intercept remains constrained and documented as wont-do?",
+      "sota": true,
+      "sourceId": "esi-litigation-hold-2026-guide"
+    },
+    {
+      "id": "sota-esi-geolocation-facility",
+      "label": "SOTA geolocation · facility/lease fixtures only",
+      "prompt": "How do facility coordinates and lease GPS fixtures support Geolocation Evidence on /tracker without live device tracking?",
+      "sota": true,
+      "sourceId": "esi-legal-hold-2026"
+    },
+    {
+      "id": "sota-esi-sigint-typology",
+      "label": "SOTA SIGINT typology only (collection wont-do)",
+      "prompt": "How should SIGINT appear on /tracker as Electronic Communications typology narrative only, with collection explicitly wont-do and never executed?",
+      "sota": true,
+      "sourceId": "esi-frcp-37e-spoliation"
+    },
+    {
+      "id": "sota-esi-physical-coc",
+      "label": "SOTA physical evidence · hardware CoC checklists",
+      "prompt": "What hardware inventory + facility chain-of-custody checklists keep Physical Evidence reproducible beside Live P1 digital ticks?",
+      "sota": true,
+      "sourceId": "esi-legal-hold-best-practices"
+    },
+    {
+      "id": "sota-esi-documentary-8036",
+      "label": "SOTA documentary evidence · FRE 803(6) PAC/wire",
+      "prompt": "How should Business Records under FRE 803(6) surface regularly kept PAC / wire memo packets as Documentary Evidence without inventing logs?",
+      "sota": true,
+      "sourceId": "esi-litigation-hold-2026-guide"
+    },
+    {
+      "id": "sota-esi-metadata-901",
+      "label": "SOTA metadata / audit trails · FRE 901",
+      "prompt": "Which log-sequence + timestamp provenance patterns keep Metadata / Audit Trails FRE 901-ready when Live P1 auto-populates?",
+      "sota": true,
+      "sourceId": "esi-frcp-37e-spoliation"
     }
   ],
   "methods": [
@@ -541,7 +635,12 @@
     "SOTA Live P1 × BO queue coupling epistemology check",
     "SOTA 3D chamber CRISP label + roster readability lab",
     "SOTA chamber decision-surface vs decoration red-team",
-    "SOTA single-zoom-path chamber interaction drill"
+    "SOTA single-zoom-path chamber interaction drill",
+    "SOTA FRCP 37(e) ESI hold chronology worksheet",
+    "SOTA MDM inventory vs IMEI triangulation boundary drill",
+    "SOTA removable-media DLP + CoC bag protocol",
+    "SOTA PAC/ERP export completeness (no SWIFT) scorecard",
+    "SOTA FRE 803(6)/901 documentary + metadata provenance lab"
   ],
   "falsifiers": [
     "Score presented as courtroom opinion",

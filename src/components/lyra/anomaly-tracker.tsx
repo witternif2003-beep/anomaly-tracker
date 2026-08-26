@@ -965,7 +965,7 @@ export function AnomalyTracker({ initialData }: { initialData?: TrackerBook }) {
                     {book.postdocCatalog.axisCount} axes · {book.postdocCatalog.sotaAxisCount ?? 0} SOTA ·
                     TOP {book.postdocCatalog.top500Count ?? 500} · tracker-tab
                     {book.postdocCatalog.virtualExpand
-                      ? " · virtual 725.5k · Live P1 · BO · Chamber CRISP"
+                      ? " · virtual 815.5k · Live P1 · ESI Evidence"
                       : ""}{" "}
                     · showing{" "}
                     {Math.min(postdocShow, filteredPostdoc.length)} of{" "}
@@ -984,11 +984,12 @@ export function AnomalyTracker({ initialData }: { initialData?: TrackerBook }) {
                         <Badge className="bg-amber-500/20 text-amber-100">{top500Rows.length} SOTA</Badge>
                       </div>
                       <p className="mb-2 text-xs text-muted-foreground">
-                        Ranked from 2025–2026 DFIR + TRACKER Live P1 + Black-owned auto-queue + 3D
-                        anomaly chamber CRISP research (Magnet DFIR 2026, AI SOC P1 triage, AI
-                        supplier-diversity discovery, Vectra decision dashboards, SIMURG realtime 3D
-                        threat viz, crisp flat-label / roster readability). Fixture-clock only — no
-                        live CERT/SBA scrapes or intercepts.
+                        Ranked from 2025–2026 DFIR + TRACKER Live P1 + Digital Evidence / ESI research
+                        (FRCP 34/37(e) BMS·HMI·VPN·OT under hold, mobile MDM inventory, removable-media
+                        DLP+CoC, financial bank/ERP/PAC no SWIFT, e-comms under hold, facility
+                        geolocation fixtures, SIGINT typology-only, physical CoC, FRE 803(6)
+                        documentary, FRE 901 metadata). Fixture-clock only — no intercepts or live
+                        CJIS.
                       </p>
                       {book.postdocCatalog.sotaSources?.length ? (
                         <ul className="mb-3 flex flex-wrap gap-1.5 text-[10px] text-muted-foreground">
