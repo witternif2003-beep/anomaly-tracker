@@ -250,9 +250,9 @@ export function ScoutBotPanel({
           </div>
           {findings.length ? (
             <ul className="space-y-1.5">
-              {findings.map((f) => (
+              {findings.map((f, i) => (
                 <li
-                  key={f.id}
+                  key={`${f.id}-${i}-${f.healed ? "h" : "o"}`}
                   className={cn(
                     "rounded-lg border px-2.5 py-2 text-xs",
                     f.healed

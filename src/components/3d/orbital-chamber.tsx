@@ -135,24 +135,51 @@ type OverlayLabel = {
 function resolveCollisions(labels: OverlayLabel[], width: number, height: number) {
   const out = labels.map((l) => ({ ...l }));
   out.sort((a, b) => b.depth - a.depth);
-  for (let pass = 0; pass < 4; pass += 1) {
+  const minX = LABEL_W * 0.78;
+  const minY = LABEL_H * 0.9;
+  const top = 52;
+  const bottom = Math.max(top + 80, height - 12);
+  const left = 10;
+  const right = Math.max(left + 40, width - 10);
+
+  for (let pass = 0; pass < 10; pass += 1) {
     for (let i = 0; i < out.length; i += 1) {
       for (let j = i + 1; j < out.length; j += 1) {
         const a = out[i];
         const b = out[j];
         const dx = b.x - a.x;
         const dy = b.y - a.y;
-        const minX = LABEL_W * 0.72;
-        const minY = LABEL_H * 0.85;
         if (Math.abs(dx) < minX && Math.abs(dy) < minY) {
-          const pushX = (minX - Math.abs(dx)) * 0.55 * (dx === 0 ? (j % 2 === 0 ? 1 : -1) : Math.sign(dx) || 1);
-          const pushY = (minY - Math.abs(dy)) * 0.55 * (dy === 0 ? 1 : Math.sign(dy) || 1);
-          b.x = Math.min(width - 8, Math.max(8, b.x + pushX));
-          b.y = Math.min(height - 8, Math.max(48, b.y + pushY));
+          const pushX =
+            (minX - Math.abs(dx)) *
+            0.62 *
+            (dx === 0 ? (j % 2 === 0 ? 1 : -1) : Math.sign(dx) || 1);
+          const pushY =
+            (minY - Math.abs(dy)) * 0.68 * (dy === 0 ? (pass % 2 === 0 ? 1 : -1) : Math.sign(dy) || 1);
+          b.x = Math.min(right, Math.max(left, b.x + pushX));
+          b.y = Math.min(bottom, Math.max(top, b.y + pushY));
         }
       }
     }
   }
+
+  // Spiral park any remaining overlaps so dense "all businesses" stays readable.
+  for (let i = 0; i < out.length; i += 1) {
+    for (let j = i + 1; j < out.length; j += 1) {
+      const a = out[i];
+      const b = out[j];
+      if (Math.abs(b.x - a.x) < minX * 0.9 && Math.abs(b.y - a.y) < minY * 0.9) {
+        const slot = j;
+        const col = slot % 3;
+        const row = Math.floor(slot / 3);
+        b.x = left + 16 + col * (LABEL_W * 0.92);
+        b.y = top + 8 + row * (LABEL_H * 0.95);
+        if (b.x > right) b.x = right - (slot % 7) * 12;
+        if (b.y > bottom) b.y = bottom - (slot % 5) * 10;
+      }
+    }
+  }
+
   return out.sort((a, b) => a.depth - b.depth);
 }
 
@@ -247,6 +274,7 @@ export function OrbitalChamber({
   const cy = size.h * 0.48;
 
   const overlayLabels = useMemo(() => {
+    const dense = visibleNodes.length + visibleEvents.length > 22;
     const raw: OverlayLabel[] = [];
     for (const { node, x, y, z } of entityOrbs) {
       const p = projectPoint(x, y, z, yaw, zoom, cx, cy);
@@ -263,6 +291,11 @@ export function OrbitalChamber({
       });
     }
     for (const { event, x, y, z } of anomalyOrbs) {
+      const isHot = hotEventId === event.id;
+      const isSelected = selectedEntityId === event.entityId;
+      // Dense "all businesses" mode: keep entity labels + P1 / hot / selected anomalies only.
+      // Full anomaly list remains readable in the roster below.
+      if (dense && event.priority !== "P1" && !isHot && !isSelected) continue;
       const p = projectPoint(x, y, z, yaw, zoom, cx, cy);
       raw.push({
         id: event.id,
@@ -273,12 +306,25 @@ export function OrbitalChamber({
         x: p.sx,
         y: p.sy - 22,
         depth: p.depth,
-        hot: hotEventId === event.id,
-        selected: selectedEntityId === event.entityId,
+        hot: isHot,
+        selected: isSelected,
       });
     }
     return resolveCollisions(raw, size.w, size.h);
-  }, [entityOrbs, anomalyOrbs, yaw, zoom, cx, cy, size.w, size.h, selectedEntityId, hotEventId]);
+  }, [
+    entityOrbs,
+    anomalyOrbs,
+    visibleNodes.length,
+    visibleEvents.length,
+    yaw,
+    zoom,
+    cx,
+    cy,
+    size.w,
+    size.h,
+    selectedEntityId,
+    hotEventId,
+  ]);
 
   const bumpZoom = useCallback((delta: number) => {
     setZoom((z) => clampZoom(z + delta));
@@ -461,7 +507,11 @@ export function OrbitalChamber({
 
       <div className="chamber-roster" aria-label="Complete readable chamber roster">
         <div className="chamber-roster-head">
-          All entries · {visibleNodes.length} entities · {visibleEvents.length} anomalies · always crisp
+          All entries · {visibleNodes.length} entities · {visibleEvents.length} anomalies · always
+          crisp
+          {visibleNodes.length + visibleEvents.length > 22
+            ? " · overlay shows entities + P1/hot (roster has every label)"
+            : ""}
         </div>
         <ul className="chamber-roster-list">
           {visibleNodes.map((node) => (

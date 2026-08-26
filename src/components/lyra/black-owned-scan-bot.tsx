@@ -102,23 +102,30 @@ export function BlackOwnedScanBot({ bot }: { bot: BlackOwnedScanBotPayload }) {
   const stream = useMemo(() => bot.stream ?? [], [bot.stream]);
   const [cursor, setCursor] = useState(0);
   const [clock, setClock] = useState("");
-  const [log, setLog] = useState<BlackOwnedScanTick[]>([]);
+  const [log, setLog] = useState<Array<BlackOwnedScanTick & { renderKey: string }>>([]);
   const [newCount, setNewCount] = useState(0);
   const [docCount, setDocCount] = useState(0);
 
   useEffect(() => {
     if (!stream.length) return;
     const tickMs = Math.max(500, bot.tickMs || 1600);
-    setLog([stream[0]]);
+    const first = stream[0];
+    setLog([{ ...first, renderKey: `${first.id}-boot-${Date.now()}` }]);
     setCursor(0);
-    setNewCount(stream[0]?.status === "logged-new" ? 1 : 0);
-    setDocCount(stream[0]?.status === "documented" ? 1 : 0);
+    setNewCount(first?.status === "logged-new" ? 1 : 0);
+    setDocCount(first?.status === "documented" ? 1 : 0);
     setClock(new Date().toISOString());
     const id = window.setInterval(() => {
       setCursor((c) => {
         const next = (c + 1) % stream.length;
         const row = stream[next];
-        setLog((prev) => [row, ...prev].slice(0, 28));
+        // Unique renderKey every append — stream wraps 24/7 so id/seq alone collide in the window.
+        setLog((prev) =>
+          [{ ...row, renderKey: `${row.id}-${row.seq}-${Date.now()}-${prev.length}` }, ...prev].slice(
+            0,
+            28,
+          ),
+        );
         if (row.status === "logged-new") setNewCount((n) => n + 1);
         if (row.status === "documented") setDocCount((n) => n + 1);
         setClock(new Date().toISOString());
@@ -224,7 +231,7 @@ export function BlackOwnedScanBot({ bot }: { bot: BlackOwnedScanBotPayload }) {
             <ul className="max-h-72 space-y-1.5 overflow-y-auto pr-1">
               {log.map((row) => (
                 <li
-                  key={`${row.id}-${row.seq}`}
+                  key={row.renderKey}
                   className={cn("rounded-lg border px-2.5 py-2 text-xs", statusTone(row.status))}
                 >
                   <div className="flex flex-wrap items-center justify-between gap-2">
