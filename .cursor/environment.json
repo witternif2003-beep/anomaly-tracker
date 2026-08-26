@@ -1,0 +1,4 @@
+{
+  "name": "Lyra",
+  "install": "test -f package.json\ntest -f package-lock.json\nnpm ci\nnpx next typegen"
+}
