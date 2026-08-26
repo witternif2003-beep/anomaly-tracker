@@ -164,11 +164,13 @@ export function LiveTelemetryFeed({
           </div>
           <div className="flex flex-wrap gap-2">
             <Badge className="bg-emerald-500/20 text-emerald-200">ACTIVE 24/7</Badge>
+            <Badge className="bg-amber-500/20 text-amber-100">SOTA · Live P1</Badge>
             <Badge variant="outline">{telemetry.mode}</Badge>
             <Badge variant="outline">
               {stream.length.toLocaleString()} live ticks · {entitiesCovered} entities
             </Badge>
             <Badge variant="secondary">liveSurveillance={String(telemetry.liveSurveillance)}</Badge>
+            <Badge variant="outline">fixture-clock · not live NCIC</Badge>
           </div>
         </div>
       </CardHeader>

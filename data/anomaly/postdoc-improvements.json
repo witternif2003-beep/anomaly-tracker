@@ -2,9 +2,9 @@
   "title": "Post-doctoral forensic query catalog (tracker §8.1)",
   "classified": false,
   "governmentProgram": false,
-  "total": 95500,
+  "total": 185500,
   "top500": 500,
-  "note": "95,500 unclassified post-doctoral forensic queries for /tracker (+90,000). TRACKER-TAB specific. TOP 500 are state-of-the-art DFIR + tracker-dashboard improvements (Magnet DFIR 2026, cloud forensics, AI+OSINT, AML/XAI, WeirdFlows, FIU graphs, ranked-signal dashboard UX). Full catalog is a deterministic virtual expand on /tracker — bake ships TOP 500 + seed (Pages-safe). Never removes prior axes — only adds. No live intercepts, CJIS, or SIGINT.",
+  "note": "185,500 unclassified post-doctoral forensic queries for /tracker (+90,000). TRACKER-TAB + Live P1 telemetry specific. TOP 500 are state-of-the-art DFIR / SOC-telemetry / tracker-dashboard improvements (Magnet DFIR 2026, cloud forensics, AI+OSINT, AML/XAI, WeirdFlows, FIU graphs, ranked-signal UX, AI SOC P1 triage). Full catalog is deterministic virtual expand on /tracker — bake ships TOP 500 + seed (Pages-safe). Additive only. No live intercepts, CJIS, or SIGINT.",
   "sotaSources": [
     {
       "id": "magnet-dfir-2026",
@@ -47,6 +47,18 @@
       "title": "Threat / anomaly dashboard UX — ranked signal, provenance, pivots",
       "url": "https://www.wandr.studio/blog/threat-intelligence-dashboard-design",
       "themes": ["ranked shortlist", "confidence provenance", "entity pivot", "tracker decision surface"]
+    },
+    {
+      "id": "live-p1-telemetry-soc",
+      "title": "AI SOC / P1 alert telemetry triage (2026)",
+      "url": "https://underdefense.com/blog/ai-soc-analyst/",
+      "themes": ["P1 triage", "alert enrichment", "fixture-clock telemetry", "verdict + falsifier", "MTTA/MTTI"]
+    },
+    {
+      "id": "live-p1-alert-funnel",
+      "title": "SOC alert management — triage to verdict funnel",
+      "url": "https://www.dropzone.ai/resource-guide/ai-soc-analysts-the-complete-guide-to-alert-management",
+      "themes": ["categorize/prioritize", "investigation evidence pack", "Live P1 stream UX"]
     }
   ],
   "axes": [
@@ -302,6 +314,41 @@
       "prompt": "How should §8.1 forensic queries expose filter cost, falsifier, and next counsel step as a decision surface on TRACKER?",
       "sota": true,
       "sourceId": "tracker-dashboard-ux"
+    },
+    {
+      "id": "sota-live-p1-triage",
+      "label": "SOTA Live P1 telemetry triage",
+      "prompt": "How should Live P1 telemetry on /tracker rank, dedupe, and enrich fixture ticks so analysts see a shortlist not a firehose?",
+      "sota": true,
+      "sourceId": "live-p1-telemetry-soc"
+    },
+    {
+      "id": "sota-live-p1-enrichment",
+      "label": "SOTA Live P1 entity enrichment",
+      "prompt": "What one-click enrichments (entity, city, May packet, PAC typology) attach to each Live P1 tick without live surveillance?",
+      "sota": true,
+      "sourceId": "live-p1-telemetry-soc"
+    },
+    {
+      "id": "sota-live-p1-falsifier",
+      "label": "SOTA Live P1 verdict + falsifier",
+      "prompt": "How do Live P1 rows publish fixture/constrained/wont-do verdicts with explicit falsifiers before counsel escalation?",
+      "sota": true,
+      "sourceId": "live-p1-alert-funnel"
+    },
+    {
+      "id": "sota-live-p1-mtta",
+      "label": "SOTA Live P1 MTTA / scroll-stable clock",
+      "prompt": "How should fixture-clock MTTA/MTTI metrics and scroll-stable feeds keep reading position while Live P1 auto-populates?",
+      "sota": true,
+      "sourceId": "live-p1-alert-funnel"
+    },
+    {
+      "id": "sota-live-p1-epistemology",
+      "label": "SOTA Live P1 epistemology banner",
+      "prompt": "What HUD copy keeps ACTIVE 24/7 Live P1 telemetry labeled as fixture-clock rehearsal, never live FBI/NCIC?",
+      "sota": true,
+      "sourceId": "live-p1-telemetry-soc"
     }
   ],
   "methods": [

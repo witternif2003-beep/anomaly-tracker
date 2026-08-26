@@ -964,7 +964,7 @@ export function AnomalyTracker({ initialData }: { initialData?: TrackerBook }) {
                   <CardDescription>
                     {book.postdocCatalog.axisCount} axes · {book.postdocCatalog.sotaAxisCount ?? 0} SOTA ·
                     TOP {book.postdocCatalog.top500Count ?? 500} · tracker-tab
-                    {book.postdocCatalog.virtualExpand ? " · virtual 95.5k" : ""} · showing{" "}
+                    {book.postdocCatalog.virtualExpand ? " · virtual 185.5k · Live P1" : ""} · showing{" "}
                     {Math.min(postdocShow, filteredPostdoc.length)} of{" "}
                     {postdocMatchedTotal.toLocaleString()} matched
                   </CardDescription>
@@ -981,10 +981,10 @@ export function AnomalyTracker({ initialData }: { initialData?: TrackerBook }) {
                         <Badge className="bg-amber-500/20 text-amber-100">{top500Rows.length} SOTA</Badge>
                       </div>
                       <p className="mb-2 text-xs text-muted-foreground">
-                        Ranked from 2025–2026 DFIR + TRACKER dashboard UX research (Magnet
-                        Enterprise DFIR 2026, automated cloud forensics, AI+OSINT, AML/XAI,
-                        WeirdFlows, FIU knowledge graphs, ranked-signal / provenance / pivot UX).
-                        Fixture-clock only — no live intercepts.
+                        Ranked from 2025–2026 DFIR + TRACKER Live P1 telemetry research (Magnet
+                        DFIR 2026, cloud forensics, AI+OSINT, AML/XAI, WeirdFlows, FIU graphs,
+                        ranked-signal UX, AI SOC P1 triage / alert funnel). Fixture-clock only —
+                        no live intercepts.
                       </p>
                       {book.postdocCatalog.sotaSources?.length ? (
                         <ul className="mb-3 flex flex-wrap gap-1.5 text-[10px] text-muted-foreground">
@@ -1048,7 +1048,7 @@ export function AnomalyTracker({ initialData }: { initialData?: TrackerBook }) {
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
                     <div className="flex-1">
                       <label className="mb-1 block text-xs text-muted-foreground" htmlFor="postdoc-q">
-                        Filter TRACKER forensic catalog (+90,000 virtual)
+                        Filter TRACKER · Live P1 forensic catalog (+90,000 virtual)
                       </label>
                       <Input
                         id="postdoc-q"
@@ -1181,7 +1181,7 @@ export function AnomalyTracker({ initialData }: { initialData?: TrackerBook }) {
                         </Button>
                       ) : (
                         <Badge variant="outline">
-                          Virtual catalog · {book.postdocCatalog.total.toLocaleString()} total · page ≤500
+                          Virtual catalog · {book.postdocCatalog.total.toLocaleString()} total · Live P1 · page ≤500
                         </Badge>
                       )}
                     </div>
