@@ -121,3 +121,21 @@ npm install -g wrangler@4
 | Slack | Messaging | `@slack/mcp` | `@chinchillaenterprises/mcp-slack@4.14.0` (official Slack MCP unpublished; Anthropic package deprecated) | Bot token |
 | Context7 | Live docs | `context7-mcp` | `@upstash/context7-mcp@4.0.3` | API key |
 | FOLIO | Legal ontology | `folio-mcp@0.4.1` | Installed | None (CC-BY cards locally; document pulls need `folio login`) |
+
+## Skills, agents, and pipelines
+
+Local P1 files. No extra packages.
+
+| Type | Count | Location |
+| --- | --- | --- |
+| Skills | 16 | `.cursor/skills/*/skill.yaml` (Cursor-readable `SKILL.md` alongside) |
+| Agents | 10 | `.cursor/agents/*.md` |
+| Pipelines | 5 | `scripts/pipelines/` |
+| Cloudflare Worker | 1 | `workers/ci-gate.js` |
+| Catalog slots | 1,280 | `GET /v1/p1` maps each slot to a skill, agent, pipeline, and the CI worker |
+
+```bash
+npm run pipelines
+```
+
+Named pipelines: `cloudflare-ci.sh` (Wrangler **dry-run only**), `cloudflare-p1-health.sh`.

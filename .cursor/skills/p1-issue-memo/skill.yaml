@@ -1,0 +1,17 @@
+id: p1-issue-memo
+name: p1-issue-memo
+description: Shape a P1 issue memo: question presented, brief answer, analysis, caveats.
+p1:
+  capability: issue-memo
+  catalog: /v1/p1
+  local_api: http://127.0.0.1:4040
+when_to_use: |
+  Use for issue-memo work products in the catalog.
+steps:
+  - Identify the P1 slot, skill, and agent mapped on /v1/p1.
+  - Prefer local-v1 / local-v1-concise. Do not call hosted LLM APIs.
+  - For legal asks, search FOLIO then CourtListener via POST /v1/legal/search.
+  - Return a concrete work product, not a plan to write one.
+resources:
+  - path: .cursor/skills/p1-issue-memo/SKILL.md
+  - path: server/p1-catalog.ts

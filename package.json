@@ -18,7 +18,8 @@
     "toolchain": "bash scripts/install-toolchain.sh",
     "mcp:install": "bash scripts/install-mcp.sh",
     "local-api": "tsx server/index.ts",
-    "start:local": "tsx server/index.ts"
+    "start:local": "tsx server/index.ts",
+    "pipelines": "bash scripts/pipelines/p1-catalog-audit.sh && bash scripts/pipelines/skill-agent-roster.sh && bash scripts/pipelines/cloudflare-ci.sh && bash scripts/pipelines/cloudflare-p1-health.sh && bash scripts/pipelines/local-api-smoke.sh"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",

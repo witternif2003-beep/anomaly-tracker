@@ -1,0 +1,17 @@
+id: p1-jurisdiction-map
+name: p1-jurisdiction-map
+description: Map a problem onto the catalog jurisdiction (circuit or district).
+p1:
+  capability: jurisdiction-map
+  catalog: /v1/p1
+  local_api: http://127.0.0.1:4040
+when_to_use: |
+  Use when venue, circuit split, or binding vs persuasive authority matters.
+steps:
+  - Identify the P1 slot, skill, and agent mapped on /v1/p1.
+  - Prefer local-v1 / local-v1-concise. Do not call hosted LLM APIs.
+  - For legal asks, search FOLIO then CourtListener via POST /v1/legal/search.
+  - Return a concrete work product, not a plan to write one.
+resources:
+  - path: .cursor/skills/p1-jurisdiction-map/SKILL.md
+  - path: server/p1-catalog.ts

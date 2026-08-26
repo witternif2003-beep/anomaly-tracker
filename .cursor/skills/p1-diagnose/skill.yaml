@@ -1,0 +1,17 @@
+id: p1-diagnose
+name: p1-diagnose
+description: Diagnose gaps, ambiguity, and specificity in a P1 request.
+p1:
+  capability: diagnose
+  catalog: /v1/p1
+  local_api: http://127.0.0.1:4040
+when_to_use: |
+  Use when the user has a draft but it is vague, overbroad, or missing the standard of review.
+steps:
+  - Identify the P1 slot, skill, and agent mapped on /v1/p1.
+  - Prefer local-v1 / local-v1-concise. Do not call hosted LLM APIs.
+  - For legal asks, search FOLIO then CourtListener via POST /v1/legal/search.
+  - Return a concrete work product, not a plan to write one.
+resources:
+  - path: .cursor/skills/p1-diagnose/SKILL.md
+  - path: server/p1-catalog.ts

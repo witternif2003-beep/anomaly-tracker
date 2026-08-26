@@ -1,0 +1,17 @@
+id: p1-folio-ontology
+name: p1-folio-ontology
+description: Map a question onto FOLIO ontology cards (elements, burdens, review).
+p1:
+  capability: folio-ontology
+  catalog: /v1/p1
+  local_api: http://127.0.0.1:4040
+when_to_use: |
+  Use for doctrine cards without scraping the web. Prefer local FOLIO hits.
+steps:
+  - Identify the P1 slot, skill, and agent mapped on /v1/p1.
+  - Prefer local-v1 / local-v1-concise. Do not call hosted LLM APIs.
+  - For legal asks, search FOLIO then CourtListener via POST /v1/legal/search.
+  - Return a concrete work product, not a plan to write one.
+resources:
+  - path: .cursor/skills/p1-folio-ontology/SKILL.md
+  - path: server/p1-catalog.ts

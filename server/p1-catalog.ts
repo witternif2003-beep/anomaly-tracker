@@ -1,3 +1,5 @@
+import { mapP1Entities } from "./p1-entities";
+
 export interface P1Slot {
   id: string;
   slot: number;
@@ -9,6 +11,15 @@ export interface P1Slot {
   courtlistenerQuery: string;
   status: "available";
   tags: string[];
+  skillId: string;
+  skillPath: string;
+  agentId: string;
+  agentPath: string;
+  pipelineId: string;
+  pipelinePath: string;
+  workerPath: string;
+  workerId: string;
+  resource: { kind: string; id: string; path: string };
 }
 
 const PRACTICE_AREAS = [
@@ -122,6 +133,7 @@ function buildSlot(index: number): P1Slot {
   const workProduct = WORK_PRODUCTS[index % WORK_PRODUCTS.length];
   const folioTopic = FOLIO_TOPICS[index % FOLIO_TOPICS.length];
   const id = `p1-${String(slot).padStart(4, "0")}`;
+  const mapped = mapP1Entities(index);
   return {
     id,
     slot,
@@ -132,7 +144,8 @@ function buildSlot(index: number): P1Slot {
     folioTopic,
     courtlistenerQuery: `${practiceArea} ${jurisdiction}`,
     status: "available",
-    tags: [practiceArea, jurisdiction, workProduct, folioTopic, "p1"],
+    tags: [practiceArea, jurisdiction, workProduct, folioTopic, "p1", mapped.skillId, mapped.agentId],
+    ...mapped,
   };
 }
 
@@ -143,7 +156,7 @@ export function listP1Slots(opts: { q?: string; limit?: number; offset?: number 
   let rows = P1_CATALOG;
   if (q) {
     rows = rows.filter((slot) =>
-      [slot.id, slot.title, slot.practiceArea, slot.jurisdiction, slot.workProduct, slot.folioTopic]
+      [slot.id, slot.title, slot.practiceArea, slot.jurisdiction, slot.workProduct, slot.folioTopic, slot.skillId, slot.agentId]
         .join(" ")
         .toLowerCase()
         .includes(q),

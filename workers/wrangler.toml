@@ -1,0 +1,6 @@
+name = "lyra-ci-gate"
+main = "ci-gate.js"
+compatibility_date = "2026-01-15"
+
+[vars]
+P1_ORIGIN = "http://127.0.0.1:4040"
