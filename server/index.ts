@@ -26,6 +26,15 @@ app.use((req, _res, next) => {
   next();
 });
 
+app.get("/favicon.svg", (_req, res) => {
+  res.type("image/svg+xml");
+  res.sendFile(path.join(__dirname, "favicon.svg"));
+});
+
+app.get("/favicon.ico", (_req, res) => {
+  res.redirect(301, "/favicon.svg");
+});
+
 app.get("/health", (_req, res) => {
   res.json({ ok: true, server: "lyra-local-api", port: PORT });
 });
