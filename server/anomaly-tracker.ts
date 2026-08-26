@@ -7,6 +7,7 @@ import mayForensicPacket from "../data/anomaly/may-forensic-packet.json";
 import blackOwnedScanBotDoc from "../data/anomaly/black-owned-scan-bot.json";
 import scoutBotDoc from "../data/anomaly/scout-bot.json";
 import businessCrimeTaxonomy from "../data/anomaly/business-crime-taxonomy.json";
+import { buildBlackOwnedScanBot } from "./black-owned-scan-pipeline";
 import inventoryLedger from "../data/anomaly/inventory-ledger.json";
 import dependencyStrategyDoc from "../data/anomaly/dependency-strategy.json";
 import mcpAuditDoc from "../data/anomaly/mcp-audit.json";
@@ -426,167 +427,6 @@ function buildTelemetryStream(
   };
 }
 
-function buildBlackOwnedScanBot(entities: ReturnType<typeof enrichEntity>[]) {
-  const verified = entities
-    .filter((e) => e.blackOwned)
-    .map((e) => ({
-      id: e.id,
-      name: e.name,
-      city: e.city.label,
-      sector: e.sector,
-      entityType: e.entityType,
-      kind: "verified-roster" as const,
-      blackOwned: true,
-      ownershipVerification: e.ownershipVerification,
-      signal: e.ownershipNote ?? "Fixture-verified Black-owned roster",
-      priority: e.topPriority === "ok" ? "P3" : e.topPriority,
-      scanAction: "revalidate-ownership-packet",
-      source: "fixture-roster",
-    }));
-
-  const candidates = blackOwnedScanBotDoc.newBusinessCandidates.map((c) => ({
-    id: c.id,
-    name: c.name,
-    city: c.city,
-    sector: c.sector,
-    entityType: c.entityType,
-    kind: "new-to-scan" as const,
-    blackOwned: true,
-    ownershipVerification: "pending-scan",
-    signal: c.signal,
-    priority: c.priority,
-    scanAction: "queue-new-business-scan",
-    source: "counsel-intake-queue",
-  }));
-
-  const targets = [...verified, ...candidates];
-  const actions = [
-    ...blackOwnedScanBotDoc.scanActions,
-    "crime-taxonomy-search",
-    "document-violation-hit",
-    "document-no-hit",
-  ];
-  const sources = blackOwnedScanBotDoc.sources;
-  const categories = businessCrimeTaxonomy.categories;
-  const cases = businessCrimeTaxonomy.cases;
-  const stream: Array<{
-    id: string;
-    seq: number;
-    loggedAtOffsetMs: number;
-    status: "scanning" | "queued" | "logged-new" | "revalidated" | "crime-search" | "documented";
-    target: (typeof targets)[number];
-    message: string;
-    priority?: string;
-    crimeCategoryId?: string;
-    crimeCategoryLabel?: string;
-    caseId?: string | null;
-    caseTitle?: string | null;
-    documentation?: string;
-  }> = [];
-
-  let seq = 0;
-  // Ops clock: revalidate verified roster + log new candidates.
-  for (let cycle = 0; cycle < 2; cycle += 1) {
-    for (const target of verified) {
-      seq += 1;
-      const action = actions[seq % actions.length];
-      stream.push({
-        id: `bo-scan-${target.id}-${cycle}-${seq}`,
-        seq,
-        loggedAtOffsetMs: seq * blackOwnedScanBotDoc.tickMs,
-        status: "revalidated",
-        target: { ...target, scanAction: action, source: sources[seq % sources.length] },
-        message: `24/7 bot revalidated Black-owned fixture ${target.name} · ${action}`,
-      });
-    }
-    for (const target of candidates) {
-      seq += 1;
-      stream.push({
-        id: `bo-new-${target.id}-${cycle}-${seq}`,
-        seq,
-        loggedAtOffsetMs: seq * blackOwnedScanBotDoc.tickMs,
-        status: "logged-new",
-        target: {
-          ...target,
-          scanAction: actions[seq % actions.length],
-          source: sources[seq % sources.length],
-        },
-        message: `NEW BUSINESS LOGGED TO SCAN · ${target.name} · ${target.signal}`,
-      });
-      seq += 1;
-      stream.push({
-        id: `bo-queue-${target.id}-${cycle}-${seq}`,
-        seq,
-        loggedAtOffsetMs: seq * blackOwnedScanBotDoc.tickMs,
-        status: "queued",
-        target,
-        message: `Queued forensic + crime-taxonomy scan for ${target.name} (${target.city})`,
-      });
-    }
-  }
-
-  // Full crime DB search: every scanned company × every violation category (fixture docs).
-  for (const target of targets) {
-    for (let i = 0; i < categories.length; i += 1) {
-      const cat = categories[i];
-      const relatedCases = cases.filter((c) => c.categoryId === cat.id);
-      const hitCase = relatedCases.length ? relatedCases[i % relatedCases.length] : null;
-      const isHit = (target.id.length * 13 + i * 7) % 11 === 0;
-      seq += 1;
-      stream.push({
-        id: `bo-crime-${target.id}-${cat.id}-${seq}`,
-        seq,
-        loggedAtOffsetMs: seq * blackOwnedScanBotDoc.tickMs,
-        status: isHit ? "documented" : "crime-search",
-        target: {
-          ...target,
-          scanAction: isHit ? "document-violation-hit" : "crime-taxonomy-search",
-          source: "business-crime-taxonomy",
-          priority: cat.priority,
-        },
-        crimeCategoryId: cat.id,
-        crimeCategoryLabel: cat.label,
-        caseId: hitCase?.id ?? null,
-        caseTitle: hitCase?.title ?? null,
-        documentation: isHit
-          ? `${cat.priority} DOCUMENTED typology hit · ${cat.label} · ${target.name} · ref ${hitCase?.title ?? cat.id}`
-          : `${cat.priority} SEARCHED ${cat.label} against ${target.name} · no company-held indicator (fixture)`,
-        message: isHit
-          ? `${cat.priority} DOCUMENTED · ${target.name} · ${cat.label}${hitCase ? ` · case ref: ${hitCase.title}` : ""}${hitCase?.financialImpact && hitCase.financialImpact !== "N/A" ? ` · impact ${hitCase.financialImpact}` : ""}`
-          : `${cat.priority} SEARCH · ${target.name} · ${cat.label} (${categories.length} crime categories in DB)`,
-        priority: cat.priority,
-      });
-    }
-  }
-
-  const normalized = stream.map((row, index) => ({
-    ...row,
-    seq: index + 1,
-    loggedAtOffsetMs: (index + 1) * blackOwnedScanBotDoc.tickMs,
-  }));
-
-  return {
-    object: "lyra.black-owned-scan-bot" as const,
-    title: blackOwnedScanBotDoc.title,
-    mode: blackOwnedScanBotDoc.mode,
-    tickMs: blackOwnedScanBotDoc.tickMs,
-    active: true,
-    liveSurveillance: false,
-    liveCertQueries: false,
-    liveCrimeFeeds: false,
-    note: `${blackOwnedScanBotDoc.note} Crime search DB: ${categories.length} violation categories · ${cases.length} case typologies searched/documented per scanned company (fixture).`,
-    verifiedCount: verified.length,
-    candidateCount: candidates.length,
-    queueLength: candidates.length,
-    crimeCategoryCount: categories.length,
-    crimeCaseCount: cases.length,
-    scanActions: actions,
-    sources,
-    targets,
-    stream: normalized,
-  };
-}
-
 function buildBusinessCrimeCatalog() {
   return {
     object: "lyra.business-crime-catalog" as const,
@@ -931,6 +771,8 @@ export function compileAnomalyTracker(opts?: {
       mayForensicElementsPerEntity: entities[0]?.mayForensicPacket.elementCount ?? 0,
       blackOwnedScanBotActive: true,
       blackOwnedScanCandidates: blackOwnedScanBotDoc.newBusinessCandidates.length,
+      blackOwnedDiscoveryPool: blackOwnedScanBotDoc.discoveryPool.length,
+      blackOwnedAutoQueue: true,
       scoutBotActive: true,
       scoutBotSelfHealing: true,
       businessCrimeCategories: businessCrimeTaxonomy.categories.length,
@@ -1243,8 +1085,11 @@ export function compileAnomalyTracker(opts?: {
           id: "black-owned-scan-bot",
           ok:
             entities.some((e) => e.blackOwned) &&
-            blackOwnedScanBotDoc.newBusinessCandidates.length >= 8,
-          detail: `${entities.filter((e) => e.blackOwned).length} verified BO · ${blackOwnedScanBotDoc.newBusinessCandidates.length} new-to-scan · 24/7 fixture bot`,
+            blackOwnedScanBotDoc.newBusinessCandidates.length >= 12 &&
+            blackOwnedScanBotDoc.discoveryPool.length >= 24 &&
+            blackOwnedScanBotDoc.autoQueueOnDiscover === true &&
+            blackOwnedScanBotDoc.hardeningGates.length >= 50,
+          detail: `${entities.filter((e) => e.blackOwned).length} verified BO · ${blackOwnedScanBotDoc.newBusinessCandidates.length} seed queue · ${blackOwnedScanBotDoc.discoveryPool.length} discovery pool · auto-queue · ${blackOwnedScanBotDoc.hardeningGates.length} hardening gates`,
         },
         {
           id: "error-scout-bot",

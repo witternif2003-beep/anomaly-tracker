@@ -75,8 +75,12 @@ if not bot.get("active"):
     errors.append("blackOwnedScanBot.active false")
 if (bot.get("verifiedCount") or 0) < 1:
     errors.append("blackOwnedScanBot.verifiedCount empty")
-if (bot.get("candidateCount") or 0) < 8:
+if (bot.get("candidateCount") or 0) < 12:
     errors.append("blackOwnedScanBot.candidateCount too low")
+if (bot.get("discoveryPoolCount") or 0) < 24:
+    errors.append("blackOwnedScanBot.discoveryPoolCount too low")
+if not bot.get("autoQueueOnDiscover"):
+    errors.append("blackOwnedScanBot.autoQueueOnDiscover false")
 if (bot.get("queueLength") or 0) < 1:
     errors.append("blackOwnedScanBot.queueLength empty")
 if len(bot.get("stream") or []) < 10:
@@ -90,6 +94,20 @@ if (bot.get("crimeCaseCount") or 0) != 60:
 crime_ticks = [s for s in (bot.get("stream") or []) if s.get("status") in ("crime-search", "documented")]
 if len(crime_ticks) < 52:
     errors.append("blackOwnedScanBot stream missing crime search/documentation ticks")
+auto_ticks = [s for s in (bot.get("stream") or []) if s.get("status") == "auto-queued"]
+if len(auto_ticks) < 12:
+    errors.append("blackOwnedScanBot missing auto-queued ticks")
+hardening = bot.get("hardening") or {}
+if (hardening.get("gateCount") or 0) < 50:
+    errors.append("blackOwnedScanBot hardening gates < 50")
+if (hardening.get("hardeningScore") or 0) < 95:
+    errors.append("blackOwnedScanBot hardeningScore < 95")
+if not hardening.get("allOk"):
+    errors.append("blackOwnedScanBot hardening.allOk false")
+if not bot.get("integrityHash"):
+    errors.append("blackOwnedScanBot.integrityHash missing")
+if not summary.get("blackOwnedAutoQueue"):
+    errors.append("summary.blackOwnedAutoQueue false")
 
 catalog = d.get("businessCrimeCatalog") or {}
 if (catalog.get("categoryCount") or 0) != 52:
@@ -124,7 +142,7 @@ print(
     f"nodes={len(nodes)} events={len(events)} postdoc=500",
     f"telemetryTicks={telemetry.get('totalTicks')} health={len(checks)}",
     f"mayPackets={len(packets)} mayCats={may.get('categoryCount')}",
-    f"boBot={bot.get('verifiedCount')}+{bot.get('candidateCount')} stream={len(bot.get('stream') or [])}",
+    f"boBot={bot.get('verifiedCount')}+{bot.get('candidateCount')}+pool{bot.get('discoveryPoolCount')} stream={len(bot.get('stream') or [])} harden={hardening.get('hardeningScore')}",
     f"crime={catalog.get('categoryCount')}cats/{catalog.get('caseCount')}cases",
     f"scout={scout.get('mode')} healed-actions={len(scout.get('healActions') or [])}",
 )

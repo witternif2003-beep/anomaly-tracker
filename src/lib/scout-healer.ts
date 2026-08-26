@@ -156,6 +156,26 @@ export function inspectTrackerBook(book: any, opts?: {
       healAction: "reload-static",
     });
   }
+  if (bot.active && bot.autoQueueOnDiscover === false) {
+    findings.push({
+      id: "bo-auto-queue",
+      severity: "P1",
+      title: "Auto-queue on discover disabled",
+      detail: "New businesses must auto-admit to scan queue",
+      healable: true,
+      healAction: "reload-static",
+    });
+  }
+  if (bot.active && (bot.hardening?.hardeningScore ?? 0) < 95) {
+    findings.push({
+      id: "bo-hardening-score",
+      severity: "P1",
+      title: "BO scan hardening score below floor",
+      detail: `score=${bot.hardening?.hardeningScore ?? 0}`,
+      healable: true,
+      healAction: "reload-static",
+    });
+  }
 
   const scout = book.scoutBot ?? {};
   if (!scout.active || !scout.selfHealing) {

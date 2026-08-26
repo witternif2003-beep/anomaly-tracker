@@ -1,25 +1,172 @@
 {
-  "title": "Black-owned business scan bot",
-  "mode": "fixture-clock-24x7",
-  "tickMs": 1600,
+  "title": "Black-owned business scan bot · auto-queue discovery",
+  "mode": "fixture-clock-24x7-hardened",
+  "tickMs": 900,
+  "discoveryTickMs": 2200,
   "classified": false,
   "liveSurveillance": false,
   "liveCertQueries": false,
-  "note": "Hard-coded bot that rotates every fixture-verified Black-owned entity and logs staged “new business” candidates into a scan queue. Fixture-clock only — not live CERT.gov / SBA / mass U.S. business scraping.",
+  "autoQueueOnDiscover": true,
+  "schemaVersion": 3,
+  "note": "Hardened 24/7 fixture bot: discovers Black-owned business candidates from staged channels and AUTO-QUEUES them for ownership + crime-taxonomy scan. Fixture-clock only — not live CERT.gov / SBA / mass U.S. business scraping.",
   "scanActions": [
     "ownership-attestation-review",
     "counsel-packet-check",
     "mdm-asset-roster",
     "esi-legal-hold-map",
     "financial-export-hold",
-    "may-forensic-menu-bind"
+    "may-forensic-menu-bind",
+    "auto-queue-admit",
+    "discovery-channel-normalize",
+    "dedupe-fingerprint",
+    "priority-rescore",
+    "gate-hardening-pass",
+    "crime-taxonomy-search",
+    "document-violation-hit",
+    "document-no-hit"
   ],
   "sources": [
     "fixture-roster",
     "supplier-verify-rehearsal",
     "internal-diversity-ledger",
-    "counsel-intake-queue"
+    "counsel-intake-queue",
+    "discovery-channel-stub",
+    "auto-queue-admitter"
   ],
+  "discoveryChannels": [
+    {
+      "id": "supplier-diversity-intake",
+      "label": "Supplier diversity intake",
+      "priorityBoost": 2,
+      "hardening": "schema-v3-intake"
+    },
+    {
+      "id": "state-registry-stub",
+      "label": "State registry stub",
+      "priorityBoost": 1,
+      "hardening": "jurisdiction-normalize"
+    },
+    {
+      "id": "mbe-packet-upload",
+      "label": "MBE certificate packet",
+      "priorityBoost": 3,
+      "hardening": "packet-hash-present"
+    },
+    {
+      "id": "grant-ownership-narrative",
+      "label": "Grant ownership narrative",
+      "priorityBoost": 1,
+      "hardening": "narrative-nonempty"
+    },
+    {
+      "id": "prime-contractor-list",
+      "label": "Prime-contractor supplier list",
+      "priorityBoost": 2,
+      "hardening": "vendor-id-present"
+    },
+    {
+      "id": "city-small-biz-registry",
+      "label": "City small-business registry",
+      "priorityBoost": 1,
+      "hardening": "city-geocode-fixture"
+    },
+    {
+      "id": "investor-dd-schedule",
+      "label": "Investor DD ownership schedule",
+      "priorityBoost": 2,
+      "hardening": "cap-table-fixture"
+    },
+    {
+      "id": "rfp-diversity-schedule",
+      "label": "RFP diversity schedule",
+      "priorityBoost": 2,
+      "hardening": "rfp-row-bound"
+    }
+  ],
+  "pipelineStages": [
+    "discover",
+    "fingerprint",
+    "dedupe",
+    "gate",
+    "auto-queue",
+    "priority-score",
+    "ownership-scan",
+    "crime-taxonomy-search",
+    "document",
+    "harden-verify"
+  ],
+  "hardeningGates": [
+    { "id": "schema-version", "group": "schema", "detail": "Payload schemaVersion >= 3" },
+    { "id": "auto-queue-flag", "group": "queue", "detail": "autoQueueOnDiscover enabled" },
+    { "id": "tick-bounds", "group": "clock", "detail": "tickMs within 400–5000" },
+    { "id": "discovery-tick-bounds", "group": "clock", "detail": "discoveryTickMs within 800–15000" },
+    { "id": "no-live-surveillance", "group": "policy", "detail": "liveSurveillance=false" },
+    { "id": "no-live-cert", "group": "policy", "detail": "liveCertQueries=false" },
+    { "id": "no-live-crime-feeds", "group": "policy", "detail": "liveCrimeFeeds=false" },
+    { "id": "verified-roster-min", "group": "roster", "detail": "verifiedCount >= 5" },
+    { "id": "seed-candidates-min", "group": "queue", "detail": "seed candidates >= 12" },
+    { "id": "discovery-pool-min", "group": "discovery", "detail": "discoveryPool >= 24" },
+    { "id": "channels-min", "group": "discovery", "detail": "discoveryChannels >= 6" },
+    { "id": "stages-complete", "group": "pipeline", "detail": "pipelineStages includes auto-queue" },
+    { "id": "actions-include-auto-queue", "group": "pipeline", "detail": "scanActions includes auto-queue-admit" },
+    { "id": "dedupe-fingerprints", "group": "integrity", "detail": "Every target has fingerprint" },
+    { "id": "unique-fingerprints", "group": "integrity", "detail": "No duplicate fingerprints in seed+pool" },
+    { "id": "priority-enum", "group": "integrity", "detail": "Priorities only P1|P2|P3" },
+    { "id": "entity-type-present", "group": "integrity", "detail": "entityType non-empty on every candidate" },
+    { "id": "city-present", "group": "integrity", "detail": "city non-empty on every candidate" },
+    { "id": "sector-present", "group": "integrity", "detail": "sector non-empty on every candidate" },
+    { "id": "signal-present", "group": "integrity", "detail": "discovery signal non-empty" },
+    { "id": "channel-bound", "group": "discovery", "detail": "Every discovery row binds a channel id" },
+    { "id": "queue-ids-unique", "group": "queue", "detail": "Queue entry ids unique" },
+    { "id": "queue-status-machine", "group": "queue", "detail": "Statuses in allowed machine" },
+    { "id": "p1-first-ordering", "group": "queue", "detail": "P1 seeds sort ahead of P3" },
+    { "id": "crime-categories-52", "group": "crime", "detail": "crimeCategoryCount == 52" },
+    { "id": "crime-cases-60", "group": "crime", "detail": "crimeCaseCount == 60" },
+    { "id": "crime-ticks-min", "group": "crime", "detail": "crime search/document ticks >= 52" },
+    { "id": "stream-monotonic-seq", "group": "integrity", "detail": "stream seq monotonic from 1" },
+    { "id": "stream-unique-ids", "group": "integrity", "detail": "stream ids unique" },
+    { "id": "auto-queue-ticks", "group": "queue", "detail": "stream contains auto-queued statuses" },
+    { "id": "discovered-ticks", "group": "discovery", "detail": "stream contains discovered statuses" },
+    { "id": "gate-pass-ticks", "group": "hardening", "detail": "stream contains gate-pass statuses" },
+    { "id": "hardening-score-floor", "group": "hardening", "detail": "hardeningScore >= 95" },
+    { "id": "hardening-gates-50", "group": "hardening", "detail": "hardening gate definitions >= 50" },
+    { "id": "hardening-results-aligned", "group": "hardening", "detail": "results length == gate definitions" },
+    { "id": "all-gates-ok", "group": "hardening", "detail": "every hardening result ok" },
+    { "id": "integrity-hash-present", "group": "integrity", "detail": "integrityHash non-empty" },
+    { "id": "queue-capacity", "group": "queue", "detail": "queueCapacity >= seed+pool" },
+    { "id": "retry-policy", "group": "resilience", "detail": "retryPolicy.maxAttempts >= 3" },
+    { "id": "backoff-policy", "group": "resilience", "detail": "retryPolicy.backoffMs >= 250" },
+    { "id": "circuit-breaker", "group": "resilience", "detail": "circuitBreaker configured" },
+    { "id": "idempotent-admit", "group": "queue", "detail": "idempotentAdmit=true" },
+    { "id": "dead-letter-bucket", "group": "resilience", "detail": "deadLetter enabled" },
+    { "id": "observability-metrics", "group": "observability", "detail": "metrics counters present" },
+    { "id": "may-forensic-bind", "group": "pipeline", "detail": "may-forensic-menu-bind in actions" },
+    { "id": "ownership-scan-action", "group": "pipeline", "detail": "ownership-attestation-review in actions" },
+    { "id": "no-classified-flag", "group": "policy", "detail": "classified=false" },
+    { "id": "fixture-clock-mode", "group": "clock", "detail": "mode includes fixture-clock" },
+    { "id": "additive-only", "group": "policy", "detail": "pipeline never drops verified roster" },
+    { "id": "scout-compatible", "group": "interop", "detail": "bot.active + self-heal fields readable" },
+    { "id": "summary-candidate-count", "group": "interop", "detail": "summary mirrors candidateCount" },
+    { "id": "discovery-pool-priorities", "group": "discovery", "detail": "discovery pool has P1 coverage" },
+    { "id": "seed-p1-coverage", "group": "queue", "detail": "seed candidates include P1" },
+    { "id": "normalized-names", "group": "integrity", "detail": "normalizedName present on queue rows" }
+  ],
+  "retryPolicy": {
+    "maxAttempts": 5,
+    "backoffMs": 400,
+    "jitterPct": 15,
+    "idempotentAdmit": true
+  },
+  "circuitBreaker": {
+    "failureThreshold": 8,
+    "cooldownMs": 12000,
+    "halfOpenProbes": 2
+  },
+  "deadLetter": {
+    "enabled": true,
+    "maxSize": 64,
+    "reasons": ["dedupe-collision", "gate-reject", "schema-invalid"]
+  },
   "newBusinessCandidates": [
     {
       "id": "cand-oak-press",
@@ -28,7 +175,8 @@
       "sector": "Publishing",
       "entityType": "llc",
       "signal": "Supplier diversity intake form (fixture)",
-      "priority": "P1"
+      "priority": "P1",
+      "channelId": "supplier-diversity-intake"
     },
     {
       "id": "cand-river-solar",
@@ -37,7 +185,8 @@
       "sector": "Clean energy co-op",
       "entityType": "cooperative",
       "signal": "State co-op registry scrape stub (fixture)",
-      "priority": "P1"
+      "priority": "P1",
+      "channelId": "state-registry-stub"
     },
     {
       "id": "cand-crown-clinic",
@@ -46,7 +195,8 @@
       "sector": "Healthcare nonprofit",
       "entityType": "nonprofit",
       "signal": "Grant packet ownership narrative (fixture)",
-      "priority": "P2"
+      "priority": "P2",
+      "channelId": "grant-ownership-narrative"
     },
     {
       "id": "cand-lantern-logistics",
@@ -55,7 +205,8 @@
       "sector": "Freight / logistics",
       "entityType": "llc",
       "signal": "Prime-contractor supplier list (fixture)",
-      "priority": "P1"
+      "priority": "P1",
+      "channelId": "prime-contractor-list"
     },
     {
       "id": "cand-heritage-bank",
@@ -64,7 +215,8 @@
       "sector": "Community finance",
       "entityType": "credit-union",
       "signal": "NCUA public listing rehearsal (fixture)",
-      "priority": "P2"
+      "priority": "P2",
+      "channelId": "state-registry-stub"
     },
     {
       "id": "cand-southside-fab",
@@ -73,7 +225,8 @@
       "sector": "Manufacturing",
       "entityType": "s-corp",
       "signal": "MBE certificate packet upload (fixture)",
-      "priority": "P1"
+      "priority": "P1",
+      "channelId": "mbe-packet-upload"
     },
     {
       "id": "cand-bloom-market",
@@ -82,7 +235,8 @@
       "sector": "Retail grocery",
       "entityType": "sole-prop",
       "signal": "City small-business registry stub (fixture)",
-      "priority": "P2"
+      "priority": "P2",
+      "channelId": "city-small-biz-registry"
     },
     {
       "id": "cand-nova-media",
@@ -91,7 +245,8 @@
       "sector": "Media production",
       "entityType": "llc",
       "signal": "RFP diversity schedule (fixture)",
-      "priority": "P1"
+      "priority": "P1",
+      "channelId": "rfp-diversity-schedule"
     },
     {
       "id": "cand-ember-construct",
@@ -100,7 +255,8 @@
       "sector": "General contracting",
       "entityType": "c-corp",
       "signal": "Bonding capacity questionnaire (fixture)",
-      "priority": "P2"
+      "priority": "P2",
+      "channelId": "supplier-diversity-intake"
     },
     {
       "id": "cand-pulse-health",
@@ -109,7 +265,8 @@
       "sector": "Health IT",
       "entityType": "benefit-corp",
       "signal": "Investor DD ownership schedule (fixture)",
-      "priority": "P1"
+      "priority": "P1",
+      "channelId": "investor-dd-schedule"
     },
     {
       "id": "cand-harbor-foods",
@@ -118,7 +275,8 @@
       "sector": "Food wholesale",
       "entityType": "partnership",
       "signal": "School nutrition vendor roster (fixture)",
-      "priority": "P1"
+      "priority": "P1",
+      "channelId": "prime-contractor-list"
     },
     {
       "id": "cand-quill-law",
@@ -127,7 +285,490 @@
       "sector": "Legal services",
       "entityType": "llc",
       "signal": "Bar association directory stub (fixture)",
-      "priority": "P3"
+      "priority": "P3",
+      "channelId": "state-registry-stub"
+    },
+    {
+      "id": "cand-ridge-biotech",
+      "name": "Ridgeway Biotech Labs",
+      "city": "Durham, NC",
+      "sector": "Life sciences",
+      "entityType": "c-corp",
+      "signal": "University spinout ownership schedule (fixture)",
+      "priority": "P1",
+      "channelId": "investor-dd-schedule"
+    },
+    {
+      "id": "cand-copper-transit",
+      "name": "Copperline Transit Services",
+      "city": "Dallas, TX",
+      "sector": "Mobility / transit ops",
+      "entityType": "llc",
+      "signal": "Municipal vendor diversity form (fixture)",
+      "priority": "P1",
+      "channelId": "supplier-diversity-intake"
+    },
+    {
+      "id": "cand-lotus-apparel",
+      "name": "Lotus Thread Apparel Co",
+      "city": "Los Angeles, CA",
+      "sector": "Apparel manufacturing",
+      "entityType": "s-corp",
+      "signal": "MBE packet + factory roster (fixture)",
+      "priority": "P2",
+      "channelId": "mbe-packet-upload"
+    },
+    {
+      "id": "cand-beacon-cyber",
+      "name": "Beacon Shield Cyber",
+      "city": "Arlington, VA",
+      "sector": "Cybersecurity services",
+      "entityType": "llc",
+      "signal": "FedRAMP-adjacent supplier intake (fixture)",
+      "priority": "P1",
+      "channelId": "rfp-diversity-schedule"
+    },
+    {
+      "id": "cand-marigold-care",
+      "name": "Marigold Home Care Collective",
+      "city": "Cleveland, OH",
+      "sector": "Home health",
+      "entityType": "nonprofit",
+      "signal": "Medicaid provider ownership narrative (fixture)",
+      "priority": "P2",
+      "channelId": "grant-ownership-narrative"
+    },
+    {
+      "id": "cand-ironwood-data",
+      "name": "Ironwood Data Commons",
+      "city": "Minneapolis, MN",
+      "sector": "Data infrastructure",
+      "entityType": "benefit-corp",
+      "signal": "Civic tech RFP diversity schedule (fixture)",
+      "priority": "P1",
+      "channelId": "rfp-diversity-schedule"
+    },
+    {
+      "id": "cand-sagebrush-ag",
+      "name": "Sagebrush Ag Tech Co-op",
+      "city": "Phoenix, AZ",
+      "sector": "AgTech cooperative",
+      "entityType": "cooperative",
+      "signal": "State co-op registry stub (fixture)",
+      "priority": "P2",
+      "channelId": "state-registry-stub"
+    },
+    {
+      "id": "cand-harborlight-fintech",
+      "name": "Harborlight Community Fintech",
+      "city": "Jacksonville, FL",
+      "sector": "Fintech / CDFIs",
+      "entityType": "c-corp",
+      "signal": "CDFI ownership attestation packet (fixture)",
+      "priority": "P1",
+      "channelId": "mbe-packet-upload"
+    },
+    {
+      "id": "cand-northstar-logistics",
+      "name": "Northstar Cold Chain LLC",
+      "city": "Indianapolis, IN",
+      "sector": "Cold-chain logistics",
+      "entityType": "llc",
+      "signal": "Prime supplier diversity list (fixture)",
+      "priority": "P1",
+      "channelId": "prime-contractor-list"
+    },
+    {
+      "id": "cand-willow-studio",
+      "name": "Willow Circuit Design Studio",
+      "city": "Portland, OR",
+      "sector": "Industrial design",
+      "entityType": "sole-prop",
+      "signal": "City creative-business registry (fixture)",
+      "priority": "P3",
+      "channelId": "city-small-biz-registry"
+    },
+    {
+      "id": "cand-emberline-energy",
+      "name": "Emberline Microgrid Partners",
+      "city": "Denver, CO",
+      "sector": "Distributed energy",
+      "entityType": "partnership",
+      "signal": "Utility supplier diversity intake (fixture)",
+      "priority": "P1",
+      "channelId": "supplier-diversity-intake"
+    },
+    {
+      "id": "cand-canvas-edu",
+      "name": "Canvas & Code Academy",
+      "city": "Nashville, TN",
+      "sector": "Education / workforce",
+      "entityType": "nonprofit",
+      "signal": "Grant ownership narrative (fixture)",
+      "priority": "P2",
+      "channelId": "grant-ownership-narrative"
+    }
+  ],
+  "discoveryPool": [
+    {
+      "id": "disc-amber-forge",
+      "name": "Amber Forge Metalworks",
+      "city": "Birmingham, AL",
+      "sector": "Metal fabrication",
+      "entityType": "llc",
+      "signal": "City registry discovery pulse (fixture)",
+      "priority": "P1",
+      "channelId": "city-small-biz-registry"
+    },
+    {
+      "id": "disc-cobalt-cloud",
+      "name": "Cobalt Nest Cloud Ops",
+      "city": "Seattle, WA",
+      "sector": "Cloud operations",
+      "entityType": "llc",
+      "signal": "RFP diversity discovery (fixture)",
+      "priority": "P1",
+      "channelId": "rfp-diversity-schedule"
+    },
+    {
+      "id": "disc-fern-pharmacy",
+      "name": "Fern & Remedy Pharmacy",
+      "city": "St. Louis, MO",
+      "sector": "Independent pharmacy",
+      "entityType": "s-corp",
+      "signal": "MBE packet discovery (fixture)",
+      "priority": "P2",
+      "channelId": "mbe-packet-upload"
+    },
+    {
+      "id": "disc-kinetic-rail",
+      "name": "Kinetic Rail Maintenance Co",
+      "city": "Kansas City, MO",
+      "sector": "Rail maintenance",
+      "entityType": "c-corp",
+      "signal": "Prime contractor discovery (fixture)",
+      "priority": "P1",
+      "channelId": "prime-contractor-list"
+    },
+    {
+      "id": "disc-opal-housing",
+      "name": "Opal Commons Housing Trust",
+      "city": "Newark, NJ",
+      "sector": "Community housing",
+      "entityType": "nonprofit",
+      "signal": "Grant narrative discovery (fixture)",
+      "priority": "P2",
+      "channelId": "grant-ownership-narrative"
+    },
+    {
+      "id": "disc-quartz-sensors",
+      "name": "Quartz Field Sensors Inc",
+      "city": "Austin, TX",
+      "sector": "IoT hardware",
+      "entityType": "c-corp",
+      "signal": "Investor DD discovery (fixture)",
+      "priority": "P1",
+      "channelId": "investor-dd-schedule"
+    },
+    {
+      "id": "disc-riverstone-legal",
+      "name": "Riverstone Justice Collective",
+      "city": "Richmond, VA",
+      "sector": "Legal aid",
+      "entityType": "nonprofit",
+      "signal": "State registry discovery (fixture)",
+      "priority": "P3",
+      "channelId": "state-registry-stub"
+    },
+    {
+      "id": "disc-sunken-garden",
+      "name": "Sunken Garden Urban Farm",
+      "city": "Detroit, MI",
+      "sector": "Urban agriculture",
+      "entityType": "cooperative",
+      "signal": "Co-op registry discovery (fixture)",
+      "priority": "P2",
+      "channelId": "state-registry-stub"
+    },
+    {
+      "id": "disc-tide-analytics",
+      "name": "Tide Analytics Cooperative",
+      "city": "Providence, RI",
+      "sector": "Analytics services",
+      "entityType": "cooperative",
+      "signal": "Supplier diversity discovery (fixture)",
+      "priority": "P1",
+      "channelId": "supplier-diversity-intake"
+    },
+    {
+      "id": "disc-umbra-security",
+      "name": "Umbra Perimeter Security",
+      "city": "Tampa, FL",
+      "sector": "Physical security",
+      "entityType": "llc",
+      "signal": "Prime list discovery (fixture)",
+      "priority": "P1",
+      "channelId": "prime-contractor-list"
+    },
+    {
+      "id": "disc-violet-films",
+      "name": "Violet Frame Films",
+      "city": "Atlanta, GA",
+      "sector": "Film production",
+      "entityType": "llc",
+      "signal": "City creative registry discovery (fixture)",
+      "priority": "P2",
+      "channelId": "city-small-biz-registry"
+    },
+    {
+      "id": "disc-windrow-logistics",
+      "name": "Windrow Parcel Collective",
+      "city": "Columbus, OH",
+      "sector": "Last-mile logistics",
+      "entityType": "llc",
+      "signal": "Supplier intake discovery (fixture)",
+      "priority": "P1",
+      "channelId": "supplier-diversity-intake"
+    },
+    {
+      "id": "disc-xenon-materials",
+      "name": "Xenon Green Materials",
+      "city": "Pittsburgh, PA",
+      "sector": "Advanced materials",
+      "entityType": "benefit-corp",
+      "signal": "Investor DD discovery (fixture)",
+      "priority": "P1",
+      "channelId": "investor-dd-schedule"
+    },
+    {
+      "id": "disc-yarrow-clinic",
+      "name": "Yarrow Community Dental",
+      "city": "Milwaukee, WI",
+      "sector": "Dental clinic",
+      "entityType": "nonprofit",
+      "signal": "Grant narrative discovery (fixture)",
+      "priority": "P2",
+      "channelId": "grant-ownership-narrative"
+    },
+    {
+      "id": "disc-zephyr-hvac",
+      "name": "Zephyr Clean HVAC Group",
+      "city": "Raleigh, NC",
+      "sector": "HVAC services",
+      "entityType": "s-corp",
+      "signal": "MBE packet discovery (fixture)",
+      "priority": "P1",
+      "channelId": "mbe-packet-upload"
+    },
+    {
+      "id": "disc-arcade-robotics",
+      "name": "Arcade Field Robotics",
+      "city": "San Jose, CA",
+      "sector": "Robotics",
+      "entityType": "c-corp",
+      "signal": "RFP diversity discovery (fixture)",
+      "priority": "P1",
+      "channelId": "rfp-diversity-schedule"
+    },
+    {
+      "id": "disc-bramble-bakery",
+      "name": "Bramble Collective Bakery",
+      "city": "Louisville, KY",
+      "sector": "Food production",
+      "entityType": "cooperative",
+      "signal": "City registry discovery (fixture)",
+      "priority": "P3",
+      "channelId": "city-small-biz-registry"
+    },
+    {
+      "id": "disc-cedarline-insurance",
+      "name": "Cedarline Mutual Insurance",
+      "city": "Hartford, CT",
+      "sector": "Insurance",
+      "entityType": "c-corp",
+      "signal": "State registry discovery (fixture)",
+      "priority": "P2",
+      "channelId": "state-registry-stub"
+    },
+    {
+      "id": "disc-driftwood-marine",
+      "name": "Driftwood Marine Repair",
+      "city": "Norfolk, VA",
+      "sector": "Marine repair",
+      "entityType": "llc",
+      "signal": "Prime contractor discovery (fixture)",
+      "priority": "P1",
+      "channelId": "prime-contractor-list"
+    },
+    {
+      "id": "disc-evergreen-msp",
+      "name": "Evergreen Stack MSP",
+      "city": "Salt Lake City, UT",
+      "sector": "Managed IT",
+      "entityType": "llc",
+      "signal": "Supplier diversity discovery (fixture)",
+      "priority": "P1",
+      "channelId": "supplier-diversity-intake"
+    },
+    {
+      "id": "disc-flint-foundry",
+      "name": "Flint Heritage Foundry",
+      "city": "Flint, MI",
+      "sector": "Foundry / casting",
+      "entityType": "s-corp",
+      "signal": "MBE packet discovery (fixture)",
+      "priority": "P2",
+      "channelId": "mbe-packet-upload"
+    },
+    {
+      "id": "disc-gilded-archive",
+      "name": "Gilded Archive Digitization",
+      "city": "Savannah, GA",
+      "sector": "Digitization services",
+      "entityType": "llc",
+      "signal": "RFP diversity discovery (fixture)",
+      "priority": "P2",
+      "channelId": "rfp-diversity-schedule"
+    },
+    {
+      "id": "disc-hearth-biostats",
+      "name": "Hearth Biostatistics Lab",
+      "city": "Research Triangle, NC",
+      "sector": "Biostatistics",
+      "entityType": "benefit-corp",
+      "signal": "Investor DD discovery (fixture)",
+      "priority": "P1",
+      "channelId": "investor-dd-schedule"
+    },
+    {
+      "id": "disc-ivory-transit",
+      "name": "Ivory Route Shuttle Co",
+      "city": "Orlando, FL",
+      "sector": "Shuttle / transit",
+      "entityType": "llc",
+      "signal": "Municipal intake discovery (fixture)",
+      "priority": "P1",
+      "channelId": "supplier-diversity-intake"
+    },
+    {
+      "id": "disc-jasper-solar",
+      "name": "Jasper Rooftop Solar Guild",
+      "city": "Albuquerque, NM",
+      "sector": "Solar install",
+      "entityType": "cooperative",
+      "signal": "Co-op registry discovery (fixture)",
+      "priority": "P1",
+      "channelId": "state-registry-stub"
+    },
+    {
+      "id": "disc-keystone-packaging",
+      "name": "Keystone Eco Packaging",
+      "city": "Allentown, PA",
+      "sector": "Sustainable packaging",
+      "entityType": "llc",
+      "signal": "Prime list discovery (fixture)",
+      "priority": "P2",
+      "channelId": "prime-contractor-list"
+    },
+    {
+      "id": "disc-lumen-broadband",
+      "name": "Lumen Neighborhood Broadband",
+      "city": "Buffalo, NY",
+      "sector": "Community broadband",
+      "entityType": "nonprofit",
+      "signal": "Grant narrative discovery (fixture)",
+      "priority": "P1",
+      "channelId": "grant-ownership-narrative"
+    },
+    {
+      "id": "disc-moss-architects",
+      "name": "Moss Line Architects",
+      "city": "New Orleans, LA",
+      "sector": "Architecture",
+      "entityType": "partnership",
+      "signal": "City registry discovery (fixture)",
+      "priority": "P3",
+      "channelId": "city-small-biz-registry"
+    },
+    {
+      "id": "disc-nimbus-payments",
+      "name": "Nimbus Community Payments",
+      "city": "Atlanta, GA",
+      "sector": "Payments / fintech",
+      "entityType": "c-corp",
+      "signal": "Investor DD discovery (fixture)",
+      "priority": "P1",
+      "channelId": "investor-dd-schedule"
+    },
+    {
+      "id": "disc-obsidian-waste",
+      "name": "Obsidian Circular Waste Co",
+      "city": "Houston, TX",
+      "sector": "Recycling / waste",
+      "entityType": "llc",
+      "signal": "MBE packet discovery (fixture)",
+      "priority": "P1",
+      "channelId": "mbe-packet-upload"
+    },
+    {
+      "id": "disc-prairie-cyber",
+      "name": "Prairie Cipher SOC",
+      "city": "Omaha, NE",
+      "sector": "Security operations",
+      "entityType": "llc",
+      "signal": "RFP diversity discovery (fixture)",
+      "priority": "P1",
+      "channelId": "rfp-diversity-schedule"
+    },
+    {
+      "id": "disc-quillback-edu",
+      "name": "Quillback STEM Studio",
+      "city": "Cincinnati, OH",
+      "sector": "STEM education",
+      "entityType": "nonprofit",
+      "signal": "Grant narrative discovery (fixture)",
+      "priority": "P2",
+      "channelId": "grant-ownership-narrative"
+    },
+    {
+      "id": "disc-redwood-fleet",
+      "name": "Redwood Fleet Electrify",
+      "city": "Sacramento, CA",
+      "sector": "EV fleet services",
+      "entityType": "benefit-corp",
+      "signal": "Supplier intake discovery (fixture)",
+      "priority": "P1",
+      "channelId": "supplier-diversity-intake"
+    },
+    {
+      "id": "disc-stonegate-facilities",
+      "name": "Stonegate Facilities Guild",
+      "city": "Baltimore, MD",
+      "sector": "Facilities management",
+      "entityType": "llc",
+      "signal": "Prime contractor discovery (fixture)",
+      "priority": "P2",
+      "channelId": "prime-contractor-list"
+    },
+    {
+      "id": "disc-terra-maps",
+      "name": "Terra Equity Mapping Lab",
+      "city": "Washington, DC",
+      "sector": "Geospatial / civic data",
+      "entityType": "nonprofit",
+      "signal": "RFP diversity discovery (fixture)",
+      "priority": "P1",
+      "channelId": "rfp-diversity-schedule"
+    },
+    {
+      "id": "disc-upland-fiber",
+      "name": "Upland Fiber Splicing Co",
+      "city": "Boise, ID",
+      "sector": "Telecom construction",
+      "entityType": "s-corp",
+      "signal": "MBE packet discovery (fixture)",
+      "priority": "P1",
+      "channelId": "mbe-packet-upload"
     }
   ]
 }

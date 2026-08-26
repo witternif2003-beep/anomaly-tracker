@@ -1,6 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import {
+  startTransition,
+  useEffect,
+  useEffectEvent,
+  useMemo,
+  useState,
+} from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -8,23 +14,40 @@ import { cn } from "@/lib/utils";
 export type BlackOwnedScanTarget = {
   id: string;
   name: string;
+  normalizedName?: string;
   city: string;
   sector: string;
   entityType: string;
-  kind: "verified-roster" | "new-to-scan";
+  kind: "verified-roster" | "new-to-scan" | "discovery-pool";
   blackOwned: boolean;
   ownershipVerification: string;
   signal: string;
   priority: string;
   scanAction: string;
   source: string;
+  channelId?: string | null;
+  fingerprint?: string;
+  score?: number;
+  queueStatus?: string;
 };
 
 export type BlackOwnedScanTick = {
   id: string;
   seq: number;
   loggedAtOffsetMs: number;
-  status: "scanning" | "queued" | "logged-new" | "revalidated" | "crime-search" | "documented";
+  status:
+    | "scanning"
+    | "queued"
+    | "logged-new"
+    | "revalidated"
+    | "crime-search"
+    | "documented"
+    | "discovered"
+    | "fingerprinted"
+    | "gated"
+    | "auto-queued"
+    | "gate-pass"
+    | "dead-lettered";
   target: BlackOwnedScanTarget;
   message: string;
   priority?: string;
@@ -33,6 +56,8 @@ export type BlackOwnedScanTick = {
   caseId?: string | null;
   caseTitle?: string | null;
   documentation?: string;
+  stage?: string;
+  autoQueued?: boolean;
 };
 
 export type BlackOwnedScanBotPayload = {
@@ -40,19 +65,57 @@ export type BlackOwnedScanBotPayload = {
   title: string;
   mode: string;
   tickMs: number;
+  discoveryTickMs?: number;
+  schemaVersion?: number;
   active: boolean;
+  autoQueueOnDiscover?: boolean;
+  idempotentAdmit?: boolean;
   liveSurveillance: boolean;
   liveCertQueries: boolean;
   liveCrimeFeeds?: boolean;
   note: string;
   verifiedCount: number;
   candidateCount: number;
+  discoveryPoolCount?: number;
   queueLength: number;
+  queueCapacity?: number;
   crimeCategoryCount?: number;
   crimeCaseCount?: number;
   scanActions: string[];
   sources: string[];
+  discoveryChannels?: Array<{
+    id: string;
+    label: string;
+    priorityBoost: number;
+    hardening: string;
+  }>;
+  pipelineStages?: string[];
+  retryPolicy?: {
+    maxAttempts: number;
+    backoffMs: number;
+    jitterPct: number;
+    idempotentAdmit: boolean;
+  };
+  circuitBreaker?: {
+    failureThreshold: number;
+    cooldownMs: number;
+    halfOpenProbes: number;
+  };
+  deadLetter?: { enabled: boolean; maxSize: number; reasons: string[] };
+  integrityHash?: string;
+  metrics?: Record<string, number>;
+  hardening?: {
+    title: string;
+    gateCount: number;
+    okCount: number;
+    hardeningScore: number;
+    allOk: boolean;
+    note: string;
+    results: Array<{ id: string; group: string; detail: string; ok: boolean }>;
+  };
   targets: BlackOwnedScanTarget[];
+  discoveryPool?: BlackOwnedScanTarget[];
+  queue?: BlackOwnedScanTarget[];
   stream: BlackOwnedScanTick[];
 };
 
@@ -83,96 +146,234 @@ export type BusinessCrimeCatalog = {
   }>;
 };
 
+type QueueRow = BlackOwnedScanTarget & {
+  admittedAt: string;
+  autoQueued: boolean;
+  discoveryChannel?: string;
+};
+
+type DiscoveryLog = {
+  renderKey: string;
+  at: string;
+  business: string;
+  priority: string;
+  channel: string;
+  action: string;
+};
+
 function priorityTone(priority: string) {
   if (priority === "P1") return "bg-destructive text-destructive-foreground";
   if (priority === "P2") return "bg-amber-500/90 text-black";
   return "bg-muted text-muted-foreground";
 }
 
-function statusTone(status: BlackOwnedScanTick["status"]) {
-  if (status === "logged-new") return "border-emerald-400/40 bg-emerald-500/10 text-emerald-200";
+function statusTone(status: BlackOwnedScanTick["status"] | string) {
+  if (status === "logged-new" || status === "auto-queued") {
+    return "border-emerald-400/40 bg-emerald-500/10 text-emerald-200";
+  }
   if (status === "documented") return "border-rose-400/40 bg-rose-500/10 text-rose-100";
   if (status === "crime-search") return "border-sky-400/35 bg-sky-500/10 text-sky-100";
-  if (status === "scanning") return "border-primary/40 bg-primary/10 text-primary";
-  if (status === "revalidated") return "border-teal-400/30 bg-teal-500/10 text-teal-100";
+  if (status === "scanning" || status === "discovered") {
+    return "border-primary/40 bg-primary/10 text-primary";
+  }
+  if (status === "revalidated" || status === "gate-pass") {
+    return "border-teal-400/30 bg-teal-500/10 text-teal-100";
+  }
+  if (status === "fingerprinted" || status === "gated") {
+    return "border-violet-400/30 bg-violet-500/10 text-violet-100";
+  }
   return "border-border/50 bg-background/40 text-muted-foreground";
+}
+
+function sortByPriority(rows: QueueRow[]) {
+  const rank = (p: string) => (p === "P1" ? 0 : p === "P2" ? 1 : 2);
+  return [...rows].sort(
+    (a, b) => rank(a.priority) - rank(b.priority) || (b.score ?? 0) - (a.score ?? 0),
+  );
 }
 
 export function BlackOwnedScanBot({ bot }: { bot: BlackOwnedScanBotPayload }) {
   const stream = useMemo(() => bot.stream ?? [], [bot.stream]);
+  const discoveryPool = useMemo(() => bot.discoveryPool ?? [], [bot.discoveryPool]);
+  const seedQueue = useMemo(() => {
+    const fromQueue = bot.queue ?? bot.targets.filter((t) => t.kind === "new-to-scan");
+    return sortByPriority(
+      fromQueue.map((t) => ({
+        ...t,
+        admittedAt: "seed",
+        autoQueued: true,
+        discoveryChannel: t.channelId ?? "seed",
+      })),
+    );
+  }, [bot.queue, bot.targets]);
+
+  const verified = useMemo(
+    () => bot.targets.filter((t) => t.kind === "verified-roster"),
+    [bot.targets],
+  );
+
   const [cursor, setCursor] = useState(0);
   const [clock, setClock] = useState("");
   const [log, setLog] = useState<Array<BlackOwnedScanTick & { renderKey: string }>>([]);
+  const [liveQueue, setLiveQueue] = useState<QueueRow[]>(seedQueue);
+  const [poolCursor, setPoolCursor] = useState(0);
+  const [discoveryLog, setDiscoveryLog] = useState<DiscoveryLog[]>([]);
+  const [autoQueuedCount, setAutoQueuedCount] = useState(seedQueue.length);
   const [newCount, setNewCount] = useState(0);
   const [docCount, setDocCount] = useState(0);
+  const [discoverCount, setDiscoverCount] = useState(0);
+
+  useEffect(() => {
+    setLiveQueue(seedQueue);
+    setAutoQueuedCount(seedQueue.length);
+  }, [seedQueue]);
+
+  const onScanTick = useEffectEvent((row: BlackOwnedScanTick) => {
+    setLog((prev) =>
+      [{ ...row, renderKey: `${row.id}-${row.seq}-${Date.now()}-${prev.length}` }, ...prev].slice(
+        0,
+        36,
+      ),
+    );
+    if (row.status === "logged-new" || row.status === "auto-queued") {
+      setNewCount((n) => n + 1);
+    }
+    if (row.status === "documented") setDocCount((n) => n + 1);
+    if (row.status === "discovered") setDiscoverCount((n) => n + 1);
+    setClock(new Date().toISOString());
+  });
+
+  const onDiscoverAndAutoQueue = useEffectEvent((candidate: BlackOwnedScanTarget) => {
+    const admittedAt = new Date().toISOString();
+    const channel =
+      bot.discoveryChannels?.find((c) => c.id === candidate.channelId)?.label ??
+      candidate.channelId ??
+      "discovery";
+
+    startTransition(() => {
+      setLiveQueue((prev) => {
+        if (prev.some((p) => p.id === candidate.id || p.fingerprint === candidate.fingerprint)) {
+          return prev; // idempotent admit
+        }
+        const next: QueueRow = {
+          ...candidate,
+          kind: "new-to-scan",
+          ownershipVerification: "pending-scan",
+          scanAction: "auto-queue-admit",
+          source: "auto-queue-admitter",
+          queueStatus: "auto-queued",
+          admittedAt,
+          autoQueued: true,
+          discoveryChannel: channel,
+        };
+        return sortByPriority([next, ...prev]);
+      });
+      setAutoQueuedCount((n) => n + 1);
+      setDiscoveryLog((prev) =>
+        [
+          {
+            renderKey: `${candidate.id}-${admittedAt}`,
+            at: admittedAt,
+            business: candidate.name,
+            priority: candidate.priority,
+            channel,
+            action: "AUTO-QUEUED on discover",
+          },
+          ...prev,
+        ].slice(0, 24),
+      );
+      setLog((prev) =>
+        [
+          {
+            id: `live-autoq-${candidate.id}-${Date.now()}`,
+            seq: prev.length + 1,
+            loggedAtOffsetMs: 0,
+            status: "auto-queued" as const,
+            target: { ...candidate, kind: "new-to-scan" as const },
+            message: `AUTO-QUEUED · ${candidate.name} discovered via ${channel} → scan queue`,
+            priority: candidate.priority,
+            stage: "auto-queue",
+            autoQueued: true,
+            renderKey: `live-autoq-${candidate.id}-${Date.now()}`,
+          },
+          ...prev,
+        ].slice(0, 36),
+      );
+    });
+  });
 
   useEffect(() => {
     if (!stream.length) return;
-    const tickMs = Math.max(500, bot.tickMs || 1600);
+    const tickMs = Math.max(400, bot.tickMs || 900);
     const first = stream[0];
     setLog([{ ...first, renderKey: `${first.id}-boot-${Date.now()}` }]);
     setCursor(0);
-    setNewCount(first?.status === "logged-new" ? 1 : 0);
+    setNewCount(first?.status === "logged-new" || first?.status === "auto-queued" ? 1 : 0);
     setDocCount(first?.status === "documented" ? 1 : 0);
+    setDiscoverCount(first?.status === "discovered" ? 1 : 0);
     setClock(new Date().toISOString());
     const id = window.setInterval(() => {
       setCursor((c) => {
         const next = (c + 1) % stream.length;
-        const row = stream[next];
-        // Unique renderKey every append — stream wraps 24/7 so id/seq alone collide in the window.
-        setLog((prev) =>
-          [{ ...row, renderKey: `${row.id}-${row.seq}-${Date.now()}-${prev.length}` }, ...prev].slice(
-            0,
-            28,
-          ),
-        );
-        if (row.status === "logged-new") setNewCount((n) => n + 1);
-        if (row.status === "documented") setDocCount((n) => n + 1);
-        setClock(new Date().toISOString());
+        onScanTick(stream[next]);
         return next;
       });
     }, tickMs);
     return () => window.clearInterval(id);
   }, [stream, bot.tickMs]);
 
+  // 24/7 discovery → automatic scan-queue admission
+  useEffect(() => {
+    if (!bot.autoQueueOnDiscover || !discoveryPool.length) return;
+    const tickMs = Math.max(800, bot.discoveryTickMs || 2200);
+    const id = window.setInterval(() => {
+      setPoolCursor((c) => {
+        const next = c % discoveryPool.length;
+        const candidate = discoveryPool[next];
+        onDiscoverAndAutoQueue(candidate);
+        return (next + 1) % discoveryPool.length;
+      });
+    }, tickMs);
+    return () => window.clearInterval(id);
+  }, [bot.autoQueueOnDiscover, bot.discoveryTickMs, discoveryPool]);
+
   const head = stream[cursor] ?? log[0] ?? null;
-  const verified = useMemo(
-    () => bot.targets.filter((t) => t.kind === "verified-roster"),
-    [bot.targets],
-  );
-  const candidates = useMemo(
-    () => bot.targets.filter((t) => t.kind === "new-to-scan"),
-    [bot.targets],
-  );
+  const hardening = bot.hardening;
+  const p1Queued = liveQueue.filter((q) => q.priority === "P1").length;
+  const remainingPool = Math.max(0, discoveryPool.length - Math.min(poolCursor, discoveryPool.length));
 
   return (
-    <Card className="overflow-hidden border-emerald-500/20">
+    <Card className="overflow-hidden border-emerald-500/25">
       <CardHeader className="border-b border-border/40">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <CardTitle className="flex items-center gap-2 font-display text-lg">
               <span className="hud-beacon" aria-hidden />
-              Black-owned scan bot · crime taxonomy search
+              {bot.title}
             </CardTitle>
             <CardDescription className="mt-1 max-w-3xl">{bot.note}</CardDescription>
           </div>
           <div className="flex flex-wrap gap-2">
             <Badge className="bg-emerald-500/20 text-emerald-200">ACTIVE 24/7</Badge>
-            <Badge variant="outline">{bot.mode}</Badge>
+            <Badge className="bg-sky-500/20 text-sky-100">AUTO-QUEUE ON DISCOVER</Badge>
+            <Badge variant="outline">schema v{bot.schemaVersion ?? 3}</Badge>
             <Badge variant="outline">{bot.crimeCategoryCount ?? 52} crime cats</Badge>
             <Badge variant="outline">{bot.crimeCaseCount ?? 60} cases</Badge>
-            <Badge variant="secondary">liveCrimeFeeds={String(bot.liveCrimeFeeds ?? false)}</Badge>
+            <Badge variant="secondary">
+              harden {hardening?.hardeningScore ?? 0}/{hardening?.gateCount ?? 0}
+            </Badge>
           </div>
         </div>
       </CardHeader>
-      <CardContent className="grid gap-4 pt-4 lg:grid-cols-[1.05fr_0.95fr]">
-        <div className="hud-stat space-y-3 !items-stretch">
+      <CardContent className="grid gap-4 pt-4 xl:grid-cols-[1.1fr_0.9fr]">
+        <div className="space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-2 text-[10px] tracking-[0.18em] text-muted-foreground uppercase">
-            <span>Fixture clock · search + document violations</span>
+            <span>Discovery → fingerprint → gate → auto-queue → crime scan</span>
             <span className="font-mono normal-case tracking-normal text-emerald-300/90">{clock}</span>
           </div>
+
           {head ? (
-            <div className="space-y-2">
+            <div className="space-y-2 rounded-xl border border-emerald-400/20 bg-emerald-500/5 p-3">
               <div className="flex flex-wrap gap-2">
                 <Badge className={priorityTone(head.priority ?? head.target.priority)}>
                   {head.priority ?? head.target.priority}
@@ -180,11 +381,13 @@ export function BlackOwnedScanBot({ bot }: { bot: BlackOwnedScanBotPayload }) {
                 <Badge variant="outline" className={cn("border", statusTone(head.status))}>
                   {head.status}
                 </Badge>
-                <Badge variant="secondary">{head.target.kind}</Badge>
+                {head.stage ? <Badge variant="secondary">{head.stage}</Badge> : null}
+                {head.autoQueued ? <Badge className="bg-sky-500/20 text-sky-100">auto-queued</Badge> : null}
               </div>
               <p className="font-display text-base leading-snug">{head.target.name}</p>
               <p className="text-sm text-muted-foreground">
                 {head.target.city} · {head.target.sector} · {head.target.entityType}
+                {head.target.fingerprint ? ` · fp ${head.target.fingerprint.slice(0, 8)}` : ""}
               </p>
               {head.crimeCategoryLabel ? (
                 <p className="rounded-md border border-sky-400/25 bg-sky-500/5 px-3 py-2 text-sm">
@@ -196,21 +399,28 @@ export function BlackOwnedScanBot({ bot }: { bot: BlackOwnedScanBotPayload }) {
                   ) : null}
                 </p>
               ) : null}
-              <p className="rounded-md border border-emerald-400/25 bg-emerald-500/5 px-3 py-2 text-sm text-emerald-100/90">
-                {head.documentation ?? head.message}
-              </p>
+              <p className="text-sm text-emerald-100/90">{head.documentation ?? head.message}</p>
             </div>
           ) : (
             <p className="text-sm text-muted-foreground">Scan stream empty — regenerate static data.</p>
           )}
-          <div className="grid grid-cols-2 gap-2 text-center sm:grid-cols-4">
+
+          <div className="grid grid-cols-2 gap-2 text-center sm:grid-cols-3 lg:grid-cols-6">
             <div className="rounded-lg border border-border/40 px-2 py-2">
-              <p className="font-display text-lg">{bot.queueLength}</p>
-              <p className="text-[10px] tracking-[0.14em] text-muted-foreground uppercase">Queue</p>
+              <p className="font-display text-lg">{liveQueue.length}</p>
+              <p className="text-[10px] tracking-[0.14em] text-muted-foreground uppercase">Live queue</p>
             </div>
             <div className="rounded-lg border border-border/40 px-2 py-2">
-              <p className="font-display text-lg">{newCount}</p>
-              <p className="text-[10px] tracking-[0.14em] text-muted-foreground uppercase">New logged</p>
+              <p className="font-display text-lg">{autoQueuedCount}</p>
+              <p className="text-[10px] tracking-[0.14em] text-muted-foreground uppercase">Auto-queued</p>
+            </div>
+            <div className="rounded-lg border border-border/40 px-2 py-2">
+              <p className="font-display text-lg">{p1Queued}</p>
+              <p className="text-[10px] tracking-[0.14em] text-muted-foreground uppercase">P1 in queue</p>
+            </div>
+            <div className="rounded-lg border border-border/40 px-2 py-2">
+              <p className="font-display text-lg">{discoverCount}</p>
+              <p className="text-[10px] tracking-[0.14em] text-muted-foreground uppercase">Discovered</p>
             </div>
             <div className="rounded-lg border border-border/40 px-2 py-2">
               <p className="font-display text-lg">{docCount}</p>
@@ -221,14 +431,76 @@ export function BlackOwnedScanBot({ bot }: { bot: BlackOwnedScanBotPayload }) {
               <p className="text-[10px] tracking-[0.14em] text-muted-foreground uppercase">24/7 ticks</p>
             </div>
           </div>
+
+          <div className="grid gap-3 lg:grid-cols-2">
+            <div>
+              <p className="mb-1 text-[10px] tracking-[0.16em] text-muted-foreground uppercase">
+                Verified roster · {verified.length}
+              </p>
+              <ul className="max-h-48 space-y-1 overflow-y-auto text-xs text-muted-foreground">
+                {verified.map((t) => (
+                  <li key={t.id}>
+                    <span className="text-foreground">{t.name}</span> · {t.city}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div>
+              <p className="mb-1 text-[10px] tracking-[0.16em] text-muted-foreground uppercase">
+                New businesses to scan · live queue {liveQueue.length}
+                {remainingPool ? ` · pool ${discoveryPool.length}` : ""}
+              </p>
+              <ul className="max-h-48 space-y-1 overflow-y-auto text-xs text-muted-foreground">
+                {liveQueue.map((t) => (
+                  <li key={`${t.id}-${t.admittedAt}`} className="flex flex-wrap items-center gap-1.5">
+                    <span className="text-foreground">{t.name}</span>
+                    <Badge className={cn("h-5 px-1.5 text-[10px]", priorityTone(t.priority))}>
+                      {t.priority}
+                    </Badge>
+                    {t.autoQueued ? (
+                      <span className="font-mono text-[10px] text-emerald-300/80">auto</span>
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
         </div>
 
         <div className="space-y-3">
           <div>
             <p className="mb-2 text-[10px] tracking-[0.16em] text-muted-foreground uppercase">
+              Auto-queue discovery log
+            </p>
+            <ul className="max-h-40 space-y-1.5 overflow-y-auto pr-1">
+              {discoveryLog.length ? (
+                discoveryLog.map((row) => (
+                  <li
+                    key={row.renderKey}
+                    className="rounded-lg border border-emerald-400/25 bg-emerald-500/5 px-2.5 py-2 text-xs"
+                  >
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <span className="font-medium text-foreground">
+                        {row.priority} · {row.business}
+                      </span>
+                      <span className="font-mono text-[10px] text-emerald-200/90">{row.action}</span>
+                    </div>
+                    <p className="mt-0.5 text-muted-foreground">{row.channel}</p>
+                  </li>
+                ))
+              ) : (
+                <li className="rounded-lg border border-border/40 px-2.5 py-2 text-xs text-muted-foreground">
+                  Waiting for next discovery pulse — new finds auto-admit to the scan queue.
+                </li>
+              )}
+            </ul>
+          </div>
+
+          <div>
+            <p className="mb-2 text-[10px] tracking-[0.16em] text-muted-foreground uppercase">
               Live scan / crime documentation log
             </p>
-            <ul className="max-h-72 space-y-1.5 overflow-y-auto pr-1">
+            <ul className="max-h-56 space-y-1.5 overflow-y-auto pr-1">
               {log.map((row) => (
                 <li
                   key={row.renderKey}
@@ -243,39 +515,74 @@ export function BlackOwnedScanBot({ bot }: { bot: BlackOwnedScanBotPayload }) {
                   </div>
                   <p className="mt-0.5 text-muted-foreground">
                     {row.crimeCategoryLabel
-                      ? `${row.crimeCategoryLabel}`
+                      ? row.crimeCategoryLabel
                       : `${row.target.city} · ${row.target.scanAction}`}
                   </p>
                 </li>
               ))}
             </ul>
           </div>
-          <div className="grid gap-2 sm:grid-cols-2">
-            <div>
-              <p className="mb-1 text-[10px] tracking-[0.16em] text-muted-foreground uppercase">
-                Verified roster
-              </p>
-              <ul className="space-y-1 text-xs text-muted-foreground">
-                {verified.slice(0, 6).map((t) => (
-                  <li key={t.id}>
-                    <span className="text-foreground">{t.name}</span> · {t.city}
+
+          {hardening ? (
+            <div className="rounded-xl border border-teal-400/25 bg-teal-500/5 p-3">
+              <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                <p className="text-[10px] tracking-[0.16em] text-muted-foreground uppercase">
+                  Pipeline hardening · {hardening.title}
+                </p>
+                <Badge
+                  className={
+                    hardening.allOk
+                      ? "bg-emerald-500/20 text-emerald-100"
+                      : "bg-amber-500/20 text-amber-100"
+                  }
+                >
+                  {hardening.hardeningScore}/100 · {hardening.okCount}/{hardening.gateCount} gates
+                </Badge>
+              </div>
+              <p className="mb-2 text-xs text-muted-foreground">{hardening.note}</p>
+              <div className="mb-2 flex flex-wrap gap-1.5 text-[10px] text-muted-foreground">
+                <span>hash {bot.integrityHash?.slice(0, 12)}</span>
+                <span>· retries {bot.retryPolicy?.maxAttempts}</span>
+                <span>· breaker {bot.circuitBreaker?.failureThreshold}</span>
+                <span>· dead-letter {String(bot.deadLetter?.enabled)}</span>
+                <span>· idempotent {String(bot.idempotentAdmit)}</span>
+              </div>
+              <ul className="max-h-36 space-y-1 overflow-y-auto text-[11px]">
+                {hardening.results.map((gate) => (
+                  <li
+                    key={gate.id}
+                    className={cn(
+                      "flex items-start justify-between gap-2 rounded border px-2 py-1",
+                      gate.ok
+                        ? "border-emerald-400/20 text-emerald-100/90"
+                        : "border-rose-400/30 text-rose-100",
+                    )}
+                  >
+                    <span>
+                      <span className="font-mono text-[10px] uppercase opacity-70">{gate.group}</span>{" "}
+                      {gate.detail}
+                    </span>
+                    <span className="font-mono text-[10px] uppercase">{gate.ok ? "ok" : "fail"}</span>
                   </li>
                 ))}
               </ul>
             </div>
+          ) : null}
+
+          {bot.discoveryChannels?.length ? (
             <div>
               <p className="mb-1 text-[10px] tracking-[0.16em] text-muted-foreground uppercase">
-                New businesses to scan
+                Discovery channels
               </p>
-              <ul className="space-y-1 text-xs text-muted-foreground">
-                {candidates.slice(0, 6).map((t) => (
-                  <li key={t.id}>
-                    <span className="text-foreground">{t.name}</span> · {t.priority}
-                  </li>
+              <div className="flex flex-wrap gap-1.5">
+                {bot.discoveryChannels.map((ch) => (
+                  <Badge key={ch.id} variant="outline" className="text-[10px]">
+                    {ch.label} · +{ch.priorityBoost}
+                  </Badge>
                 ))}
-              </ul>
+              </div>
             </div>
-          </div>
+          ) : null}
         </div>
       </CardContent>
     </Card>
