@@ -122,6 +122,20 @@ export function compileScoutCodeIntegrity() {
     "AipConsole JSON detect allows empty Content-Type",
   );
   push(
+    "hidden-aip-static-skip-api",
+    "fetch",
+    fileHas("src/components/lyra/aip-console.tsx", "preferInBrowserAip") &&
+      fileHas("src/components/lyra/aip-console.tsx", "NEXT_PUBLIC_STATIC_SITE"),
+    "AipConsole skips dead /api/aip/* on static export (no console 404 P1)",
+  );
+  push(
+    "hidden-chamber-wheel-passive-safe",
+    "chamber",
+    fileHas("src/components/3d/orbital-chamber.tsx", "passive: false") &&
+      fileHas("src/components/3d/orbital-chamber.tsx", "Do not preventDefault here"),
+    "orbital-chamber keeps preventDefault on native non-passive wheel only",
+  );
+  push(
     "hidden-studio-empty-ctype",
     "fetch",
     fileHas("src/components/lyra/studio.tsx", "if (!type) return true") ||

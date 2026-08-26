@@ -335,7 +335,8 @@ export function OrbitalChamber({
 
   const onWheel = useCallback(
     (e: WheelEvent<HTMLDivElement>) => {
-      e.preventDefault();
+      // Do not preventDefault here — React wheel listeners are passive.
+      // Native non-passive listener below blocks page scroll.
       const dir = e.deltaY > 0 ? -ZOOM_STEP : ZOOM_STEP;
       bumpZoom(dir * (e.ctrlKey || e.metaKey ? 1.6 : 1));
     },

@@ -20,6 +20,13 @@ function looksLikeJson(response: Response) {
   return type.includes("json");
 }
 
+/** Static export / GitHub Pages has no Next `/api/*` — prefer in-browser dive+scan. */
+function preferInBrowserAip(): boolean {
+  if (process.env.NEXT_PUBLIC_STATIC_SITE === "1") return true;
+  if (typeof window !== "undefined" && window.location.hostname.endsWith("github.io")) return true;
+  return false;
+}
+
 export function AipConsole() {
   const [dive, setDive] = useState<AipDeepDive | null>(null);
   const [diveError, setDiveError] = useState<string | null>(null);
@@ -36,13 +43,16 @@ export function AipConsole() {
     setDiveBusy(true);
     setDiveError(null);
     try {
-      const response = await fetch(withBasePath("/api/aip/dive"), { cache: "no-store" });
-      if (response.ok && looksLikeJson(response)) {
-        const data = (await response.json()) as AipDeepDive & { error?: string };
-        if (!data.error) {
-          setDive(data);
-          setDiveSource("api");
-          return;
+      // output: 'export' / Pages: skip dead /api/aip/dive (avoids console 404 P1 noise).
+      if (!preferInBrowserAip()) {
+        const response = await fetch(withBasePath("/api/aip/dive"), { cache: "no-store" });
+        if (response.ok && looksLikeJson(response)) {
+          const data = (await response.json()) as AipDeepDive & { error?: string };
+          if (!data.error) {
+            setDive(data);
+            setDiveSource("api");
+            return;
+          }
         }
       }
       // Static Pages / missing API: run the same fixture suite in-browser.
@@ -83,17 +93,19 @@ export function AipConsole() {
       .map((line) => line.trim())
       .filter(Boolean);
     try {
-      const response = await fetch(withBasePath("/api/aip/scan"), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: body, anchors: anchorList }),
-      });
-      if (response.ok && looksLikeJson(response)) {
-        const data = (await response.json()) as AipScan & { error?: string };
-        if (!data.error && data.verdict) {
-          setScan(data);
-          setScanSource("api");
-          return;
+      if (!preferInBrowserAip()) {
+        const response = await fetch(withBasePath("/api/aip/scan"), {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: body, anchors: anchorList }),
+        });
+        if (response.ok && looksLikeJson(response)) {
+          const data = (await response.json()) as AipScan & { error?: string };
+          if (!data.error && data.verdict) {
+            setScan(data);
+            setScanSource("api");
+            return;
+          }
         }
       }
       const data = scanText(body, anchorList);
