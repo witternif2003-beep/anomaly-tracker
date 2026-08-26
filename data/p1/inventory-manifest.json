@@ -1,7 +1,7 @@
 {
   "title": "P1 Tier-1 expanded inventory",
   "additionalSlots": 10000,
-  "note": "Requested scoped names are mostly unpublished. Closest public packages are installed. Docker images are pulled when a daemon is available; otherwise in-process libraries replace them. Cuckoo is cloned as source only — the live malware sandbox is not started. pefile remains the static PE substitute.",
+  "note": "Requested scoped names are mostly unpublished. Closest public packages are installed. Doubled to 70 assets (additive): similar/compatible installs + repo files + package-lock + MCP config + credentials + command-output surfaces. Docker images are pulled when a daemon is available; otherwise in-process libraries replace them. Cuckoo is cloned as source only \u2014 the live malware sandbox is not started.",
   "assets": [
     {
       "id": "npm-opinion-parser",
@@ -9,7 +9,11 @@
       "requested": "@law-research/opinion-parser",
       "closest": "pdf-parse",
       "kind": "npm",
-      "packages": ["pdf-parse", "citation-js", "compromise"]
+      "packages": [
+        "pdf-parse",
+        "citation-js",
+        "compromise"
+      ]
     },
     {
       "id": "npm-disk-imaging",
@@ -17,7 +21,10 @@
       "requested": "@forensic-tools/disk-imaging",
       "closest": "hachoir (PyPI) + pefile; no public npm disk imager",
       "kind": "pip",
-      "packages": ["hachoir", "pefile"]
+      "packages": [
+        "hachoir",
+        "pefile"
+      ]
     },
     {
       "id": "npm-geospatial",
@@ -25,7 +32,11 @@
       "requested": "@crime-analytics/geospatial",
       "closest": "@turf/turf",
       "kind": "npm",
-      "packages": ["@turf/turf", "geojson", "geolib"]
+      "packages": [
+        "@turf/turf",
+        "geojson",
+        "geolib"
+      ]
     },
     {
       "id": "npm-sanctions",
@@ -33,7 +44,9 @@
       "requested": "@financial-intel/sanctions-screen",
       "closest": "ofac",
       "kind": "npm",
-      "packages": ["ofac"]
+      "packages": [
+        "ofac"
+      ]
     },
     {
       "id": "npm-osint-social",
@@ -41,7 +54,9 @@
       "requested": "@osint-collector/social-media",
       "closest": "sherlock-project (PyPI)",
       "kind": "pip",
-      "packages": ["sherlock-project"]
+      "packages": [
+        "sherlock-project"
+      ]
     },
     {
       "id": "npm-hash-verifier",
@@ -49,7 +64,12 @@
       "requested": "@evidence-chain/hash-verifier",
       "closest": "hash-wasm + ssri + hasha + object-hash",
       "kind": "npm",
-      "packages": ["hash-wasm", "ssri", "hasha", "object-hash"]
+      "packages": [
+        "hash-wasm",
+        "ssri",
+        "hasha",
+        "object-hash"
+      ]
     },
     {
       "id": "pip-crimemapping",
@@ -57,7 +77,9 @@
       "requested": "crimemapping",
       "closest": "folium",
       "kind": "pip",
-      "packages": ["folium"]
+      "packages": [
+        "folium"
+      ]
     },
     {
       "id": "pip-forensic-accounting",
@@ -65,7 +87,9 @@
       "requested": "forensic-accounting",
       "closest": "pyod",
       "kind": "pip",
-      "packages": ["pyod"]
+      "packages": [
+        "pyod"
+      ]
     },
     {
       "id": "pip-legal-ner",
@@ -73,7 +97,10 @@
       "requested": "legal-ner",
       "closest": "eyecite + reporters-db",
       "kind": "pip",
-      "packages": ["eyecite", "reporters-db"]
+      "packages": [
+        "eyecite",
+        "reporters-db"
+      ]
     },
     {
       "id": "pip-db-forensics",
@@ -81,7 +108,9 @@
       "requested": "db-forensics",
       "closest": "sqlite-utils",
       "kind": "pip",
-      "packages": ["sqlite-utils"]
+      "packages": [
+        "sqlite-utils"
+      ]
     },
     {
       "id": "pip-stego",
@@ -89,7 +118,11 @@
       "requested": "steganography-tools",
       "closest": "steganography-tools",
       "kind": "pip",
-      "packages": ["steganography-tools", "stegano", "pillow"]
+      "packages": [
+        "steganography-tools",
+        "stegano",
+        "pillow"
+      ]
     },
     {
       "id": "docker-elasticsearch",
@@ -97,7 +130,9 @@
       "requested": "elastic/elasticsearch:8.12",
       "closest": "minisearch (no Docker in this VM)",
       "kind": "npm",
-      "packages": ["minisearch"]
+      "packages": [
+        "minisearch"
+      ]
     },
     {
       "id": "docker-neo4j",
@@ -105,7 +140,9 @@
       "requested": "neo4j/neo4j:5.0",
       "closest": "graphology (no Docker in this VM)",
       "kind": "npm",
-      "packages": ["graphology"]
+      "packages": [
+        "graphology"
+      ]
     },
     {
       "id": "docker-osint",
@@ -153,7 +190,9 @@
       "requested": "Maltego",
       "closest": "graphology (Maltego CE is a proprietary installer, not a public git clone)",
       "kind": "npm",
-      "packages": ["graphology"]
+      "packages": [
+        "graphology"
+      ]
     },
     {
       "id": "gh-recon-ng",
@@ -185,7 +224,9 @@
       "requested": "OpenCTI",
       "closest": "graphology + OFAC/EDGAR stubs (OpenCTI platform not deployed)",
       "kind": "npm",
-      "packages": ["graphology"]
+      "packages": [
+        "graphology"
+      ]
     },
     {
       "id": "gh-misp",
@@ -223,7 +264,7 @@
       "id": "docker-jaeger",
       "family": "docker",
       "requested": "jaegertracing/all-in-one",
-      "closest": "AIP-Σ0 dive receipts (no Jaeger daemon)",
+      "closest": "AIP-\u03a30 dive receipts (no Jaeger daemon)",
       "kind": "rest",
       "endpoint": "http://127.0.0.1:4040/v1/aip/dive"
     },
@@ -233,7 +274,10 @@
       "requested": "sec-edgar",
       "closest": "edgartools + SEC EFTS REST",
       "kind": "pip",
-      "packages": ["edgartools", "sec-edgar-downloader"]
+      "packages": [
+        "edgartools",
+        "sec-edgar-downloader"
+      ]
     },
     {
       "id": "api-finra",
@@ -265,7 +309,9 @@
       "requested": "pacer-client",
       "closest": "pacer-tools (PyPI pacer-client is an unrelated NLR app)",
       "kind": "pip",
-      "packages": ["pacer-tools"]
+      "packages": [
+        "pacer-tools"
+      ]
     },
     {
       "id": "api-congress",
@@ -282,6 +328,307 @@
       "closest": "https://api.govinfo.gov (optional key)",
       "kind": "rest",
       "endpoint": "https://api.govinfo.gov"
+    },
+    {
+      "id": "npm-cyclonedx",
+      "family": "npm",
+      "requested": "@cyclonedx/cdxgen",
+      "closest": "manual SBOM from package-lock + PatchProof doctrine",
+      "kind": "npm",
+      "packages": [
+        "ssri",
+        "object-hash"
+      ]
+    },
+    {
+      "id": "npm-lockfile-lint",
+      "family": "npm",
+      "requested": "lockfile-lint",
+      "closest": "npm ci + engines pin verification",
+      "kind": "npm",
+      "packages": []
+    },
+    {
+      "id": "npm-mcp-sdk",
+      "family": "npm",
+      "requested": "@modelcontextprotocol/sdk",
+      "closest": "@modelcontextprotocol/sdk when published; else MCP server packages already installed",
+      "kind": "npm",
+      "packages": []
+    },
+    {
+      "id": "npm-wrangler-compat",
+      "family": "npm",
+      "requested": "wrangler@4",
+      "closest": "wrangler@4 (dry-run only)",
+      "kind": "npm",
+      "packages": [
+        "wrangler"
+      ]
+    },
+    {
+      "id": "npm-next-static",
+      "family": "npm",
+      "requested": "next@16 static export",
+      "closest": "next (output: export) already in lockfile",
+      "kind": "npm",
+      "packages": [
+        "next"
+      ]
+    },
+    {
+      "id": "npm-three-r3f",
+      "family": "npm",
+      "requested": "@react-three/fiber",
+      "closest": "CSS orbital chamber fallback when R3F optional",
+      "kind": "npm",
+      "packages": []
+    },
+    {
+      "id": "pip-sbom-tools",
+      "family": "pypi",
+      "requested": "cyclonedx-python",
+      "closest": "package-lock SBOM path (npm) + hashlib",
+      "kind": "pip",
+      "packages": []
+    },
+    {
+      "id": "pip-pefile-compat",
+      "family": "pypi",
+      "requested": "pefile",
+      "closest": "pefile (static PE; Cuckoo substitute)",
+      "kind": "pip",
+      "packages": [
+        "pefile"
+      ]
+    },
+    {
+      "id": "pip-hachoir-compat",
+      "family": "pypi",
+      "requested": "hachoir",
+      "closest": "hachoir (disk imaging closest)",
+      "kind": "pip",
+      "packages": [
+        "hachoir"
+      ]
+    },
+    {
+      "id": "pip-pyod-compat",
+      "family": "pypi",
+      "requested": "pyod",
+      "closest": "pyod (forensic accounting closest)",
+      "kind": "pip",
+      "packages": [
+        "pyod"
+      ]
+    },
+    {
+      "id": "api-congress-compat",
+      "family": "legal-api",
+      "requested": "Congress.gov bulk",
+      "closest": "https://api.congress.gov",
+      "kind": "rest",
+      "endpoint": "https://api.congress.gov"
+    },
+    {
+      "id": "api-govinfo-compat",
+      "family": "legal-api",
+      "requested": "GovInfo bulk",
+      "closest": "https://api.govinfo.gov",
+      "kind": "rest",
+      "endpoint": "https://api.govinfo.gov"
+    },
+    {
+      "id": "api-courtlistener-compat",
+      "family": "legal-api",
+      "requested": "CourtListener REST",
+      "closest": "court-listener / CourtListener REST",
+      "kind": "rest",
+      "endpoint": "https://www.courtlistener.com/api/"
+    },
+    {
+      "id": "api-sec-efts",
+      "family": "legal-api",
+      "requested": "SEC EFTS",
+      "closest": "SEC EFTS REST + edgartools",
+      "kind": "rest",
+      "endpoint": "https://efts.sec.gov/LATEST/search-index"
+    },
+    {
+      "id": "docker-redis-compat",
+      "family": "docker",
+      "requested": "redis:7",
+      "closest": "in-process Map cache when Docker absent",
+      "kind": "rest",
+      "endpoint": "http://127.0.0.1:4040/health"
+    },
+    {
+      "id": "docker-postgres-compat",
+      "family": "docker",
+      "requested": "postgres:16",
+      "closest": "postgres-mcp / fixture DB stubs when Docker absent",
+      "kind": "rest",
+      "endpoint": "http://127.0.0.1:4040/health"
+    },
+    {
+      "id": "gh-recon-ng-compat",
+      "family": "git",
+      "requested": "lanmaster53/recon-ng",
+      "closest": "vendor/p1/recon-ng",
+      "kind": "git",
+      "packages": []
+    },
+    {
+      "id": "gh-cuckoo-compat",
+      "family": "git",
+      "requested": "cuckoosandbox/cuckoo",
+      "closest": "vendor/p1/cuckoo source only",
+      "kind": "git",
+      "packages": []
+    },
+    {
+      "id": "repo-scripts-pipelines",
+      "family": "repo",
+      "requested": "scripts/pipelines/*.sh \u00d712",
+      "closest": "scripts/pipelines (12 pipeline scripts)",
+      "kind": "repo",
+      "packages": []
+    },
+    {
+      "id": "repo-scout-bot",
+      "family": "repo",
+      "requested": "data/anomaly/scout-bot.json",
+      "closest": "data/anomaly/scout-bot.json",
+      "kind": "repo",
+      "packages": []
+    },
+    {
+      "id": "repo-postdoc-catalog",
+      "family": "repo",
+      "requested": "postdoc-forensic-catalog.ts",
+      "closest": "src/lib/postdoc-forensic-catalog.ts",
+      "kind": "repo",
+      "packages": []
+    },
+    {
+      "id": "repo-credentials",
+      "family": "repo",
+      "requested": "credentials-framework.json",
+      "closest": "data/anomaly/credentials-framework.json",
+      "kind": "repo",
+      "packages": []
+    },
+    {
+      "id": "repo-free-api",
+      "family": "repo",
+      "requested": "free-api-resolutions.json",
+      "closest": "data/anomaly/free-api-resolutions.json",
+      "kind": "repo",
+      "packages": []
+    },
+    {
+      "id": "repo-mcp-cursor",
+      "family": "repo",
+      "requested": ".cursor/mcp.json",
+      "closest": ".cursor/mcp.json",
+      "kind": "repo",
+      "packages": []
+    },
+    {
+      "id": "repo-package-lock",
+      "family": "repo",
+      "requested": "package-lock.json",
+      "closest": "package-lock.json",
+      "kind": "repo",
+      "packages": []
+    },
+    {
+      "id": "repo-anomaly-tracker-server",
+      "family": "repo",
+      "requested": "server/anomaly-tracker.ts",
+      "closest": "server/anomaly-tracker.ts",
+      "kind": "repo",
+      "packages": []
+    },
+    {
+      "id": "repo-install-status",
+      "family": "repo",
+      "requested": "server/install-status.ts",
+      "closest": "server/install-status.ts",
+      "kind": "repo",
+      "packages": []
+    },
+    {
+      "id": "repo-deploy-pages",
+      "family": "repo",
+      "requested": "scripts/deploy-gh-pages.sh",
+      "closest": "scripts/deploy-gh-pages.sh",
+      "kind": "repo",
+      "packages": []
+    },
+    {
+      "id": "npm-hash-wasm-compat",
+      "family": "npm",
+      "requested": "hash-wasm",
+      "closest": "hash-wasm",
+      "kind": "npm",
+      "packages": [
+        "hash-wasm"
+      ]
+    },
+    {
+      "id": "npm-ssri-compat",
+      "family": "npm",
+      "requested": "ssri",
+      "closest": "ssri",
+      "kind": "npm",
+      "packages": [
+        "ssri"
+      ]
+    },
+    {
+      "id": "pip-folium-compat",
+      "family": "pypi",
+      "requested": "folium",
+      "closest": "folium",
+      "kind": "pip",
+      "packages": [
+        "folium"
+      ]
+    },
+    {
+      "id": "pip-eyecite-compat",
+      "family": "pypi",
+      "requested": "eyecite",
+      "closest": "eyecite",
+      "kind": "pip",
+      "packages": [
+        "eyecite"
+      ]
+    },
+    {
+      "id": "api-ofac-compat",
+      "family": "legal-api",
+      "requested": "OFAC SDN CSV",
+      "closest": "https://www.treasury.gov/ofac/downloads/sdn.csv",
+      "kind": "rest",
+      "endpoint": "https://www.treasury.gov/ofac/downloads/sdn.csv"
+    },
+    {
+      "id": "api-finra-compat",
+      "family": "legal-api",
+      "requested": "FINRA API",
+      "closest": "https://api.finra.org",
+      "kind": "rest",
+      "endpoint": "https://api.finra.org"
+    },
+    {
+      "id": "telemetry-live-p1",
+      "family": "telemetry",
+      "requested": "Live P1 fixture telemetry",
+      "closest": "src/components/lyra/live-telemetry-feed.tsx + bake telemetry",
+      "kind": "repo",
+      "packages": []
     }
   ]
 }

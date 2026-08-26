@@ -406,11 +406,44 @@ export function compileScoutCodeIntegrity() {
     "postdoc catalog virtual expand wired (catalog + bake)",
   );
   push(
-    "hidden-postdoc-total-905500",
+    "hidden-postdoc-total-995500",
     "postdoc",
-    fileHas("src/lib/postdoc-forensic-catalog.ts", "905_500") ||
-      fileHas("src/lib/postdoc-forensic-catalog.ts", "905500"),
-    "POSTDOC_TOTAL locked at 905500",
+    fileHas("src/lib/postdoc-forensic-catalog.ts", "995_500") ||
+      fileHas("src/lib/postdoc-forensic-catalog.ts", "995500"),
+    "POSTDOC_TOTAL locked at 995500",
+  );
+  push(
+    "hidden-postdoc-install-inventory-theme",
+    "postdoc",
+    fileHas("src/lib/postdoc-forensic-catalog.ts", "Install-Inventory") &&
+      fileHas("data/anomaly/postdoc-improvements.json", "sota-oneshot-inventory-double"),
+    "postdoc stamps Install-Inventory + one-shot doubling SOTA axis",
+  );
+  push(
+    "hidden-oneshot-steps-56",
+    "install",
+    (() => {
+      try {
+        const m = JSON.parse(read("data/p1/one-shot-manifest.json")) as { steps?: unknown[] };
+        return (m.steps ?? []).length >= 56;
+      } catch {
+        return false;
+      }
+    })(),
+    "one-shot-manifest.json has ≥56 steps (doubled inventory)",
+  );
+  push(
+    "hidden-inventory-assets-70",
+    "install",
+    (() => {
+      try {
+        const m = JSON.parse(read("data/p1/inventory-manifest.json")) as { assets?: unknown[] };
+        return (m.assets ?? []).length >= 70;
+      } catch {
+        return false;
+      }
+    })(),
+    "inventory-manifest.json has ≥70 closest assets (doubled)",
   );
 
   // Scout ×729 tick pressure in config source of truth
@@ -758,7 +791,7 @@ export function compileScoutCodeIntegrity() {
         if (axis === "additive-only") ok = ok && !/deleteFeature|removeFeature/.test(body);
         if (axis === "no-live-surveillance") ok = ok && !/liveSurveillance\s*[:=]\s*true/.test(body);
         if (axis === "postdoc-virtual") {
-          ok = ok && (pipe !== "tracker-3d-smoke" || /905500|postdoc|PIPELINE OK/i.test(body));
+          ok = ok && (pipe !== "tracker-3d-smoke" || /995500|postdoc|PIPELINE OK/i.test(body));
         }
         if (axis === "cache-bust" || axis === "false-heal-guard" || axis === "inflight-guard") ok = ok;
         if (axis === "extreme-mode") {

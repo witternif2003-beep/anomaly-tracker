@@ -973,7 +973,7 @@ export function AnomalyTracker({ initialData }: { initialData?: TrackerBook }) {
                     {book.postdocCatalog.axisCount} axes · {book.postdocCatalog.sotaAxisCount ?? 0} SOTA ·
                     TOP {book.postdocCatalog.top500Count ?? 500} · tracker-tab
                     {book.postdocCatalog.virtualExpand
-                      ? " · virtual 905.5k · Live P1 · Globe pipeline"
+                      ? " · virtual 995.5k · Live P1 · Install inventory"
                       : ""}{" "}
                     · showing{" "}
                     {Math.min(postdocShow, filteredPostdoc.length)} of{" "}

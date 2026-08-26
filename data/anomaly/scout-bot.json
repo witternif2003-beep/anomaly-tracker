@@ -12,7 +12,7 @@
   "repairRescan": true,
   "repairRescanPasses": 729,
   "gateTarget": 98415,
-  "note": "24/7 postdoc \u00d7729 extreme Error scout (3\u00d7 harder than prior \u00d7243) \u00b7 self-healing detect\u2192decide\u2192act\u2192verify \u00b7 1ms tick floor \u00b7 hidden-code thorough deep dive (\u22655832 gates) \u00b7 all 12 pipelines \u00b7 repair each error then rescan \u00d7729 \u00b7 baselines postdoc=905500. Never removes features \u2014 only restores and adds coverage. Not live mass surveillance.",
+  "note": "24/7 postdoc \u00d7729 extreme Error scout (3\u00d7 harder than prior \u00d7243) \u00b7 self-healing detect\u2192decide\u2192act\u2192verify \u00b7 1ms tick floor \u00b7 hidden-code thorough deep dive (\u22655832 gates) \u00b7 all 12 pipelines \u00b7 repair each error then rescan \u00d7729 \u00b7 baselines postdoc=995500. Never removes features \u2014 only restores and adds coverage. Not live mass surveillance.",
   "healActions": [
     "reload-static",
     "reset-selected-anomaly",
@@ -35,7 +35,7 @@
     "crimeCategories": 52,
     "crimeCases": 60,
     "mayPackets": 15,
-    "postdoc": 905500,
+    "postdoc": 995500,
     "envPlaceholders": 18,
     "envFreeResolved": 16,
     "pipelineScripts": 12,

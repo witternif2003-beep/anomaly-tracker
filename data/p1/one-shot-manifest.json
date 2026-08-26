@@ -1,7 +1,7 @@
 {
   "title": "Complete one-shot installation sequence",
   "script": "scripts/install-one-shot.sh",
-  "note": "Each requested name is tried first. Unpublished or missing names install the closest public match. Docker images require a daemon; this VM may have none. Cuckoo is cloned as source only — the live malware sandbox is not started.",
+  "note": "Each requested name is tried first. Unpublished or missing names install the closest public match. Doubled to 56 steps (additive): repo/package-lock/MCP/credentials/command-output verification + compatible MCP/legal/docker/git/pipeline installs. Docker images require a daemon; this VM may have none. Cuckoo is cloned as source only \u2014 the live malware sandbox is not started.",
   "steps": [
     {
       "id": "core-nvm",
@@ -43,7 +43,7 @@
       "id": "mcp-linear",
       "group": "mcp",
       "requested": "@linear/mcp",
-      "closest": "mcp-remote@0.2.5 → https://mcp.linear.app/sse + @tacticlaunch/mcp-linear"
+      "closest": "mcp-remote@0.2.5 \u2192 https://mcp.linear.app/sse + @tacticlaunch/mcp-linear"
     },
     {
       "id": "mcp-stripe",
@@ -170,6 +170,174 @@
       "group": "git",
       "requested": "https://github.com/cuckoosandbox/cuckoo.git",
       "closest": "vendor/p1/cuckoo (source clone only; live sandbox not started) + pefile"
+    },
+    {
+      "id": "verify-package-lock",
+      "group": "repo",
+      "requested": "package-lock.json present + npm ci dry doctrine",
+      "closest": "package-lock.json + engines node 22.14.0 / npm 10.9.7"
+    },
+    {
+      "id": "verify-mcp-json",
+      "group": "repo",
+      "requested": ".cursor/mcp.json MCP roster",
+      "closest": ".cursor/mcp.json (Cursor MCP config)"
+    },
+    {
+      "id": "verify-credentials-framework",
+      "group": "repo",
+      "requested": "credentials-framework.json placeholders empty-in-git",
+      "closest": "data/anomaly/credentials-framework.json + free-api-resolutions.json"
+    },
+    {
+      "id": "verify-command-output",
+      "group": "repo",
+      "requested": "corporate commandOutput oneShot/MCP/lockfileCore",
+      "closest": "server/corporate-taxonomy.ts commandOutput bake"
+    },
+    {
+      "id": "verify-oneshot-manifest",
+      "group": "repo",
+      "requested": "one-shot-manifest.json step ledger",
+      "closest": "data/p1/one-shot-manifest.json"
+    },
+    {
+      "id": "verify-inventory-manifest",
+      "group": "repo",
+      "requested": "inventory-manifest.json closest assets",
+      "closest": "data/p1/inventory-manifest.json"
+    },
+    {
+      "id": "mcp-playwright",
+      "group": "mcp",
+      "requested": "@playwright/mcp",
+      "closest": "@playwright/mcp (or npx playwright already in one-shot)"
+    },
+    {
+      "id": "mcp-github-removed",
+      "group": "mcp",
+      "requested": "@modelcontextprotocol/server-github",
+      "closest": "Cloudflare MCP replacement (GitHub MCP absent by policy)"
+    },
+    {
+      "id": "mcp-kubernetes",
+      "group": "mcp",
+      "requested": "@kubernetes/mcp",
+      "closest": "closest public k8s MCP stub / policy-guard noted"
+    },
+    {
+      "id": "mcp-sinch",
+      "group": "mcp",
+      "requested": "@sinch/mcp",
+      "closest": "Sinch MCP namespace (Conversation/SMS skills)"
+    },
+    {
+      "id": "mcp-code-mode-cf",
+      "group": "mcp",
+      "requested": "cloudflare-code-mode",
+      "closest": "cloudflare-code-mode MCP binding"
+    },
+    {
+      "id": "pip-edgartools",
+      "group": "python-legal",
+      "requested": "edgartools",
+      "closest": "edgartools (SEC client; compatible with sec-edgar closest)"
+    },
+    {
+      "id": "pip-citation-js",
+      "group": "python-legal",
+      "requested": "citation toolkit",
+      "closest": "citation-js + eyecite + reporters-db"
+    },
+    {
+      "id": "pip-hash-chain",
+      "group": "python-legal",
+      "requested": "evidence hash chain",
+      "closest": "hash-wasm + ssri + hasha (npm) / hashlib (stdlib)"
+    },
+    {
+      "id": "ext-eslint",
+      "group": "extensions",
+      "requested": "dbaeumer.vscode-eslint",
+      "closest": "eslint via scripts/eslint.sh (extension optional)"
+    },
+    {
+      "id": "ext-prettier",
+      "group": "extensions",
+      "requested": "esbenp.prettier-vscode",
+      "closest": "prettier via package.json if present; closest formatters"
+    },
+    {
+      "id": "docker-minisearch",
+      "group": "docker",
+      "requested": "elastic search daemon",
+      "closest": "minisearch in-process (compatible when Docker absent)"
+    },
+    {
+      "id": "docker-graphology",
+      "group": "docker",
+      "requested": "neo4j daemon",
+      "closest": "graphology in-process (compatible when Docker absent)"
+    },
+    {
+      "id": "git-sherlock",
+      "group": "git",
+      "requested": "sherlock-project/sherlock",
+      "closest": "sherlock-project PyPI / vendor closest"
+    },
+    {
+      "id": "git-recon-ng-plugins",
+      "group": "git",
+      "requested": "recon-ng marketplace plugins",
+      "closest": "vendor/p1/recon-ng (source; plugins optional)"
+    },
+    {
+      "id": "core-node-engines",
+      "group": "core",
+      "requested": "package.json engines pin",
+      "closest": "engines.node 22.14.0 + engines.npm 10.9.7"
+    },
+    {
+      "id": "core-typescript",
+      "group": "core",
+      "requested": "typescript typecheck",
+      "closest": "npm run typecheck (tsc --noEmit)"
+    },
+    {
+      "id": "pipeline-tracker-3d",
+      "group": "pipelines",
+      "requested": "tracker-3d-smoke",
+      "closest": "bash scripts/pipelines/tracker-3d-smoke.sh"
+    },
+    {
+      "id": "pipeline-aip-static",
+      "group": "pipelines",
+      "requested": "aip-static-smoke",
+      "closest": "bash scripts/pipelines/aip-static-smoke.sh"
+    },
+    {
+      "id": "pipeline-env-placeholders",
+      "group": "pipelines",
+      "requested": "env-placeholders",
+      "closest": "bash scripts/pipelines/env-placeholders.sh"
+    },
+    {
+      "id": "pipeline-policy-guard",
+      "group": "pipelines",
+      "requested": "policy-guard",
+      "closest": "bash scripts/pipelines/policy-guard.sh"
+    },
+    {
+      "id": "telemetry-build",
+      "group": "telemetry",
+      "requested": "build-telemetry.sh",
+      "closest": "bash scripts/build-telemetry.sh"
+    },
+    {
+      "id": "deploy-pages-orphan",
+      "group": "deploy",
+      "requested": "deploy-gh-pages clean orphan",
+      "closest": "bash scripts/deploy-gh-pages.sh (orphan publish)"
     }
   ]
 }
