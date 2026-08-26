@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { ScrollStableFeed } from "@/components/lyra/scroll-stable-feed";
 
 export type TelemetryTick = {
   id: string;
@@ -233,14 +234,14 @@ export function LiveTelemetryFeed({
           </div>
         </div>
 
-        <div className="flex max-h-[420px] flex-col gap-2 overflow-y-auto pr-1">
+        <ScrollStableFeed heightClassName="h-[420px] max-h-[420px]">
           {feed.map((row, i) => (
             <button
               key={`${row.id}-${i}`}
               type="button"
               onClick={() => onSelectAnomaly?.(row.anomalyId)}
               className={cn(
-                "animate-rise rounded-lg border border-border/50 bg-background/30 px-3 py-2 text-left transition hover:border-primary/35",
+                "rounded-lg border border-border/50 bg-background/30 px-3 py-2 text-left transition hover:border-primary/35",
                 i === 0 && "border-primary/40 bg-primary/10",
               )}
             >
@@ -261,7 +262,7 @@ export function LiveTelemetryFeed({
               ) : null}
             </button>
           ))}
-        </div>
+        </ScrollStableFeed>
       </CardContent>
     </Card>
   );

@@ -1,8 +1,8 @@
 {
   "title": "10,000+ improvement recommendations (research note §7)",
   "classified": false,
-  "note": "65 hard-coded seed improvements from the research annex, plus deterministic expansion to 10,080. Unpublished @forensic-tools / @financial-intel packages map to closest installs. Intercepts, IMEI triangulation, live SWIFT sessions, and SAR auto-filing are wont-do.",
-  "generatedTotal": 10080,
+  "note": "65 hard-coded seed improvements from the research annex, plus deterministic expansion to 15,080 (+5,000). Unpublished @forensic-tools / @financial-intel packages map to closest installs. Intercepts, IMEI triangulation, live SWIFT sessions, and SAR auto-filing are wont-do.",
+  "generatedTotal": 15080,
   "seedCount": 65,
   "seeds": [
     {

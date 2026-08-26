@@ -484,7 +484,7 @@ export function AnomalyTracker({ initialData }: { initialData?: TrackerBook }) {
                 <LoaderCircleIcon className="size-4 animate-spin" />
                 Compiling tracker
               </CardTitle>
-              <CardDescription>Loading fixtures, taxonomy map, and 10k+ improvements.</CardDescription>
+              <CardDescription>Loading fixtures, taxonomy map, and 15k+ improvements.</CardDescription>
             </CardHeader>
           </Card>
         ) : null}

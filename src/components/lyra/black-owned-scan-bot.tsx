@@ -10,6 +10,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { ScrollStableFeed } from "@/components/lyra/scroll-stable-feed";
 
 export type BlackOwnedScanTarget = {
   id: string;
@@ -487,10 +488,10 @@ export function BlackOwnedScanBot({ bot }: { bot: BlackOwnedScanBotPayload }) {
             <p className="mb-2 text-[10px] tracking-[0.16em] text-muted-foreground uppercase">
               Auto-queue discovery log
             </p>
-            <ul className="max-h-40 space-y-1.5 overflow-y-auto pr-1">
+            <ScrollStableFeed heightClassName="h-40 max-h-40" className="gap-1.5">
               {discoveryLog.length ? (
                 discoveryLog.map((row) => (
-                  <li
+                  <div
                     key={row.renderKey}
                     className="rounded-lg border border-emerald-400/25 bg-emerald-500/5 px-2.5 py-2 text-xs"
                   >
@@ -501,23 +502,23 @@ export function BlackOwnedScanBot({ bot }: { bot: BlackOwnedScanBotPayload }) {
                       <span className="font-mono text-[10px] text-emerald-200/90">{row.action}</span>
                     </div>
                     <p className="mt-0.5 text-muted-foreground">{row.channel}</p>
-                  </li>
+                  </div>
                 ))
               ) : (
-                <li className="rounded-lg border border-border/40 px-2.5 py-2 text-xs text-muted-foreground">
+                <div className="rounded-lg border border-border/40 px-2.5 py-2 text-xs text-muted-foreground">
                   Waiting for next discovery pulse — new finds auto-admit to the scan queue.
-                </li>
+                </div>
               )}
-            </ul>
+            </ScrollStableFeed>
           </div>
 
           <div>
             <p className="mb-2 text-[10px] tracking-[0.16em] text-muted-foreground uppercase">
               Live scan / crime documentation log
             </p>
-            <ul className="max-h-56 space-y-1.5 overflow-y-auto pr-1">
+            <ScrollStableFeed heightClassName="h-56 max-h-56" className="gap-1.5">
               {log.map((row) => (
-                <li
+                <div
                   key={row.renderKey}
                   className={cn("rounded-lg border px-2.5 py-2 text-xs", statusTone(row.status))}
                 >
@@ -533,9 +534,9 @@ export function BlackOwnedScanBot({ bot }: { bot: BlackOwnedScanBotPayload }) {
                       ? row.crimeCategoryLabel
                       : `${row.target.city} · ${row.target.scanAction}`}
                   </p>
-                </li>
+                </div>
               ))}
-            </ul>
+            </ScrollStableFeed>
           </div>
 
           {hardening ? (

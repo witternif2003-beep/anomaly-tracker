@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { ScrollStableFeed } from "@/components/lyra/scroll-stable-feed";
 import {
   SCOUT_TICK_MS,
   inspectTrackerBook,
@@ -364,9 +365,9 @@ export function ScoutBotPanel({
           <p className="mb-2 text-[10px] tracking-[0.16em] text-muted-foreground uppercase">
             Scout heal log
           </p>
-          <ul className="max-h-72 space-y-1.5 overflow-y-auto pr-1">
+          <ScrollStableFeed heightClassName="h-72 max-h-72" className="gap-1.5 space-y-0">
             {log.map((row) => (
-              <li
+              <div
                 key={row.id}
                 className="rounded-lg border border-border/40 bg-background/40 px-2.5 py-2 text-xs"
               >
@@ -379,9 +380,9 @@ export function ScoutBotPanel({
                   </span>
                 </div>
                 <p className="mt-0.5 text-muted-foreground">{row.finding.detail}</p>
-              </li>
+              </div>
             ))}
-          </ul>
+          </ScrollStableFeed>
         </div>
       </CardContent>
     </Card>

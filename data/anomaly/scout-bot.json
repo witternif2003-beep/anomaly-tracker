@@ -34,7 +34,7 @@
     "envFreeResolved": 16,
     "pipelineScripts": 12,
     "boHardeningScore": 95,
-    "improvementsGenerated": 10080,
+    "improvementsGenerated": 15080,
     "gateTarget": 405,
     "tickMs": 67,
     "repairRescanPasses": 3,

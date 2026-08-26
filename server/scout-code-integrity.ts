@@ -165,6 +165,16 @@ export function compileScoutCodeIntegrity() {
     "tracker page does not SSR-inline anomaly.json",
   );
 
+  // Scroll-stable auto-feeds (W3C overflow-anchor)
+  push(
+    "hidden-scroll-stable-feed",
+    "ux",
+    fileHas("src/components/lyra/scroll-stable-feed.tsx", "overflow-anchor") &&
+      fileHas("src/app/globals.css", "scroll-stable-feed") &&
+      fileHas("src/components/lyra/live-telemetry-feed.tsx", "ScrollStableFeed"),
+    "ScrollStableFeed + CSS overflow-anchor:none on auto-populating feeds",
+  );
+
   // Free-API resolutions file present for all non-CF placeholders
   const freeDoc = read("data/anomaly/free-api-resolutions.json");
   let freeOk = false;

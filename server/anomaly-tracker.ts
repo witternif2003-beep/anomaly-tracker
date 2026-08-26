@@ -24,7 +24,7 @@ import { envPlaceholderStatus } from "./load-env";
 import { oneShotStatus } from "./install-status";
 import { cjisStatus, policyStatus } from "./policy";
 
-const IMPROVEMENT_COUNT = 10080;
+const IMPROVEMENT_COUNT = 15080;
 const POSTDOC_IMPROVEMENT_COUNT = 500;
 const TELEMETRY_TICK_MS = 1200;
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");

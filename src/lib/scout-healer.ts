@@ -57,7 +57,7 @@ export const EXPECTED = {
   mayPackets: 15,
   mayCategories: 10,
   mayElements: 43,
-  improvementsGenerated: 10080,
+  improvementsGenerated: 15080,
   improvementSeeds: 65,
   evidenceElements: 30,
   fbiMapRows: 10,
@@ -458,9 +458,9 @@ export function inspectTrackerBook(
       (improvements.generated ?? improvements.total ?? 0) < EXPECTED.improvementsGenerated
     ) {
       push(findings, {
-        id: "improvements-generated-10080",
+        id: "improvements-generated-15080",
         severity: "P2",
-        title: "Improvements generated below 10080",
+        title: "Improvements generated below 15080",
         detail: `generated=${improvements.generated ?? improvements.total ?? 0}`,
         healable: true,
         healAction: "reload-static",

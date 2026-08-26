@@ -104,7 +104,7 @@ export function policyStatus() {
       page: "/tracker",
       skills: ["p1-anomaly-tracker"],
       agent: "anomaly-tracker",
-      improvements: 10080,
+      improvements: 15080,
       intercepts: false,
       liveFbi: false,
       massSurveillance: false,

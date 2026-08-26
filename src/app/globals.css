@@ -1422,6 +1422,49 @@
   animation: rise-in 900ms cubic-bezier(0.22, 1, 0.36, 1) 80ms both;
 }
 
+/*
+ * Scroll-stable auto-feeds — W3C CSS Scroll Anchoring Module Level 1
+ * https://www.w3.org/TR/css-scroll-anchoring-1/
+ * MDN overflow-anchor: https://developer.mozilla.org/en-US/docs/Web/CSS/overflow-anchor
+ *
+ * Mutating/prepending feed nodes must not be chosen as document scroll anchors
+ * (Chrome/Firefox); otherwise the page bounces when the user scrolls past live
+ * telemetry / scout / BO discovery logs. Fixed-height scrollports stop document
+ * growth; the sentinel below provides a stable latch.
+ */
+.scroll-stable-region {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.scroll-stable-feed {
+  overflow-anchor: none;
+  overscroll-behavior: contain;
+  contain: layout style;
+  flex-shrink: 0;
+}
+
+.scroll-stable-feed > * {
+  overflow-anchor: none;
+}
+
+.scroll-anchor-sentinel {
+  overflow-anchor: auto;
+  height: 1px;
+  width: 100%;
+  flex-shrink: 0;
+  pointer-events: none;
+  visibility: hidden;
+}
+
+@supports not (overflow-anchor: none) {
+  /* Engines without overflow-anchor rely on ScrollStableFeed ResizeObserver. */
+  .scroll-stable-feed {
+    contain: layout style;
+  }
+}
+
 @keyframes orbit-spin {
   to {
     transform: rotateX(68deg) rotateZ(360deg);
