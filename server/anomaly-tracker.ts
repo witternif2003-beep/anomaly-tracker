@@ -840,8 +840,8 @@ export function compileAnomalyTracker(opts?: {
       postdocExtreme: scoutBotDoc.postdocExtreme === true,
       hiddenCodeScan: scoutBotDoc.hiddenCodeScan === true,
       repairRescan: scoutBotDoc.repairRescan === true,
-      repairRescanPasses: scoutBotDoc.repairRescanPasses ?? 243,
-      gateTarget: scoutBotDoc.gateTarget ?? 32805,
+      repairRescanPasses: scoutBotDoc.repairRescanPasses ?? 729,
+      gateTarget: scoutBotDoc.gateTarget ?? 98415,
       note: scoutBotDoc.note,
       healActions: scoutBotDoc.healActions,
       baselines: scoutBotDoc.baselines,
@@ -1103,11 +1103,11 @@ export function compileAnomalyTracker(opts?: {
             scoutBotDoc.extremeScan === true &&
             scoutBotDoc.hiddenCodeScan === true &&
             scoutBotDoc.repairRescan === true &&
-            (scoutBotDoc.repairRescanPasses ?? 0) >= 243 &&
+            (scoutBotDoc.repairRescanPasses ?? 0) >= 729 &&
             (scoutBotDoc.tickMs ?? 9999) <= 1 &&
-            (scoutBotDoc.gateTarget ?? 0) >= 32805 &&
-            scoutBotDoc.mode === "postdoc-x243-extreme-24x7",
-          detail: `scout postdoc ×243 extreme 1ms · gates≥32805 · hidden-code deep · repair→rescan ×243 · ${scoutBotDoc.healActions.length} heal actions`,
+            (scoutBotDoc.gateTarget ?? 0) >= 98415 &&
+            scoutBotDoc.mode === "postdoc-x729-extreme-24x7",
+          detail: `scout postdoc ×729 extreme 1ms · gates≥98415 · hidden-code deep · repair→rescan ×729 · ${scoutBotDoc.healActions.length} heal actions`,
         },
         {
           id: "business-crime-taxonomy",
@@ -1234,7 +1234,8 @@ export function compileAnomalyTracker(opts?: {
             (
               scoutBotDoc.mode === "postdoc-x27-extreme-24x7" ||
               scoutBotDoc.mode === "postdoc-x81-extreme-24x7" ||
-              scoutBotDoc.mode === "postdoc-x243-extreme-24x7"
+              scoutBotDoc.mode === "postdoc-x243-extreme-24x7" ||
+              scoutBotDoc.mode === "postdoc-x729-extreme-24x7"
             ),
           detail: "×27 floor retained: ≤7ms · gates≥3645 · repair→rescan ≥27 (satisfied by ×81)",
         },
@@ -1246,9 +1247,10 @@ export function compileAnomalyTracker(opts?: {
             (scoutBotDoc.repairRescanPasses ?? 0) >= 81 &&
             (
               scoutBotDoc.mode === "postdoc-x81-extreme-24x7" ||
-              scoutBotDoc.mode === "postdoc-x243-extreme-24x7"
+              scoutBotDoc.mode === "postdoc-x243-extreme-24x7" ||
+              scoutBotDoc.mode === "postdoc-x729-extreme-24x7"
             ),
-          detail: "×81 floor retained: ≤2ms · gates≥10935 · repair→rescan ≥81 (satisfied by ×243)",
+          detail: "×81 floor retained: ≤2ms · gates≥10935 · repair→rescan ≥81 (satisfied by ×729)",
         },
         {
           id: "scout-x243-pressure",
@@ -1256,8 +1258,20 @@ export function compileAnomalyTracker(opts?: {
             (scoutBotDoc.tickMs ?? 9999) <= 1 &&
             (scoutBotDoc.gateTarget ?? 0) >= 32805 &&
             (scoutBotDoc.repairRescanPasses ?? 0) >= 243 &&
-            scoutBotDoc.mode === "postdoc-x243-extreme-24x7",
-          detail: "×243 pressure: 1ms tick · gates≥32805 · repair→rescan ×243 · hidden-code deep dive ≥1944",
+            (
+              scoutBotDoc.mode === "postdoc-x243-extreme-24x7" ||
+              scoutBotDoc.mode === "postdoc-x729-extreme-24x7"
+            ),
+          detail: "×243 floor retained: ≤1ms · gates≥32805 · repair→rescan ≥243 (satisfied by ×729)",
+        },
+        {
+          id: "scout-x729-pressure",
+          ok:
+            (scoutBotDoc.tickMs ?? 9999) <= 1 &&
+            (scoutBotDoc.gateTarget ?? 0) >= 98415 &&
+            (scoutBotDoc.repairRescanPasses ?? 0) >= 729 &&
+            scoutBotDoc.mode === "postdoc-x729-extreme-24x7",
+          detail: "×729 pressure: 1ms tick · gates≥98415 · repair→rescan ×729 · hidden-code deep dive ≥5832",
         },
       ],
     },
