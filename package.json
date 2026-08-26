@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start --hostname 0.0.0.0 --port 43127",
     "lint": "eslint",
-    "verify": "bash scripts/verify-build.sh"
+    "verify": "bash scripts/verify-build.sh",
+    "telemetry": "bash scripts/build-telemetry.sh"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
