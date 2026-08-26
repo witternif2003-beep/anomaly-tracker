@@ -85,6 +85,14 @@ async function buildAnswer(messages: ChatMessage[], model: LocalModelId): Promis
               "## GHOST-HAND",
               result.ghostHand.hand.map((layer) => `- ${layer.name}: ${layer.rule}`).join("\n"),
             );
+            const lat = result.ghostHand.lattice;
+            if (lat?.engaged) {
+              sections.push(
+                "## Lyra-2 lattice",
+                `${lat.lockedCount}/${lat.axisCount} axes locked · ${lat.tensionCount} tensions`,
+                ...lat.tensions.map((t) => `- ${t.left} ↔ ${t.right}: ${t.note}`),
+              );
+            }
           }
         }
       }

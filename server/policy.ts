@@ -47,7 +47,14 @@ export function policyStatus() {
       status: "activated",
       protocol: "GHOST-HAND",
       defaultMode: "detail",
-      note: "Detail mode is the default. GHOST intake (Goal, Handoffs, Output, Stakes, Taboos) plus HAND hardening (Hypotheses, Anchors, Negatives, Done-when).",
+      note: "Detail mode is the default. GHOST-HAND plus Lyra-2 13-axis lattice (4-D, GHOST, HAND) with explicit tensions. Not a classified product.",
+    },
+    lyra2HyperDimensional: {
+      status: "engaged",
+      engine: "lyra-2",
+      protocol: "GHOST-HAND",
+      axes: 13,
+      note: "Hyper-dimensional means 4-D + GHOST + HAND scored together with tensions. No clearance banners. No interagency cable simulation.",
     },
     aipSigma0: {
       status: "deployed",

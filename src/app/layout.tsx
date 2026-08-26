@@ -22,7 +22,7 @@ const instrument = Instrument_Serif({
 export const metadata: Metadata = {
   title: "Lyra — Prompt optimization",
   description:
-    "GHOST-HAND detailed prompt optimizer. 4-D method: Deconstruct, Diagnose, Develop, Deliver, with anti-hallucination HAND rules.",
+    "GHOST-HAND / Lyra-2 prompt optimizer. 4-D plus a 13-axis lattice, with AIP-Σ0 anti-hallucination.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

@@ -47,13 +47,46 @@ export interface GhostHandLayer {
   rule?: string;
 }
 
+export interface DimensionalAxis {
+  id: string;
+  family: "4d" | "ghost" | "hand";
+  name: string;
+  score: 0 | 1 | 2;
+  status: "idle" | "open" | "defaulted" | "locked";
+  note: string;
+}
+
+export interface DimensionalTension {
+  id: string;
+  left: string;
+  right: string;
+  severity: "info" | "warn";
+  note: string;
+}
+
+export interface Lyra2Lattice {
+  engine: "lyra-2";
+  protocol: "GHOST-HAND";
+  hyperDimensional: true;
+  engaged: boolean;
+  axisCount: number;
+  lockedCount: number;
+  openCount: number;
+  tensionCount: number;
+  axes: DimensionalAxis[];
+  tensions: DimensionalTension[];
+}
+
 export interface GhostHandReport {
   active: boolean;
   protocol: "GHOST-HAND";
   mode: "detailed" | "basic";
   defaultOn: boolean;
+  engine: "lyra-2";
+  hyperDimensional: boolean;
   ghost: GhostHandLayer[];
   hand: GhostHandLayer[];
+  lattice: Lyra2Lattice;
 }
 
 export interface OptimizeRequest {

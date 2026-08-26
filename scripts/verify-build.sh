@@ -170,7 +170,7 @@ if curl -fsS -o /dev/null --max-time 3 "${base}/"; then
   echo "${body}" | python3 -c "import json,sys; d=json.load(sys.stdin); assert d.get('status')=='complete' and d.get('optimizedPrompt'); assert d.get('ghostHand',{}).get('active') is False; print('VERIFY OK: optimize API', d['status'], len(d['optimizedPrompt']), 'chars')"
   detail='{"input":"write a launch email for our headphones. Make it good.","mode":"detail","skipQuestions":true,"requestType":"auto","platform":"chatgpt"}'
   dbody="$(curl -fsS --max-time 10 -H "Content-Type: application/json" -d "${detail}" "${base}/api/optimize")"
-  echo "${dbody}" | python3 -c "import json,sys; d=json.load(sys.stdin); assert d.get('status')=='complete'; assert d.get('ghostHand',{}).get('active') is True; assert d.get('ghostHand',{}).get('protocol')=='GHOST-HAND'; assert 'GHOST-HAND / Anchors' in d.get('optimizedPrompt',''); assert 'AIP-Σ0' in d.get('optimizedPrompt',''); assert d.get('aipSigma0',{}).get('simulated') is False; assert d['aipSigma0']['promptScan']['verdict'] in ('pass','review'); print('VERIFY OK: GHOST-HAND detailed', d['ghostHand']['mode'], len(d['optimizedPrompt']), 'chars')"
+  echo "${dbody}" | python3 -c "import json,sys; d=json.load(sys.stdin); assert d.get('status')=='complete'; gh=d.get('ghostHand',{}); assert gh.get('active') is True; assert gh.get('protocol')=='GHOST-HAND'; assert gh.get('engine')=='lyra-2'; assert gh.get('hyperDimensional') is True; assert gh.get('lattice',{}).get('axisCount',0)>=13; assert 'GHOST-HAND / Anchors' in d.get('optimizedPrompt',''); assert 'Lyra-2 / Dimensional lattice' in d.get('optimizedPrompt',''); assert 'AIP-Σ0' in d.get('optimizedPrompt',''); assert d.get('aipSigma0',{}).get('simulated') is False; assert d['aipSigma0']['promptScan']['verdict'] in ('pass','review'); print('VERIFY OK: GHOST-HAND Lyra-2', gh['engine'], gh['lattice']['axisCount'], 'axes', len(d['optimizedPrompt']), 'chars')"
   dip="$(curl -fsS --max-time 15 "${base}/api/aip/dive")"
   echo "${dip}" | python3 -c "import json,sys; d=json.load(sys.stdin); assert d.get('ok') is True and d.get('simulated') is False; assert d.get('fixturesOk') is True; print('VERIFY OK: AIP-Σ0 deep dive', d['proofHash'][:12], d['elapsedMs'], 'ms')"
 else
@@ -187,6 +187,9 @@ ids = {m["id"] for m in models["data"]}
 assert {"local-v1", "local-v1-concise"} <= ids, ids
 p1 = json.load(urllib.request.urlopen(base + "/v1/p1?limit=1", timeout=8))
 assert p1["totalSlots"] >= 11000, p1["totalSlots"]
+mode = json.load(urllib.request.urlopen(base + "/v1/mode", timeout=8))
+assert mode["engine"] == "lyra-2" and mode["hyperDimensional"] is True, mode
+assert mode["lattice"]["axisCount"] >= 13, mode["lattice"]
 inv = json.load(urllib.request.urlopen(base + "/v1/inventory", timeout=8))
 assert inv["additionalSlots"] == 10000, inv["additionalSlots"]
 assert len(inv["assets"]) >= 20, len(inv["assets"])

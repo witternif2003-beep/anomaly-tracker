@@ -75,7 +75,12 @@ app.get("/v1/install", (_req, res) => {
 });
 
 app.get("/v1/mode", (_req, res) => {
-  res.json({ object: "lyra.mode", defaultMode: "detail", ...ghostHandStatus() });
+  res.json({
+    object: "lyra.mode",
+    defaultMode: "detail",
+    lyra2: true,
+    ...ghostHandStatus(),
+  });
 });
 
 app.get("/v1/aip", (_req, res) => {

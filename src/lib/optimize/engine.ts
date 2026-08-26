@@ -2,6 +2,7 @@ import type {
   ClarifyingQuestion,
   DeconstructResult,
   DiagnoseResult,
+  Lyra2Lattice,
   Mode,
   OptimizeRequest,
   OptimizeResult,
@@ -9,6 +10,7 @@ import type {
   RequestType,
 } from "./types";
 import { buildGhostHandReport, HAND_LAYERS } from "./ghost-hand";
+import { formatLatticeForPrompt } from "./lyra2";
 import { scanText } from "../aip-sigma0/scanner";
 
 const VAGUE = [
@@ -344,6 +346,7 @@ function techniquesFor(type: RequestType, complexity: DiagnoseResult["complexity
   const shared = ["Role assignment", "Context layering", "Explicit output contract"];
   if (mode === "detail") {
     shared.push("GHOST-HAND detailed protocol");
+    shared.push("Lyra-2 hyper-dimensional lattice");
     shared.push("AIP-Σ0 full-spectrum anti-hallucination");
   }
   if (type === "creative") {
@@ -494,6 +497,7 @@ function buildPrompt(
   d: DeconstructResult,
   answers: Record<string, string>,
   mode: Mode,
+  lattice?: Lyra2Lattice,
 ): { prompt: string; inferred: string[] } {
   const inferred: string[] = [];
   const audience = answers.audience?.trim() || defaultAudience(type, d);
@@ -560,6 +564,9 @@ function buildPrompt(
       : HAND_LAYERS[3].rule;
     sections["AIP-Σ0"] =
       "Anchor Inventory Protocol Σ0 is active. Every factual claim must be (1) present in the original brief, (2) quoted from attached source text, or (3) marked UNKNOWN with the verification that would settle it. Do not mint citations, holdings, statistics, URLs, or quotations.";
+    if (lattice?.engaged) {
+      sections["Lyra-2 / Dimensional lattice"] = formatLatticeForPrompt(lattice);
+    }
   }
 
   return { prompt: wrapForPlatform(platform, sections), inferred };
@@ -588,6 +595,7 @@ function implementation(platform: Platform, mode: Mode, type: RequestType): stri
   if (mode === "detail") {
     steps.push(
       "GHOST-HAND is active. Answers from the GHOST intake are baked in. HAND rules (Hypotheses, Anchors, Negatives, Done-when) are already in the prompt — do not strip them.",
+      "Lyra-2 hyper-dimensional lattice is engaged. The prompt lists 13 axes (4-D + GHOST + HAND). Resolve listed tensions explicitly.",
       "AIP-Σ0 full spectrum is deployed. Scan the model's reply for unsourced citations, percents, URLs, and case names before you trust it.",
     );
   }
@@ -627,6 +635,9 @@ function whatChanged(
   }
   if (techniques.includes("GHOST-HAND detailed protocol")) {
     items.push("Activated GHOST-HAND detailed mode: GHOST intake plus HAND anti-hallucination rules.");
+  }
+  if (techniques.includes("Lyra-2 hyper-dimensional lattice")) {
+    items.push("Engaged Lyra-2 hyper-dimensional lattice: 4-D, GHOST, and HAND axes plus explicit tensions.");
   }
   return items;
 }
@@ -706,6 +717,7 @@ export function optimize(request: OptimizeRequest): OptimizeResult {
   const answers = request.answers ?? {};
   const hasAnswers = Object.values(answers).some((v) => v.trim().length > 0);
   const questions = buildQuestions(d, type);
+  const briefScan = scanText(input);
 
   if (
     request.mode === "detail" &&
@@ -728,12 +740,35 @@ export function optimize(request: OptimizeRequest): OptimizeResult {
       implementation: [],
       platformNotes: platformNotes(request.platform, type),
       inferredDefaults: [],
-      ghostHand: buildGhostHandReport({ mode: request.mode, deconstruct: d, answers, inferred: [] }),
+      ghostHand: buildGhostHandReport({
+        mode: request.mode,
+        deconstruct: d,
+        answers,
+        inferred: [],
+        diagnose: diag,
+        briefScan,
+        stage: "questions",
+      }),
+      aipSigma0: {
+        protocol: "AIP-Σ0",
+        deployed: true,
+        simulated: false,
+        briefScan,
+        promptScan: scanText("", [input]),
+      },
     };
   }
 
-  const built = buildPrompt(input, type, request.platform, d, answers, request.mode);
-  const briefScan = scanText(input);
+  const draftLattice = buildGhostHandReport({
+    mode: request.mode,
+    deconstruct: d,
+    answers,
+    inferred: [],
+    diagnose: diag,
+    briefScan,
+    stage: "complete",
+  }).lattice;
+  const built = buildPrompt(input, type, request.platform, d, answers, request.mode, draftLattice);
   const promptScan = scanText(built.prompt, [input]);
 
   return {
@@ -756,6 +791,9 @@ export function optimize(request: OptimizeRequest): OptimizeResult {
       deconstruct: d,
       answers,
       inferred: built.inferred,
+      diagnose: diag,
+      briefScan,
+      stage: "complete",
     }),
     aipSigma0: {
       protocol: "AIP-Σ0",

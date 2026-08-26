@@ -24,6 +24,8 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { CopyButton } from "@/components/lyra/copy-button";
 import { FourDRail, type FourDPhase } from "@/components/lyra/four-d-rail";
+import { LatticeRail } from "@/components/lyra/lattice-rail";
+import { idleLyra2Lattice } from "@/lib/optimize/lyra2";
 import { EXAMPLES, PLATFORM_LABELS } from "@/lib/examples";
 import type {
   Mode,
@@ -119,9 +121,9 @@ export function Studio() {
             <div>
               <p className="font-heading text-2xl leading-none tracking-tight">Lyra</p>
               <p className="mt-1 text-xs tracking-[0.14em] text-muted-foreground uppercase">
-                GHOST-HAND detailed ·{" "}
+                GHOST-HAND · Lyra-2 ·{" "}
                 <Link href="/aip" className="underline-offset-4 hover:underline">
-                  AIP-Σ0 full spectrum
+                  AIP-Σ0
                 </Link>
               </p>
             </div>
@@ -152,8 +154,8 @@ export function Studio() {
               Turn a rough ask into a prompt a model can actually execute.
             </h1>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">
-              GHOST-HAND detailed mode is on. Lyra runs 4-D — Deconstruct, Diagnose, Develop,
-              Deliver — then hardens the prompt so the model cannot invent facts.
+              GHOST-HAND is on. Lyra-2 runs a 13-axis lattice — 4-D plus GHOST plus HAND —
+              and writes tensions into the prompt so the model cannot ignore the conflicts.
             </p>
           </div>
 
@@ -209,7 +211,7 @@ export function Studio() {
             />
             <p className="text-xs text-muted-foreground">
               {mode === "detail"
-                ? "GHOST-HAND asks Goal, Handoffs, Output, Stakes, and Taboos, then writes HAND anti-hallucination rules into the prompt."
+                ? "GHOST-HAND asks Goal, Handoffs, Output, Stakes, and Taboos. Lyra-2 then scores those axes against 4-D and HAND and lists tensions."
                 : "Basic mode applies core techniques and ships a prompt immediately."}
             </p>
           </div>
@@ -263,6 +265,10 @@ export function Studio() {
 
         <section className="flex min-w-0 flex-col gap-4">
           <FourDRail phase={busy ? phase : result ? phase : "idle"} />
+          <LatticeRail
+            engaged={mode === "detail"}
+            lattice={result?.ghostHand.lattice ?? (mode === "detail" ? idleLyra2Lattice() : undefined)}
+          />
 
           {error ? (
             <Card className="border-destructive/40">
@@ -431,6 +437,7 @@ function ResultPanel({ result }: { result: OptimizeResult }) {
           <Badge className="capitalize">{result.requestType}</Badge>
           <Badge variant="outline">{PLATFORM_LABELS[result.platform]}</Badge>
           {result.ghostHand.active ? <Badge>GHOST-HAND</Badge> : null}
+          {result.ghostHand.hyperDimensional ? <Badge variant="secondary">Lyra-2</Badge> : null}
           {result.aipSigma0 ? (
             <Badge variant={result.aipSigma0.briefScan.verdict === "pass" ? "secondary" : "outline"}>
               AIP-Σ0 {result.aipSigma0.briefScan.verdict}
@@ -603,7 +610,11 @@ function Trace({ result }: { result: OptimizeResult }) {
         <CardHeader>
           <CardTitle>GHOST-HAND</CardTitle>
           <CardDescription>
-            {result.ghostHand.active ? "Detailed protocol armed" : "Idle in Basic mode"}
+            {result.ghostHand.hyperDimensional
+              ? `Lyra-2 engaged · ${result.ghostHand.lattice.lockedCount}/${result.ghostHand.lattice.axisCount} axes locked`
+              : result.ghostHand.active
+                ? "Detailed protocol armed"
+                : "Idle in Basic mode"}
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-3 sm:grid-cols-2">
@@ -619,6 +630,13 @@ function Trace({ result }: { result: OptimizeResult }) {
               key={`h-${layer.letter}`}
               title={`HAND ${layer.letter} ${layer.name}`}
               body={layer.rule || ""}
+            />
+          ))}
+          {result.ghostHand.lattice.tensions.map((tension) => (
+            <TraceBlock
+              key={tension.id}
+              title={`${tension.left} ↔ ${tension.right}`}
+              body={`${tension.severity}: ${tension.note}`}
             />
           ))}
         </CardContent>

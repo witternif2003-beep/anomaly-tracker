@@ -1,4 +1,6 @@
-import type { DeconstructResult, GhostHandLayer, GhostHandReport, Mode } from "./types";
+import type { DeconstructResult, DiagnoseResult, GhostHandLayer, GhostHandReport, Mode } from "./types";
+import type { AipScan } from "../aip-sigma0/scanner";
+import { buildLyra2Lattice, idleLyra2Lattice, LYRA2_ENGINE } from "./lyra2";
 
 export const GHOST_HAND_PROTOCOL = "GHOST-HAND" as const;
 
@@ -34,11 +36,14 @@ export const HAND_LAYERS = [
 ] as const;
 
 export function ghostHandStatus(): GhostHandReport {
+  const lattice = idleLyra2Lattice();
   return {
     active: true,
     protocol: GHOST_HAND_PROTOCOL,
     mode: "detailed",
     defaultOn: true,
+    engine: LYRA2_ENGINE,
+    hyperDimensional: true,
     ghost: GHOST_LAYERS.map((layer) => ({
       letter: layer.letter,
       name: layer.name,
@@ -51,6 +56,7 @@ export function ghostHandStatus(): GhostHandReport {
       name: layer.name,
       rule: layer.rule,
     })),
+    lattice: { ...lattice, engaged: true },
   };
 }
 
@@ -59,12 +65,16 @@ export function buildGhostHandReport(opts: {
   deconstruct: DeconstructResult;
   answers: Record<string, string>;
   inferred: string[];
+  diagnose?: DiagnoseResult;
+  briefScan?: AipScan;
+  stage?: "questions" | "complete";
 }): GhostHandReport {
   const inactive: GhostHandReport = {
     ...ghostHandStatus(),
     active: false,
     mode: "basic",
     defaultOn: true,
+    hyperDimensional: false,
     ghost: GHOST_LAYERS.map((layer) => ({
       letter: layer.letter,
       name: layer.name,
@@ -72,6 +82,14 @@ export function buildGhostHandReport(opts: {
       status: "idle",
       value: "Basic mode — GHOST intake skipped",
     })),
+    lattice: buildLyra2Lattice({
+      mode: "basic",
+      stage: "complete",
+      deconstruct: opts.deconstruct,
+      diagnose: opts.diagnose,
+      ghost: [],
+      inferred: opts.inferred,
+    }),
   };
   if (opts.mode !== "detail") return inactive;
 
@@ -123,17 +141,30 @@ export function buildGhostHandReport(opts: {
     },
   ];
 
+  const hand = HAND_LAYERS.map((layer) => ({
+    letter: layer.letter,
+    name: layer.name,
+    rule: layer.rule,
+  }));
+  const stage = opts.stage ?? "complete";
   return {
     active: true,
     protocol: GHOST_HAND_PROTOCOL,
     mode: "detailed",
     defaultOn: true,
+    engine: LYRA2_ENGINE,
+    hyperDimensional: true,
     ghost,
-    hand: HAND_LAYERS.map((layer) => ({
-      letter: layer.letter,
-      name: layer.name,
-      rule: layer.rule,
-    })),
+    hand,
+    lattice: buildLyra2Lattice({
+      mode: opts.mode,
+      stage,
+      deconstruct: d,
+      diagnose: opts.diagnose,
+      ghost,
+      inferred: opts.inferred,
+      briefScan: opts.briefScan,
+    }),
   };
 }
 

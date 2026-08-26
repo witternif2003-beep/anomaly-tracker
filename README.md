@@ -6,7 +6,8 @@ It does not call ChatGPT, Claude, or Gemini. The optimizer runs locally in this 
 
 ## What you get
 
-- **GHOST-HAND detailed mode (default)** — GHOST intake (Goal, Handoffs, Output, Stakes, Taboos) asks clarifying questions, then HAND hardening writes Hypotheses, Anchors, Negatives, and Done-when into the prompt so the model cannot invent facts.
+- **GHOST-HAND detailed mode (default)** — GHOST intake (Goal, Handoffs, Output, Stakes, Taboos) plus HAND hardening (Hypotheses, Anchors, Negatives, Done-when).
+- **Lyra-2 hyper-dimensional lattice** — GHOST-HAND scores 13 axes (4-D + GHOST + HAND) and writes tensions into the prompt. This is a prompt-engineering feature, not a classified product.
 - **AIP-Σ0 full spectrum** — real anti-hallucination hardening: claim scanner, legal-search receipts, local-v1 completions, optimizer self-scan, and a live deep dive at `/aip`. Not simulated. Not a live Cloudflare deploy.
 - **Basic mode** — immediate rewrite using core techniques (role, constraints, output contract).
 - **Request types** — auto-detect, or lock Creative, Technical, Educational, or Complex.
@@ -162,7 +163,8 @@ Named pipelines: `cloudflare-ci.sh` (Wrangler **dry-run only**), `cloudflare-p1-
 | Marketplace plugins | Integrated | Cline, Roo Code, Continue (Open VSX) + Continue/Cline/Roo config files |
 | Live Cloudflare deploy | Dry-run only | `scripts/wrangler-safe.sh` refuses deploy without `--dry-run` |
 | CJIS / NCIC / federal credentials | Applicable placeholders | `CJIS_*` / `NCIC_*` empty in git; live queries return 403 |
-| GHOST-HAND detailed mode | Activated (default) | Detail mode on; GHOST intake + HAND anti-hallucination rules |
+| GHOST-HAND detailed mode | Activated (default) | Detail mode on; GHOST intake + HAND rules |
+| Lyra-2 hyper-dimensional | Engaged | 13-axis lattice (4-D + GHOST + HAND) with tensions. Not a classified product |
 | AIP-Σ0 full spectrum | Deployed locally | Live fixtures, tool receipts, chat footers, optimizer self-scan. Not a live Cloudflare deploy |
 
 `GET /v1/policy` reports this table. `POST /v1/cjis/search` is always refused.
