@@ -1,3 +1,4 @@
+import { ghostHandEngaged } from "./types";
 import type { AipScan } from "../aip-sigma0/scanner";
 import type {
   DeconstructResult,
@@ -70,7 +71,7 @@ export function buildLyra2Lattice(opts: {
   inferred: string[];
   briefScan?: AipScan;
 }): Lyra2Lattice {
-  if (opts.mode !== "detail") {
+  if (!ghostHandEngaged(opts.mode)) {
     const idle = idleLyra2Lattice();
     return { ...idle, engaged: false, axes: idle.axes.map((a) => ({ ...a, status: "idle", score: 0 })) };
   }

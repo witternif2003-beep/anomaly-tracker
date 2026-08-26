@@ -1,4 +1,5 @@
 import { optimize } from "@/lib/optimize";
+import { parseMode } from "@/lib/optimize/types";
 import type { OptimizeRequest } from "@/lib/optimize";
 
 export async function POST(request: Request) {
@@ -17,7 +18,7 @@ export async function POST(request: Request) {
   try {
     const result = optimize({
       input: payload.input,
-      mode: payload.mode === "basic" ? "basic" : "detail",
+      mode: parseMode(payload.mode),
       requestType: payload.requestType ?? "auto",
       platform: payload.platform ?? "chatgpt",
       answers: payload.answers,

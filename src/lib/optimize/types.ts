@@ -1,6 +1,15 @@
 import type { AipScan } from "../aip-sigma0/scanner";
 
-export type Mode = "basic" | "detail";
+export type Mode = "basic" | "detail" | "postdoc";
+
+export function parseMode(value: unknown): Mode {
+  if (value === "basic" || value === "postdoc" || value === "detail") return value;
+  return "detail";
+}
+
+export function ghostHandEngaged(mode: Mode): boolean {
+  return mode === "detail" || mode === "postdoc";
+}
 
 export type RequestType = "creative" | "technical" | "educational" | "complex";
 
@@ -80,7 +89,7 @@ export interface Lyra2Lattice {
 export interface GhostHandReport {
   active: boolean;
   protocol: "GHOST-HAND";
-  mode: "detailed" | "basic";
+  mode: "detailed" | "basic" | "postdoctoral";
   defaultOn: boolean;
   engine: "lyra-2";
   hyperDimensional: boolean;
@@ -120,6 +129,13 @@ export interface OptimizeResult {
     simulated: false;
     briefScan: AipScan;
     promptScan: AipScan;
+  };
+  liveBot?: {
+    bot: "postdoc-live";
+    hardcoded: true;
+    simulated: false;
+    fired: number;
+    ids: string[];
   };
 }
 

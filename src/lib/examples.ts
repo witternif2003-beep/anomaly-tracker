@@ -40,6 +40,14 @@ export const EXAMPLES: PromptExample[] = [
     prompt:
       "Help me migrate our monolith to microservices. We have a 8-year-old Rails app, 40 engineers, and customers who cannot have downtime.",
   },
+  {
+    id: "remote-work",
+    title: "Causal paper",
+    type: "complex",
+    blurb: "Post-doc bait: causal claim, no design",
+    prompt:
+      "Help me write a paper showing that remote work causes productivity to rise. Make it novel and use AI. People are 87 percent happier.",
+  },
 ];
 
 export const PLATFORM_LABELS: Record<Platform, string> = {

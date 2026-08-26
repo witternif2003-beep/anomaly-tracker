@@ -24,6 +24,8 @@ interface NotebookView {
     dockerAvailable: boolean;
     lyra2: boolean;
     aipSigma0: boolean;
+    postdoc?: boolean;
+    liveSuggestionBot?: boolean;
   };
   oneShot: {
     okCount: number;
@@ -213,6 +215,10 @@ export function InventoryNotebook() {
               <Badge variant="outline">Cuckoo sandbox off</Badge>
               <Badge variant={book.summary.lyra2 ? "secondary" : "outline"}>Lyra-2</Badge>
               <Badge variant={book.summary.aipSigma0 ? "secondary" : "outline"}>AIP-Σ0</Badge>
+              <Badge variant={book.summary.postdoc ? "secondary" : "outline"}>Post-doc</Badge>
+              <Badge variant={book.summary.liveSuggestionBot ? "secondary" : "outline"}>
+                Live bot
+              </Badge>
               <Badge variant="outline">
                 Docker {book.summary.dockerAvailable ? "available" : "unavailable"}
               </Badge>

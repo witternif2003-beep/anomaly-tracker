@@ -9,9 +9,20 @@ import type {
   Platform,
   RequestType,
 } from "./types";
+import { ghostHandEngaged } from "./types";
 import { buildGhostHandReport, HAND_LAYERS } from "./ghost-hand";
 import { formatLatticeForPrompt } from "./lyra2";
 import { scanText } from "../aip-sigma0/scanner";
+import {
+  isPostdocMode,
+  postdocImplementation,
+  postdocProcess,
+  postdocPromptSections,
+  postdocQuestions,
+  postdocRole,
+  postdocTechniques,
+} from "./postdoc";
+import { suggestLive } from "./suggest";
 
 const VAGUE = [
   "thing",
@@ -344,10 +355,13 @@ function diagnose(text: string, d: DeconstructResult): DiagnoseResult {
 
 function techniquesFor(type: RequestType, complexity: DiagnoseResult["complexity"], mode: Mode): string[] {
   const shared = ["Role assignment", "Context layering", "Explicit output contract"];
-  if (mode === "detail") {
+  if (ghostHandEngaged(mode)) {
     shared.push("GHOST-HAND detailed protocol");
     shared.push("Lyra-2 hyper-dimensional lattice");
     shared.push("AIP-Σ0 full-spectrum anti-hallucination");
+  }
+  if (isPostdocMode(mode)) {
+    shared.push(...postdocTechniques());
   }
   if (type === "creative") {
     return [...shared, "Multi-perspective generation", "Tone and voice lock", "Anti-cliché constraints"];
@@ -366,18 +380,24 @@ function techniquesFor(type: RequestType, complexity: DiagnoseResult["complexity
   ];
 }
 
-function roleFor(type: RequestType, d: DeconstructResult): string {
+function roleFor(type: RequestType, d: DeconstructResult, mode: Mode = "detail"): string {
   const domain = d.entities[0] ? ` specializing in ${d.entities[0]}` : "";
+  let base: string;
   switch (type) {
     case "creative":
-      return `a senior brand writer and creative director${domain} who produces specific, memorable work rather than generic marketing language`;
+      base = `a senior brand writer and creative director${domain} who produces specific, memorable work rather than generic marketing language`;
+      break;
     case "technical":
-      return `a principal engineer${domain} who reviews systems for correctness, failure modes, and operational cost — not just happy-path design`;
+      base = `a principal engineer${domain} who reviews systems for correctness, failure modes, and operational cost — not just happy-path design`;
+      break;
     case "educational":
-      return `an expert instructor${domain} who teaches ambitious learners without condescension or unexplained jargon`;
+      base = `an expert instructor${domain} who teaches ambitious learners without condescension or unexplained jargon`;
+      break;
     case "complex":
-      return `a staff-level operator and systems strategist${domain} who decomposes messy, multi-stakeholder problems into sequenced decisions`;
+      base = `a staff-level operator and systems strategist${domain} who decomposes messy, multi-stakeholder problems into sequenced decisions`;
+      break;
   }
+  return isPostdocMode(mode) ? postdocRole(base, d) : base;
 }
 
 function defaultAudience(type: RequestType, d: DeconstructResult): string {
@@ -422,7 +442,8 @@ function defaultTone(type: RequestType, d: DeconstructResult): string {
   }
 }
 
-function processBlock(type: RequestType): string[] {
+function processBlock(type: RequestType, mode: Mode): string[] {
+  if (isPostdocMode(mode)) return postdocProcess();
   switch (type) {
     case "creative":
       return [
@@ -525,7 +546,7 @@ function buildPrompt(
   if (extra) constraintLines.unshift(`Additional context from the user: ${extra}`);
 
   const sections: Record<string, string> = {
-    Role: `You are ${roleFor(type, d)}.`,
+    Role: `You are ${roleFor(type, d, mode)}.`,
     Objective: d.intent,
     "Original brief": input.trim(),
     Audience: audience,
@@ -537,7 +558,7 @@ function buildPrompt(
       .filter(Boolean)
       .join("\n"),
     Constraints: constraintLines.map((c) => `- ${c}`).join("\n"),
-    Process: processBlock(type)
+    Process: processBlock(type, mode)
       .map((step, i) => `${i + 1}. ${step}`)
       .join("\n"),
     "Output contract": [
@@ -555,7 +576,7 @@ function buildPrompt(
       "Ban: 'revolutionize', 'game-changer', 'in today's fast-paced world', 'unlock', 'elevate', 'leverage', 'delve'. If a sentence could appear in any brand's ad, rewrite it.";
   }
 
-  if (mode === "detail") {
+  if (ghostHandEngaged(mode)) {
     sections["GHOST-HAND / Hypotheses"] = HAND_LAYERS[0].rule;
     sections["GHOST-HAND / Anchors"] = HAND_LAYERS[1].rule;
     sections["GHOST-HAND / Negatives"] = HAND_LAYERS[2].rule;
@@ -567,6 +588,9 @@ function buildPrompt(
     if (lattice?.engaged) {
       sections["Lyra-2 / Dimensional lattice"] = formatLatticeForPrompt(lattice);
     }
+  }
+  if (isPostdocMode(mode)) {
+    Object.assign(sections, postdocPromptSections(answers, d));
   }
 
   return { prompt: wrapForPlatform(platform, sections), inferred };
@@ -592,12 +616,15 @@ function implementation(platform: Platform, mode: Mode, type: RequestType): stri
     "Copy the optimized prompt in full. Do not send the original one-liner alongside it.",
     "Attach any source files, code, or data after the prompt, clearly labeled.",
   ];
-  if (mode === "detail") {
+  if (ghostHandEngaged(mode)) {
     steps.push(
       "GHOST-HAND is active. Answers from the GHOST intake are baked in. HAND rules (Hypotheses, Anchors, Negatives, Done-when) are already in the prompt — do not strip them.",
       "Lyra-2 hyper-dimensional lattice is engaged. The prompt lists 13 axes (4-D + GHOST + HAND). Resolve listed tensions explicitly.",
       "AIP-Σ0 full spectrum is deployed. Scan the model's reply for unsourced citations, percents, URLs, and case names before you trust it.",
     );
+  }
+  if (isPostdocMode(mode)) {
+    steps.push(...postdocImplementation());
   }
   if (type === "technical") {
     steps.push("Paste the actual code or schema. The prompt is a contract; the artifact is the evidence.");
@@ -639,11 +666,22 @@ function whatChanged(
   if (techniques.includes("Lyra-2 hyper-dimensional lattice")) {
     items.push("Engaged Lyra-2 hyper-dimensional lattice: 4-D, GHOST, and HAND axes plus explicit tensions.");
   }
+  if (techniques.includes("Post-doctoral protocol (Q-I-C-K-F-L-R)")) {
+    items.push(
+      "Activated post-doctoral mode: question, identification, corpus, contribution, falsifiers, limitations, replicability.",
+    );
+  }
+  if (techniques.includes("Hard-coded live suggestion bot")) {
+    items.push("Attached a hard-coded live suggestion bot — pattern matchers, not a model call.");
+  }
   return items;
 }
 
-function buildQuestions(d: DeconstructResult, type: RequestType): ClarifyingQuestion[] {
+function buildQuestions(d: DeconstructResult, type: RequestType, mode: Mode): ClarifyingQuestion[] {
   const pool: ClarifyingQuestion[] = [];
+  if (isPostdocMode(mode)) {
+    pool.push(...postdocQuestions(type));
+  }
 
   if (d.missing.includes("audience")) {
     pool.push({
@@ -694,7 +732,7 @@ function buildQuestions(d: DeconstructResult, type: RequestType): ClarifyingQues
     });
   }
 
-  return pool.slice(0, 5);
+  return pool.slice(0, isPostdocMode(mode) ? 8 : 5);
 }
 
 function escapeRe(s: string): string {
@@ -716,11 +754,19 @@ export function optimize(request: OptimizeRequest): OptimizeResult {
   const techniques = techniquesFor(type, diag.complexity, request.mode);
   const answers = request.answers ?? {};
   const hasAnswers = Object.values(answers).some((v) => v.trim().length > 0);
-  const questions = buildQuestions(d, type);
+  const questions = buildQuestions(d, type, request.mode);
   const briefScan = scanText(input);
+  const live = suggestLive(input, request.mode);
+  const liveBot = {
+    bot: "postdoc-live" as const,
+    hardcoded: true as const,
+    simulated: false as const,
+    fired: live.fired,
+    ids: live.suggestions.map((s) => s.id),
+  };
 
   if (
-    request.mode === "detail" &&
+    ghostHandEngaged(request.mode) &&
     !request.skipQuestions &&
     !hasAnswers &&
     questions.length > 0
@@ -734,7 +780,7 @@ export function optimize(request: OptimizeRequest): OptimizeResult {
       deconstruct: d,
       diagnose: diag,
       techniques,
-      role: roleFor(type, d),
+      role: roleFor(type, d, request.mode),
       optimizedPrompt: "",
       whatChanged: [],
       implementation: [],
@@ -756,6 +802,7 @@ export function optimize(request: OptimizeRequest): OptimizeResult {
         briefScan,
         promptScan: scanText("", [input]),
       },
+      liveBot,
     };
   }
 
@@ -776,11 +823,11 @@ export function optimize(request: OptimizeRequest): OptimizeResult {
     mode: request.mode,
     requestType: type,
     platform: request.platform,
-    questions: request.mode === "detail" ? questions : undefined,
+    questions: ghostHandEngaged(request.mode) ? questions : undefined,
     deconstruct: d,
     diagnose: diag,
     techniques,
-    role: roleFor(type, d),
+    role: roleFor(type, d, request.mode),
     optimizedPrompt: built.prompt,
     whatChanged: whatChanged(input, type, techniques, d, diag),
     implementation: implementation(request.platform, request.mode, type),
@@ -802,5 +849,6 @@ export function optimize(request: OptimizeRequest): OptimizeResult {
       briefScan,
       promptScan,
     },
+    liveBot,
   };
 }

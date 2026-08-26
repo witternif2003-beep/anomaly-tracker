@@ -25,6 +25,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { CopyButton } from "@/components/lyra/copy-button";
 import { FourDRail, type FourDPhase } from "@/components/lyra/four-d-rail";
 import { LatticeRail } from "@/components/lyra/lattice-rail";
+import { SuggestionBot } from "@/components/lyra/suggestion-bot";
 import { idleLyra2Lattice } from "@/lib/optimize/lyra2";
 import { EXAMPLES, PLATFORM_LABELS } from "@/lib/examples";
 import type {
@@ -33,6 +34,7 @@ import type {
   Platform,
   RequestTypeChoice,
 } from "@/lib/optimize";
+import { ghostHandEngaged, parseMode } from "@/lib/optimize/types";
 import type { AipScan } from "@/lib/aip-sigma0/scanner";
 import { cn } from "@/lib/utils";
 
@@ -48,8 +50,10 @@ export function Studio() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [phase, setPhase] = useState<FourDPhase>("idle");
+  const [dismissed, setDismissed] = useState<Set<string>>(() => new Set());
 
   const canSubmit = input.trim().length >= 8 && !busy;
+  const latticeOn = ghostHandEngaged(mode);
 
   async function run(opts?: { skipQuestions?: boolean; nextAnswers?: Record<string, string> }) {
     setBusy(true);
@@ -100,6 +104,7 @@ export function Studio() {
     setAnswers({});
     setError(null);
     setPhase("idle");
+    setDismissed(new Set());
   }
 
   function reset() {
@@ -108,6 +113,16 @@ export function Studio() {
     setAnswers({});
     setError(null);
     setPhase("idle");
+    setDismissed(new Set());
+  }
+
+  function applyInsert(insert: string) {
+    setInput((prev) => {
+      const trimmed = prev.trimEnd();
+      if (!trimmed) return insert;
+      if (trimmed.includes(insert)) return prev;
+      return `${trimmed}\n\n${insert}`;
+    });
   }
 
   const empty = !result && !busy && !error;
@@ -121,7 +136,7 @@ export function Studio() {
             <div>
               <p className="font-heading text-2xl leading-none tracking-tight">Lyra</p>
               <p className="mt-1 text-xs tracking-[0.14em] text-muted-foreground uppercase">
-                GHOST-HAND · Lyra-2 ·{" "}
+                GHOST-HAND · Lyra-2 · Post-doc ·{" "}
                 <Link href="/aip" className="underline-offset-4 hover:underline">
                   AIP-Σ0
                 </Link>
@@ -135,17 +150,18 @@ export function Studio() {
           <Tabs
             value={mode}
             onValueChange={(value) => {
-              if (value === "basic" || value === "detail") {
-                setMode(value);
-                setResult(null);
-                setPhase("idle");
-                setAnswers({});
-              }
+              const next = parseMode(value);
+              setMode(next);
+              setResult(null);
+              setPhase("idle");
+              setAnswers({});
+              setDismissed(new Set());
             }}
           >
-            <TabsList>
+            <TabsList className="h-auto flex-wrap">
               <TabsTrigger value="basic">Basic</TabsTrigger>
               <TabsTrigger value="detail">GHOST-HAND</TabsTrigger>
+              <TabsTrigger value="postdoc">Post-doc</TabsTrigger>
             </TabsList>
           </Tabs>
         </div>
@@ -158,8 +174,11 @@ export function Studio() {
               Turn a rough ask into a prompt a model can actually execute.
             </h1>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">
-              GHOST-HAND is on. Lyra-2 runs a 13-axis lattice — 4-D plus GHOST plus HAND —
-              and writes tensions into the prompt so the model cannot ignore the conflicts.
+              {mode === "postdoc"
+                ? "Post-doctoral mode is on. A hard-coded live bot scores the brief as you type — question, identification, corpus, falsifiers. It does not call a model."
+                : mode === "detail"
+                  ? "GHOST-HAND is on. Lyra-2 runs a 13-axis lattice — 4-D plus GHOST plus HAND — and writes tensions into the prompt so the model cannot ignore the conflicts."
+                  : "Basic mode rewrites immediately. The live bot still flags vague words and unsourced percents as you type."}
             </p>
           </div>
 
@@ -214,11 +233,27 @@ export function Studio() {
               className="min-h-40 resize-y bg-card/60 text-sm leading-6"
             />
             <p className="text-xs text-muted-foreground">
-              {mode === "detail"
-                ? "GHOST-HAND asks Goal, Handoffs, Output, Stakes, and Taboos. Lyra-2 then scores those axes against 4-D and HAND and lists tensions."
-                : "Basic mode applies core techniques and ships a prompt immediately."}
+              {mode === "postdoc"
+                ? "The live bot inserts methods lines you can keep or edit. Optimize still runs GHOST-HAND plus the post-doc contract."
+                : mode === "detail"
+                  ? "GHOST-HAND asks Goal, Handoffs, Output, Stakes, and Taboos. Lyra-2 then scores those axes against 4-D and HAND and lists tensions."
+                  : "Basic mode applies core techniques and ships a prompt immediately."}
             </p>
           </div>
+
+          <SuggestionBot
+            input={input}
+            mode={mode}
+            dismissed={dismissed}
+            onApply={applyInsert}
+            onDismiss={(id) =>
+              setDismissed((prev) => {
+                const next = new Set(prev);
+                next.add(id);
+                return next;
+              })
+            }
+          />
 
           <div className="flex flex-wrap gap-2">
             <Button
@@ -270,8 +305,8 @@ export function Studio() {
         <section className="flex min-w-0 flex-col gap-4">
           <FourDRail phase={busy ? phase : result ? phase : "idle"} />
           <LatticeRail
-            engaged={mode === "detail"}
-            lattice={result?.ghostHand.lattice ?? (mode === "detail" ? idleLyra2Lattice() : undefined)}
+            engaged={latticeOn}
+            lattice={result?.ghostHand.lattice ?? (latticeOn ? idleLyra2Lattice() : undefined)}
           />
 
           {error ? (
@@ -324,9 +359,11 @@ function EmptyState({ mode }: { mode: Mode }) {
       <CardHeader>
         <CardTitle className="font-heading text-2xl">The 4-D method</CardTitle>
         <CardDescription>
-          {mode === "detail"
-            ? "GHOST-HAND detailed mode will stop after Diagnose if Goal, Handoffs, Output, Stakes, or Taboos are still open."
-            : "Paste a draft on the left. Lyra will rebuild it as a role, objective, constraints, process, and output contract."}
+          {mode === "postdoc"
+            ? "Post-doctoral mode will stop after Diagnose if the research question, identification, corpus, or contribution is still open."
+            : mode === "detail"
+              ? "GHOST-HAND detailed mode will stop after Diagnose if Goal, Handoffs, Output, Stakes, or Taboos are still open."
+              : "Paste a draft on the left. Lyra will rebuild it as a role, objective, constraints, process, and output contract."}
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-3 sm:grid-cols-2">
@@ -377,10 +414,14 @@ function QuestionsPanel({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>GHOST-HAND intake</CardTitle>
+        <CardTitle>
+          {result.mode === "postdoc" ? "Post-doctoral intake" : "GHOST-HAND intake"}
+        </CardTitle>
         <CardDescription>
-          Detected as {result.requestType} work. Answer the GHOST layers you know — skip the
-          rest and Lyra will use labeled defaults, then apply HAND hardening.
+          Detected as {result.requestType} work.
+          {result.mode === "postdoc"
+            ? " Answer the research question, identification, corpus, and contribution you know — skip the rest and Lyra will label defaults, then apply HAND hardening."
+            : " Answer the GHOST layers you know — skip the rest and Lyra will use labeled defaults, then apply HAND hardening."}
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
@@ -441,6 +482,7 @@ function ResultPanel({ result }: { result: OptimizeResult }) {
           <Badge className="capitalize">{result.requestType}</Badge>
           <Badge variant="outline">{PLATFORM_LABELS[result.platform]}</Badge>
           {result.ghostHand.active ? <Badge>GHOST-HAND</Badge> : null}
+          {result.mode === "postdoc" ? <Badge>Post-doc</Badge> : null}
           {result.ghostHand.hyperDimensional ? <Badge variant="secondary">Lyra-2</Badge> : null}
           {result.aipSigma0 ? (
             <Badge variant={result.aipSigma0.briefScan.verdict === "pass" ? "secondary" : "outline"}>

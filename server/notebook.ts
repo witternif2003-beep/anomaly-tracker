@@ -1,5 +1,7 @@
 import { aipSigma0Status } from "../src/lib/aip-sigma0/protocol";
 import { ghostHandStatus } from "../src/lib/optimize/ghost-hand";
+import { postdocStatus } from "../src/lib/optimize/postdoc";
+import { suggestionBotStatus } from "../src/lib/optimize/suggest";
 import { envPlaceholderStatus } from "./load-env";
 import { inventoryStatus } from "./inventory";
 import { oneShotStatus } from "./install-status";
@@ -81,6 +83,8 @@ export function installNotebook() {
   const cjis = cjisStatus();
   const aip = aipSigma0Status();
   const mode = ghostHandStatus();
+  const postdoc = postdocStatus();
+  const bot = suggestionBotStatus();
 
   const legalLive = legal.filter((s) => s.status === "live").length;
   const envSet = env.variables.filter((v) => v.configured).length;
@@ -109,6 +113,8 @@ export function installNotebook() {
       cuckooSourceCloned: install.cuckooSourceCloned,
       aipSigma0: aip.deployed && !aip.simulated,
       lyra2: mode.engine === "lyra-2" && mode.hyperDimensional,
+      postdoc: true,
+      liveSuggestionBot: bot.hardcoded && bot.live,
     },
     protocols: {
       ghostHand: {
@@ -117,6 +123,20 @@ export function installNotebook() {
         hyperDimensional: mode.hyperDimensional,
         defaultOn: mode.defaultOn,
         axes: mode.lattice.axisCount,
+      },
+      postdoc: {
+        protocol: postdoc.protocol,
+        bot: postdoc.bot,
+        hardcoded: postdoc.hardcoded,
+        simulated: postdoc.simulated,
+        liveSuggestions: postdoc.liveSuggestions,
+        layers: postdoc.layers.length,
+      },
+      liveBot: {
+        bot: bot.bot,
+        hardcoded: bot.hardcoded,
+        simulated: bot.simulated,
+        ruleCount: bot.ruleCount,
       },
       aipSigma0: {
         protocol: aip.protocol,

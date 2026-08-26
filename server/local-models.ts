@@ -64,12 +64,16 @@ async function buildAnswer(messages: ChatMessage[], model: LocalModelId): Promis
   const concise = model === "local-v1-concise";
   const sections: string[] = [];
   const anchors: string[] = [user];
+  const academic =
+    /\b(postdoc|post-doctoral|dissertation|identification strategy|research question|peer review|falsif|replicat)\b/i.test(
+      user,
+    );
 
-  if (looksLikePromptCraft(user)) {
+  if (looksLikePromptCraft(user) || academic) {
     try {
       const result = optimize({
         input: user,
-        mode: concise ? "basic" : "detail",
+        mode: concise ? "basic" : academic ? "postdoc" : "detail",
         requestType: "auto",
         platform: "universal",
         skipQuestions: true,

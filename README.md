@@ -1,12 +1,14 @@
 # Lyra
 
-Lyra is a prompt optimization studio. Paste a rough ask, pick **GHOST-HAND** (default) or Basic mode, and get a paste-ready prompt built with the **4-D method**: Deconstruct, Diagnose, Develop, Deliver.
+Lyra is a prompt optimization studio. Paste a rough ask, pick **GHOST-HAND** (default), **Post-doc**, or Basic mode, and get a paste-ready prompt built with the **4-D method**: Deconstruct, Diagnose, Develop, Deliver.
 
 It does not call ChatGPT, Claude, or Gemini. The optimizer runs locally in this app. You copy the result into the model of your choice.
 
 ## What you get
 
 - **GHOST-HAND detailed mode (default)** — GHOST intake (Goal, Handoffs, Output, Stakes, Taboos) plus HAND hardening (Hypotheses, Anchors, Negatives, Done-when).
+- **Post-doctoral mode** — same lattice, plus a methods contract (question, identification, corpus, contribution, falsifiers, limitations, replicability). Role is an adversarial peer reviewer.
+- **Live suggestion bot (hard-coded)** — scores the draft as you type. Pattern matchers only. No model call. Insert or hide each suggestion. Richer rules in Post-doc.
 - **Lyra-2 hyper-dimensional lattice** — GHOST-HAND scores 13 axes (4-D + GHOST + HAND) and writes tensions into the prompt. This is a prompt-engineering feature, not a classified product.
 - **AIP-Σ0 full spectrum** — real anti-hallucination hardening: claim scanner, legal-search receipts, local-v1 completions, optimizer self-scan, and a live deep dive at `/aip`. Not simulated. Not a live Cloudflare deploy.
 - **Basic mode** — immediate rewrite using core techniques (role, constraints, output contract).
@@ -49,7 +51,8 @@ npm run local-api
 | `/v1/p1` | GET | 11,280 P1 slots (`q`, `limit`, `offset`) — 1,280 core + 10,000 Tier-1 | None |
 | `/v1/inventory` | GET | Requested packages vs closest installs | None |
 | `/v1/notebook` | GET | Live install inventory + expansion plan (not classified) | None |
-| `/v1/mode` | GET | GHOST-HAND detailed mode status (default on) | None |
+| `/v1/mode` | GET | GHOST-HAND / Post-doc / live-bot status (default still detail) | None |
+| `/v1/suggest` | GET/POST | Hard-coded live suggestion bot (`input`/`q`, `mode`) | None |
 | `/v1/aip` | GET | AIP-Σ0 full-spectrum status (real, not simulated) | None |
 | `/v1/aip/scan` | POST | Scan text for unsourced citations, percents, URLs, case names | None |
 | `/v1/aip/dive` | GET | Live fixture suite + optimizer self-scan (not a canned boolean) | None |

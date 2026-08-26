@@ -171,6 +171,11 @@ if curl -fsS -o /dev/null --max-time 3 "${base}/"; then
   detail='{"input":"write a launch email for our headphones. Make it good.","mode":"detail","skipQuestions":true,"requestType":"auto","platform":"chatgpt"}'
   dbody="$(curl -fsS --max-time 10 -H "Content-Type: application/json" -d "${detail}" "${base}/api/optimize")"
   echo "${dbody}" | python3 -c "import json,sys; d=json.load(sys.stdin); assert d.get('status')=='complete'; gh=d.get('ghostHand',{}); assert gh.get('active') is True; assert gh.get('protocol')=='GHOST-HAND'; assert gh.get('engine')=='lyra-2'; assert gh.get('hyperDimensional') is True; assert gh.get('lattice',{}).get('axisCount',0)>=13; assert 'GHOST-HAND / Anchors' in d.get('optimizedPrompt',''); assert 'Lyra-2 / Dimensional lattice' in d.get('optimizedPrompt',''); assert 'AIP-Σ0' in d.get('optimizedPrompt',''); assert d.get('aipSigma0',{}).get('simulated') is False; assert d['aipSigma0']['promptScan']['verdict'] in ('pass','review'); print('VERIFY OK: GHOST-HAND Lyra-2', gh['engine'], gh['lattice']['axisCount'], 'axes', len(d['optimizedPrompt']), 'chars')"
+  postdoc='{"input":"Help me write a paper showing remote work causes productivity to rise. Make it novel.","mode":"postdoc","skipQuestions":true,"requestType":"auto","platform":"chatgpt"}'
+  pbody="$(curl -fsS --max-time 10 -H "Content-Type: application/json" -d "${postdoc}" "${base}/api/optimize")"
+  echo "${pbody}" | python3 -c "import json,sys; d=json.load(sys.stdin); assert d.get('status')=='complete'; assert d.get('mode')=='postdoc'; assert d.get('ghostHand',{}).get('mode')=='postdoctoral'; assert 'POSTDOC / Question' in d.get('optimizedPrompt',''); assert 'POSTDOC / Identification' in d.get('optimizedPrompt',''); assert d.get('liveBot',{}).get('hardcoded') is True; assert d['liveBot']['fired']>=1; print('VERIFY OK: postdoc mode', d['liveBot']['fired'], 'bot flags', len(d['optimizedPrompt']), 'chars')"
+  sug="$(curl -fsS --max-time 10 -H "Content-Type: application/json" -d '{"input":"Help me write a paper showing remote work causes productivity to rise. Make it novel.","mode":"postdoc"}' "${base}/api/suggest")"
+  echo "${sug}" | python3 -c "import json,sys; d=json.load(sys.stdin); assert d.get('hardcoded') is True and d.get('simulated') is False; assert d.get('live') is True; ids={s['id'] for s in d['suggestions']}; assert 'causal-without-id' in ids; assert 'help-me-generic' in ids; print('VERIFY OK: live suggest bot', d['fired'], 'fired', sorted(ids)[:6])"
   dip="$(curl -fsS --max-time 15 "${base}/api/aip/dive")"
   echo "${dip}" | python3 -c "import json,sys; d=json.load(sys.stdin); assert d.get('ok') is True and d.get('simulated') is False; assert d.get('fixturesOk') is True; print('VERIFY OK: AIP-Σ0 deep dive', d['proofHash'][:12], d['elapsedMs'], 'ms')"
   nb="$(curl -fsS --max-time 15 "${base}/api/notebook")"
@@ -182,7 +187,7 @@ fi
 local_api="${VERIFY_LOCAL_API:-http://127.0.0.1:4040}"
 if curl -fsS -o /dev/null --max-time 3 "${local_api}/v1/models"; then
   python3 - "${local_api}" <<'PY'
-import json, sys, urllib.request
+import json, sys, urllib.parse, urllib.request
 base = sys.argv[1]
 models = json.load(urllib.request.urlopen(base + "/v1/models", timeout=8))
 ids = {m["id"] for m in models["data"]}
@@ -192,6 +197,10 @@ assert p1["totalSlots"] >= 11000, p1["totalSlots"]
 mode = json.load(urllib.request.urlopen(base + "/v1/mode", timeout=8))
 assert mode["engine"] == "lyra-2" and mode["hyperDimensional"] is True, mode
 assert mode["lattice"]["axisCount"] >= 13, mode["lattice"]
+assert mode["postdoc"]["hardcoded"] is True and mode["liveBot"]["live"] is True, mode
+sug = json.load(urllib.request.urlopen(base + "/v1/suggest?mode=postdoc&q=" + urllib.parse.quote("Help me write a paper showing remote work causes productivity to rise."), timeout=8))
+assert sug["hardcoded"] is True and sug["simulated"] is False
+assert any(s["id"] == "causal-without-id" for s in sug["suggestions"]), sug
 nb = json.load(urllib.request.urlopen(base + "/v1/notebook", timeout=12))
 assert nb["classified"] is False and nb["governmentProgram"] is False, nb
 assert nb["summary"]["p1Slots"] >= 11000, nb["summary"]

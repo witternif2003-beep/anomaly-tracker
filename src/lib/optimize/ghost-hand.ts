@@ -1,4 +1,5 @@
 import type { DeconstructResult, DiagnoseResult, GhostHandLayer, GhostHandReport, Mode } from "./types";
+import { ghostHandEngaged } from "./types";
 import type { AipScan } from "../aip-sigma0/scanner";
 import { buildLyra2Lattice, idleLyra2Lattice, LYRA2_ENGINE } from "./lyra2";
 
@@ -91,7 +92,7 @@ export function buildGhostHandReport(opts: {
       inferred: opts.inferred,
     }),
   };
-  if (opts.mode !== "detail") return inactive;
+  if (!ghostHandEngaged(opts.mode)) return inactive;
 
   const d = opts.deconstruct;
   const a = opts.answers;
@@ -150,7 +151,7 @@ export function buildGhostHandReport(opts: {
   return {
     active: true,
     protocol: GHOST_HAND_PROTOCOL,
-    mode: "detailed",
+    mode: opts.mode === "postdoc" ? "postdoctoral" : "detailed",
     defaultOn: true,
     engine: LYRA2_ENGINE,
     hyperDimensional: true,

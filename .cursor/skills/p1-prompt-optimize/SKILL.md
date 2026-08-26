@@ -15,5 +15,6 @@ Use for prompt rewrites. Calls the same engine as POST /api/optimize and local-v
 - Catalog: `GET http://127.0.0.1:4040/v1/p1`.
 - Legal search: `POST http://127.0.0.1:4040/v1/legal/search`.
 - Default protocol is GHOST-HAND detailed mode (`POST /api/optimize` without `mode` → `detail`). Lyra-2 lattice is engaged in that mode (`engine: lyra-2`, 13 axes).
+- Post-doctoral mode: `mode: "postdoc"`. Live suggestion bot is hard-coded (`GET/POST /api/suggest` or `/v1/suggest`). Do not treat it as a model.
 - AIP-Σ0 full spectrum is deployed: do not invent citations; scan replies with `POST /v1/aip/scan` or open `/aip` for the live deep dive.
 - Map every answer to a P1 slot's `skillId`, `agentId`, and `resource`.

@@ -17,7 +17,7 @@ export function LatticeRail({
   if (!engaged) {
     return (
       <p className="text-xs text-muted-foreground">
-        Basic mode — Lyra-2 lattice is idle. Switch to GHOST-HAND to engage 13 axes.
+        Basic mode — Lyra-2 lattice is idle. Switch to GHOST-HAND or Post-doc to engage 13 axes.
       </p>
     );
   }

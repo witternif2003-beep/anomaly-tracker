@@ -56,6 +56,14 @@ export function policyStatus() {
       axes: 13,
       note: "Hyper-dimensional means 4-D + GHOST + HAND scored together with tensions. No clearance banners. No interagency cable simulation.",
     },
+    postdoctoralMode: {
+      status: "activated",
+      protocol: "POSTDOC",
+      bot: "postdoc-live",
+      hardcoded: true,
+      simulated: false,
+      note: "Post-doctoral mode plus a hard-coded live suggestion bot. Pattern matchers only. Not a university credential and not a model call.",
+    },
     aipSigma0: {
       status: "deployed",
       protocol: "AIP-Σ0",

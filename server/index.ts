@@ -17,6 +17,9 @@ import { oneShotStatus } from "./install-status";
 import { installNotebook } from "./notebook";
 import { listP1Slots } from "./p1-catalog";
 import { ghostHandStatus } from "../src/lib/optimize/ghost-hand";
+import { parseMode } from "../src/lib/optimize/types";
+import { postdocStatus } from "../src/lib/optimize/postdoc";
+import { suggestLive, suggestionBotStatus } from "../src/lib/optimize/suggest";
 import { aipSigma0Status } from "../src/lib/aip-sigma0/protocol";
 import { scanText } from "../src/lib/aip-sigma0/scanner";
 import { runAipDeepDive } from "../src/lib/aip-sigma0/dive";
@@ -83,9 +86,28 @@ app.get("/v1/mode", (_req, res) => {
   res.json({
     object: "lyra.mode",
     defaultMode: "detail",
+    modes: ["basic", "detail", "postdoc"],
     lyra2: true,
+    postdoc: postdocStatus(),
+    liveBot: suggestionBotStatus(),
     ...ghostHandStatus(),
   });
+});
+
+app.get("/v1/suggest", (req, res) => {
+  const input = String(req.query.input ?? req.query.q ?? "");
+  const mode = parseMode(req.query.mode);
+  if (!input.trim()) {
+    res.json(suggestionBotStatus());
+    return;
+  }
+  res.json(suggestLive(input, mode));
+});
+
+app.post("/v1/suggest", (req, res) => {
+  const body = (req.body ?? {}) as { input?: unknown; q?: unknown; mode?: unknown };
+  const input = String(body.input ?? body.q ?? "");
+  res.json(suggestLive(input, parseMode(body.mode)));
 });
 
 app.get("/v1/aip", (_req, res) => {
