@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Lyra local playground</title>
+    <style>
+      :root {
+        --bg: #12140f;
+        --panel: #1c2018;
+        --ink: #f3efe4;
+        --muted: #b7b09d;
+        --line: #323628;
+        --accent: #d4a017;
+        --ok: #9cbc6b;
+      }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); font-family: "Iowan Old Style", "Palatino Linotype", Palatino, serif; }
+      body { display: grid; grid-template-rows: auto 1fr; }
+      header { display: flex; justify-content: space-between; gap: 1rem; align-items: baseline; padding: 1rem 1.25rem; border-bottom: 1px solid var(--line); }
+      header h1 { font-size: 1.15rem; margin: 0; letter-spacing: 0.02em; }
+      header p { margin: 0; color: var(--muted); font-size: 0.85rem; font-family: ui-sans-serif, system-ui, sans-serif; }
+      main { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(260px, 0.8fr); min-height: 0; }
+      @media (max-width: 840px) { main { grid-template-columns: 1fr; } }
+      .chat { display: flex; flex-direction: column; min-height: 0; border-right: 1px solid var(--line); }
+      #log { flex: 1; overflow: auto; padding: 1rem 1.25rem; display: flex; flex-direction: column; gap: 0.85rem; }
+      .msg { padding: 0.75rem 0.9rem; border-radius: 10px; white-space: pre-wrap; line-height: 1.45; font-size: 0.98rem; }
+      .user { background: #262b20; align-self: flex-end; max-width: 90%; }
+      .assistant { background: var(--panel); border: 1px solid var(--line); }
+      form { display: grid; gap: 0.6rem; padding: 0.9rem 1.25rem 1.2rem; border-top: 1px solid var(--line); }
+      textarea { width: 100%; min-height: 88px; resize: vertical; background: #0e100c; color: var(--ink); border: 1px solid var(--line); border-radius: 8px; padding: 0.7rem; font: inherit; }
+      .row { display: flex; gap: 0.6rem; flex-wrap: wrap; align-items: center; }
+      select, button { font-family: ui-sans-serif, system-ui, sans-serif; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); padding: 0.45rem 0.7rem; }
+      button.primary { background: var(--accent); color: #1a1403; border-color: var(--accent); font-weight: 650; }
+      button:disabled { opacity: 0.55; }
+      aside { padding: 1rem 1.1rem; overflow: auto; font-family: ui-sans-serif, system-ui, sans-serif; font-size: 0.84rem; }
+      aside h2 { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin: 0 0 0.55rem; }
+      .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 0.75rem; margin-bottom: 0.7rem; }
+      .card strong { display: block; margin-bottom: 0.25rem; }
+      .muted { color: var(--muted); }
+      .ok { color: var(--ok); }
+      input[type="search"] { width: 100%; margin-bottom: 0.5rem; background: #0e100c; color: var(--ink); border: 1px solid var(--line); border-radius: 8px; padding: 0.45rem 0.55rem; }
+      a { color: var(--accent); }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div>
+        <h1>Lyra local playground</h1>
+        <p>Streaming chat against local-v1 — Bearer tokens are accepted and ignored. No hosted LLM keys.</p>
+      </div>
+      <p class="ok" id="status">connecting…</p>
+    </header>
+    <main>
+      <section class="chat">
+        <div id="log"></div>
+        <form id="composer">
+          <textarea id="prompt" placeholder="Ask a legal research question, or paste a rough prompt to rewrite." required></textarea>
+          <div class="row">
+            <label>Model
+              <select id="model">
+                <option value="local-v1">local-v1</option>
+                <option value="local-v1-concise">local-v1-concise</option>
+              </select>
+            </label>
+            <button class="primary" type="submit" id="send">Send</button>
+          </div>
+        </form>
+      </section>
+      <aside>
+        <h2>Legal search</h2>
+        <div class="card">
+          <input id="legal-q" type="search" placeholder="Search FOLIO / CourtListener" />
+          <button type="button" id="legal-go">Search</button>
+          <div id="legal-out" class="muted" style="margin-top:0.6rem">Public CourtListener plus on-box FOLIO cards.</div>
+        </div>
+        <h2>P1 catalog</h2>
+        <div class="card">
+          <div id="p1-meta" class="muted">Loading slots…</div>
+          <div id="p1-out"></div>
+        </div>
+      </aside>
+    </main>
+    <script>
+      const log = document.getElementById("log");
+      const status = document.getElementById("status");
+      const form = document.getElementById("composer");
+      const prompt = document.getElementById("prompt");
+      const model = document.getElementById("model");
+      const send = document.getElementById("send");
+      const messages = [];
+
+      function addMsg(role, text) {
+        const el = document.createElement("div");
+        el.className = "msg " + role;
+        el.textContent = text;
+        log.appendChild(el);
+        log.scrollTop = log.scrollHeight;
+        return el;
+      }
+
+      async function boot() {
+        try {
+          const res = await fetch("/v1/models");
+          const data = await res.json();
+          const ids = (data.data || []).map((m) => m.id).join(", ");
+          status.textContent = "live · " + ids;
+        } catch {
+          status.textContent = "API unreachable";
+        }
+        const p1 = await fetch("/v1/p1?limit=8").then((r) => r.json());
+        document.getElementById("p1-meta").textContent = p1.totalSlots + " slots in catalog";
+        document.getElementById("p1-out").innerHTML = (p1.data || [])
+          .map((s) => "<div><strong>" + s.id + "</strong><span class='muted'> " + s.title + "</span></div>")
+          .join("");
+      }
+
+      document.getElementById("legal-go").addEventListener("click", async () => {
+        const query = document.getElementById("legal-q").value.trim();
+        const out = document.getElementById("legal-out");
+        if (!query) return;
+        out.textContent = "Searching…";
+        const res = await fetch("/v1/legal/search", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ query, sources: ["folio", "courtlistener", "p1"], limit: 6 }),
+        });
+        const data = await res.json();
+        if (!data.results || !data.results.length) {
+          out.textContent = (data.warnings || []).join(" ") || "No hits.";
+          return;
+        }
+        out.innerHTML = data.results
+          .map((h) => {
+            const link = h.url ? " <a href='" + h.url + "' target='_blank' rel='noreferrer'>open</a>" : "";
+            return "<div style='margin-bottom:0.55rem'><strong>" + h.source + " · " + h.title + "</strong>" + link + "<div class='muted'>" + (h.snippet || "").slice(0, 220) + "</div></div>";
+          })
+          .join("");
+      });
+
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const content = prompt.value.trim();
+        if (!content) return;
+        prompt.value = "";
+        messages.push({ role: "user", content });
+        addMsg("user", content);
+        const bubble = addMsg("assistant", "");
+        send.disabled = true;
+        try {
+          const res = await fetch("/v1/chat/completions", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: "Bearer ignored-local-token",
+            },
+            body: JSON.stringify({ model: model.value, stream: true, messages }),
+          });
+          if (!res.ok || !res.body) throw new Error("chat failed");
+          const reader = res.body.getReader();
+          const decoder = new TextDecoder();
+          let buf = "";
+          let full = "";
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            buf += decoder.decode(value, { stream: true });
+            const parts = buf.split("\n\n");
+            buf = parts.pop() || "";
+            for (const part of parts) {
+              const line = part.split("\n").find((l) => l.startsWith("data: "));
+              if (!line) continue;
+              const payload = line.slice(6);
+              if (payload === "[DONE]") continue;
+              const json = JSON.parse(payload);
+              const delta = json.choices?.[0]?.delta?.content || "";
+              full += delta;
+              bubble.textContent = full;
+              log.scrollTop = log.scrollHeight;
+            }
+          }
+          messages.push({ role: "assistant", content: full });
+        } catch (err) {
+          bubble.textContent = String(err);
+        } finally {
+          send.disabled = false;
+        }
+      });
+
+      boot();
+    </script>
+  </body>
+</html>

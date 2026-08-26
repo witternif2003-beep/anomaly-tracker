@@ -2,5 +2,5 @@
   "name": "Lyra",
   "snapshot": "snapshot-20260826-917b31bd-9fd0-4900-b979-8b62e342e733",
   "install": "bash scripts/install-toolchain.sh",
-  "start": "npm run dev"
+  "start": "bash scripts/start-servers.sh"
 }

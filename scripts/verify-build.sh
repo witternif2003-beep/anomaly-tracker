@@ -31,6 +31,9 @@ lucide_ver="$(node -p "require('lucide-react/package.json').version")"
 types_node_ver="$(node -p "require('@types/node/package.json').version")"
 eslint_pkg_ver="$(node -p "require('eslint/package.json').version")"
 playwright_pkg_ver="$(node -p "require('playwright/package.json').version")"
+express_ver="$(node -p "require('express/package.json').version")"
+cors_ver="$(node -p "require('cors/package.json').version")"
+tsx_ver="$(node -p "require('tsx/package.json').version")"
 ts_ver="$(node -p "require('typescript/package.json').version")"
 ts6_ver="$(node -p "require('@typescript/typescript6/package.json').version")"
 
@@ -41,6 +44,9 @@ expect "lucide-react" "$lucide_ver" "1.34.0"
 expect "@types/node" "$types_node_ver" "22.20.1"
 expect "eslint" "$eslint_pkg_ver" "10.9.0"
 expect "playwright" "$playwright_pkg_ver" "1.62.1"
+expect "express" "$express_ver" "5.2.1"
+expect "cors" "$cors_ver" "2.8.6"
+expect "tsx" "$tsx_ver" "4.23.12"
 expect "typescript" "$ts_ver" "7.0.2"
 expect "@typescript/typescript6" "$ts6_ver" "6.0.2"
 
@@ -92,7 +98,7 @@ fi
 node ./node_modules/typescript/lib/tsc.js --noEmit
 ok "typescript --noEmit"
 
-bash scripts/eslint.sh src --max-warnings=0
+bash scripts/eslint.sh src server --max-warnings=0
 ok "eslint"
 
 base="${VERIFY_BASE_URL:-http://127.0.0.1:43127}"
@@ -102,6 +108,33 @@ if curl -fsS -o /dev/null --max-time 3 "${base}/"; then
   echo "${body}" | python3 -c "import json,sys; d=json.load(sys.stdin); assert d.get('status')=='complete' and d.get('optimizedPrompt'); print('VERIFY OK: optimize API', d['status'], len(d['optimizedPrompt']), 'chars')"
 else
   echo "VERIFY WARN: ${base} is not up; skipped live API check"
+fi
+
+local_api="${VERIFY_LOCAL_API:-http://127.0.0.1:4040}"
+if curl -fsS -o /dev/null --max-time 3 "${local_api}/v1/models"; then
+  python3 - "${local_api}" <<'PY'
+import json, sys, urllib.request
+base = sys.argv[1]
+models = json.load(urllib.request.urlopen(base + "/v1/models", timeout=8))
+ids = {m["id"] for m in models["data"]}
+assert {"local-v1", "local-v1-concise"} <= ids, ids
+p1 = json.load(urllib.request.urlopen(base + "/v1/p1?limit=1", timeout=8))
+assert p1["totalSlots"] >= 1000, p1["totalSlots"]
+req = urllib.request.Request(
+    base + "/v1/chat/completions",
+    data=json.dumps({
+        "model": "local-v1-concise",
+        "messages": [{"role": "user", "content": "Summarize why qualified immunity has two prongs."}],
+    }).encode(),
+    headers={"Content-Type": "application/json", "Authorization": "Bearer ignored"},
+    method="POST",
+)
+chat = json.load(urllib.request.urlopen(req, timeout=20))
+assert chat["choices"][0]["message"]["content"], chat
+print("VERIFY OK: local API models/p1/chat", p1["totalSlots"], "p1 slots")
+PY
+else
+  echo "VERIFY WARN: ${local_api} is not up; skipped local API check"
 fi
 
 ok "build verify finished"

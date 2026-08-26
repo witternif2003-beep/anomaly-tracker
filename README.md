@@ -28,6 +28,31 @@ npm start
 
 No API keys. No database.
 
+## Local application server (127.0.0.1:4040)
+
+Express 5.2.1 serves an OpenAI-compatible local API. Models `local-v1` and `local-v1-concise` run on-box. Authorization headers are accepted and ignored.
+
+```bash
+npm run local-api
+```
+
+| Endpoint | Method | Function | Auth |
+| --- | --- | --- | --- |
+| `/v1/chat/completions` | POST | OpenAI-compatible chat (optional `stream`) | Bearer ignored |
+| `/v1/models` | GET | Lists `local-v1` and `local-v1-concise` | None |
+| `/v1/legal/search` | POST | FOLIO cards + public CourtListener + P1 | None |
+| `/v1/p1` | GET | 1,280 P1 catalog slots (`q`, `limit`, `offset`) | None |
+| `/v1/playground` | GET | Streaming chat UI | None |
+
+```bash
+curl http://127.0.0.1:4040/v1/models
+curl -H 'Authorization: Bearer ignored' -H 'Content-Type: application/json' \
+  -d '{"model":"local-v1","messages":[{"role":"user","content":"Rewrite this prompt for a motion to dismiss."}]}' \
+  http://127.0.0.1:4040/v1/chat/completions
+```
+
+Open [http://127.0.0.1:4040/v1/playground](http://127.0.0.1:4040/v1/playground).
+
 ## How the engine chooses techniques
 
 | Type | Emphasis |
@@ -59,9 +84,11 @@ Run `bash scripts/install-toolchain.sh` (or `npm run toolchain`) to install this
 | @eslint/js | 10.0.1 | lockfile | ESLint recommended config | Closest substitute — `@eslint/js@10.9.0` is not on npm |
 | typescript-eslint | 8.68.0 | lockfile | TypeScript lint rules | Used instead of `eslint-config-next` (not ESLint 10 compatible) |
 | Playwright | 1.62.1 | lockfile | Browser automation | `npx playwright install chromium` |
-| Playwright | 1.62.1 | lockfile | Browser automation | `npx playwright install chromium` |
 | folio-mcp | 0.4.1 | `npm i -g folio-mcp@0.4.1` | Legal ontology MCP | stdio server; document pulls need `folio login` |
 | Wrangler | 4.x | `npm i -g wrangler@4` | Cloudflare Workers CLI | Dry-run / version check only — never deploy |
+| tsx | 4.23.12 | lockfile | Run the Express TypeScript server | Active |
+| Express | 5.2.1 | lockfile | Local application server on :4040 | Active |
+| cors | 2.8.6 | lockfile | CORS for the local API / playground | Active |
 
 ```bash
 nvm install 22.14.0
