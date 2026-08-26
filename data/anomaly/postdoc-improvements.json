@@ -2,9 +2,9 @@
   "title": "Post-doctoral forensic query catalog (tracker §8.1)",
   "classified": false,
   "governmentProgram": false,
-  "total": 5500,
+  "total": 95500,
   "top500": 500,
-  "note": "5,500 unclassified post-doctoral forensic queries for /tracker (+5,000). TOP 500 are state-of-the-art DFIR improvements grounded in 2025–2026 research (Magnet State of Enterprise DFIR 2026, cloud forensic acquisition, AI+OSINT fusion, financial knowledge-graph anomaly detection, explainable AML). Extends research-agenda §8 without replacing the five core questions. Never removes prior axes — only adds. No live intercepts, CJIS, or SIGINT collection.",
+  "note": "95,500 unclassified post-doctoral forensic queries for /tracker (+90,000). TRACKER-TAB specific. TOP 500 are state-of-the-art DFIR + tracker-dashboard improvements (Magnet DFIR 2026, cloud forensics, AI+OSINT, AML/XAI, WeirdFlows, FIU graphs, ranked-signal dashboard UX). Full catalog is a deterministic virtual expand on /tracker — bake ships TOP 500 + seed (Pages-safe). Never removes prior axes — only adds. No live intercepts, CJIS, or SIGINT.",
   "sotaSources": [
     {
       "id": "magnet-dfir-2026",
@@ -41,6 +41,12 @@
       "title": "FIU AI suspicious-transaction monitoring & knowledge graphs",
       "url": "https://innefu.com/ai-driven-suspicious-transaction-monitoring-in-financial-intelligence-units-fius/",
       "themes": ["knowledge graphs", "dynamic risk scoring", "OSINT enrichment", "entity resolution"]
+    },
+    {
+      "id": "tracker-dashboard-ux",
+      "title": "Threat / anomaly dashboard UX — ranked signal, provenance, pivots",
+      "url": "https://www.wandr.studio/blog/threat-intelligence-dashboard-design",
+      "themes": ["ranked shortlist", "confidence provenance", "entity pivot", "tracker decision surface"]
     }
   ],
   "axes": [
@@ -268,6 +274,34 @@
       "prompt": "Which fixture queries detect synthetic identity / device-fingerprint collisions without biometric live collection?",
       "sota": true,
       "sourceId": "fiu-knowledge-graph"
+    },
+    {
+      "id": "sota-tracker-ranked-signal",
+      "label": "SOTA tracker ranked-signal shortlist",
+      "prompt": "How should /tracker lead with a ranked P1 shortlist (confidence × impact) instead of a chronological firehose?",
+      "sota": true,
+      "sourceId": "tracker-dashboard-ux"
+    },
+    {
+      "id": "sota-tracker-provenance-ui",
+      "label": "SOTA tracker provenance & confidence UI",
+      "prompt": "How do /tracker badges show confidence + source provenance so fixture scores never look like live certainty?",
+      "sota": true,
+      "sourceId": "tracker-dashboard-ux"
+    },
+    {
+      "id": "sota-tracker-entity-pivot",
+      "label": "SOTA tracker entity-pivot workspace",
+      "prompt": "What entity-pivot paths (business → anomaly → May packet → PAC) keep investigation context on /tracker without new searches?",
+      "sota": true,
+      "sourceId": "tracker-dashboard-ux"
+    },
+    {
+      "id": "sota-tracker-query-workspace",
+      "label": "SOTA tracker forensic query workspace",
+      "prompt": "How should §8.1 forensic queries expose filter cost, falsifier, and next counsel step as a decision surface on TRACKER?",
+      "sota": true,
+      "sourceId": "tracker-dashboard-ux"
     }
   ],
   "methods": [

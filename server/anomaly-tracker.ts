@@ -23,130 +23,56 @@ import { inventoryStatus } from "./inventory";
 import { envPlaceholderStatus } from "./load-env";
 import { oneShotStatus } from "./install-status";
 import { cjisStatus, policyStatus } from "./policy";
+import {
+  POSTDOC_BAKE_SAMPLE,
+  POSTDOC_TOP500,
+  POSTDOC_TOTAL,
+  buildPostdocImprovement as buildPostdocFromSeed,
+  type PostdocImprovement,
+  type PostdocSeed,
+} from "../src/lib/postdoc-forensic-catalog";
 
 const IMPROVEMENT_COUNT = 15080;
-const POSTDOC_IMPROVEMENT_COUNT = 5500;
-const POSTDOC_TOP500 = 500;
+const POSTDOC_IMPROVEMENT_COUNT = POSTDOC_TOTAL;
 const TELEMETRY_TICK_MS = 1200;
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 
-export type PostdocImprovement = {
-  id: string;
-  index: number;
-  axisId: string;
-  axisLabel: string;
-  title: string;
-  question: string;
-  method: string;
-  falsifier: string;
-  deliverable: string;
-  lyraBinding: string;
-  categoryId: string;
-  categoryLabel: string;
-  entityTypeId: string;
-  entityTypeLabel: string;
-  fbiCategory: string | null;
-  evidenceId: string | null;
-  artifact: string | null;
-  rqAnchor: string;
-  status: "open" | "constrained";
-  wontDo: string | null;
-  priority: "P1" | "P2" | "P3";
-  pipelineCheck: string;
-  sotaRank?: number | null;
-  sotaTier?: "top500-sota" | "catalog";
-  sotaSourceId?: string | null;
-  forensicQuery: string;
-};
-
-function buildPostdocImprovement(index: number): PostdocImprovement {
-  const axes = postdocImprovementsDoc.axes as Array<{
-    id: string;
-    label: string;
-    prompt: string;
-    sota?: boolean;
-    sourceId?: string;
-  }>;
-  const methods = postdocImprovementsDoc.methods;
-  const falsifiers = postdocImprovementsDoc.falsifiers;
-  const deliverables = postdocImprovementsDoc.deliverables;
-  const categories = taxonomy.categories;
-  const entityTypes = fixtures.entityTypes;
-  const elements = evidenceCorpus.elements;
-  const maps = evidenceCorpus.fbiToCorporate;
-  const rqs = researchAgendaDoc.questions;
-  const sotaAxes = axes.filter((a) => a.sota);
-
-  const slot = index + 1;
-  const inTop500 = index < POSTDOC_TOP500;
-  const axis = inTop500
-    ? sotaAxes[index % Math.max(1, sotaAxes.length)]
-    : axes[index % axes.length];
-  const method = methods[index % methods.length];
-  const falsifier = falsifiers[Math.floor(index / 3) % falsifiers.length];
-  const deliverable = deliverables[Math.floor(index / 5) % deliverables.length];
-  const category = categories[index % categories.length];
-  const entityType = entityTypes[index % entityTypes.length];
-  const element = elements[index % elements.length];
-  const map = maps[index % maps.length];
-  const rq = rqs[index % rqs.length];
-
-  const constrained =
-    Boolean(element.collectionStatus === "constrained") ||
-    axis.id === "ethics-guardrails" ||
-    axis.id === "cross-border-hold" ||
-    rq.status === "constrained";
-  const wontDo = constrained
-    ? "wontDo" in element && typeof element.wontDo === "string"
-      ? element.wontDo
-      : (rq.wontDo ?? "sigint-intercepts")
-    : null;
-
-  const priority: "P1" | "P2" | "P3" = inTop500
-    ? index % 5 === 0
-      ? "P1"
-      : index % 2 === 0
-        ? "P2"
-        : "P3"
-    : index % 7 === 0
-      ? "P1"
-      : index % 3 === 0
-        ? "P2"
-        : "P3";
-
-  const forensicQuery = `FQ-${String(slot).padStart(4, "0")} · ${axis.label} · ${entityType.label} · ${category.label} · artifact=${element.artifact}`;
-
+function postdocSeed(): PostdocSeed {
   return {
-    id: `pd-${String(slot).padStart(4, "0")}`,
-    index: slot,
-    axisId: axis.id,
-    axisLabel: axis.label,
-    title: inTop500
-      ? `TOP ${slot} · ${axis.label} · ${entityType.label}`
-      : `${axis.label} · ${entityType.label} · ${category.label}`,
-    question: `${axis.prompt} Apply to ${entityType.label} under ${category.label} with artifact lens "${element.artifact}".`,
-    method,
-    falsifier,
-    deliverable,
-    lyraBinding: `Anchor ${rq.id}. Bind ${map.fbiCategory} → ${category.id}. Fixture evidence ${element.id}. Method=${method}. Deliverable=${deliverable}. Verify via bash scripts/pipelines/tracker-3d-smoke.sh.`,
-    categoryId: category.id,
-    categoryLabel: category.label,
-    entityTypeId: entityType.id,
-    entityTypeLabel: entityType.label,
-    fbiCategory: map.fbiCategory,
-    evidenceId: element.id,
-    artifact: element.artifact,
-    rqAnchor: rq.id,
-    status: constrained ? "constrained" : "open",
-    wontDo,
-    priority,
-    pipelineCheck: `scene.events+nodes lat/lon · postdoc-5500 · top500-sota · telemetry-24x7 · falsifier=${falsifier}`,
-    sotaRank: inTop500 ? slot : null,
-    sotaTier: inTop500 ? "top500-sota" : "catalog",
-    sotaSourceId: axis.sourceId ?? null,
-    forensicQuery,
+    axes: postdocImprovementsDoc.axes as PostdocSeed["axes"],
+    methods: postdocImprovementsDoc.methods,
+    falsifiers: postdocImprovementsDoc.falsifiers,
+    deliverables: postdocImprovementsDoc.deliverables,
+    categories: taxonomy.categories.map((c) => ({ id: c.id, label: c.label })),
+    entityTypes: fixtures.entityTypes.map((e) => ({ id: e.id, label: e.label })),
+    elements: evidenceCorpus.elements.map((e) => ({
+      id: e.id,
+      artifact: e.artifact,
+      collectionStatus: e.collectionStatus,
+      wontDo: "wontDo" in e && typeof e.wontDo === "string" ? e.wontDo : null,
+    })),
+    maps: evidenceCorpus.fbiToCorporate.map((m) => ({
+      fbiCategory: m.fbiCategory,
+      categoryId: "categoryId" in m ? String((m as { categoryId?: string }).categoryId ?? "") : undefined,
+    })),
+    researchQuestions: researchAgendaDoc.questions.map((q) => ({
+      id: q.id,
+      status: q.status,
+      wontDo: q.wontDo ?? null,
+    })),
+    total: POSTDOC_IMPROVEMENT_COUNT,
+    top500: POSTDOC_TOP500,
   };
 }
+
+function buildPostdocImprovement(index: number): PostdocImprovement {
+  return buildPostdocFromSeed(index, postdocSeed(), {
+    total: POSTDOC_IMPROVEMENT_COUNT,
+    top500: POSTDOC_TOP500,
+  });
+}
+
+export type { PostdocImprovement };
 
 export function listPostdocImprovements(opts?: {
   q?: string;
@@ -158,16 +84,19 @@ export function listPostdocImprovements(opts?: {
   offset?: number;
 }) {
   const offset = Math.max(0, opts?.offset ?? 0);
-  const limit = Math.min(Math.max(1, opts?.limit ?? POSTDOC_IMPROVEMENT_COUNT), POSTDOC_IMPROVEMENT_COUNT);
+  const limit = Math.min(
+    Math.max(1, opts?.limit ?? POSTDOC_TOP500),
+    opts?.sotaOnly ? POSTDOC_TOP500 : Math.min(2_000, POSTDOC_IMPROVEMENT_COUNT),
+  );
   const q = opts?.q?.trim().toLowerCase();
   const axisId = opts?.axisId?.trim();
   const categoryId = opts?.categoryId?.trim();
   const status = opts?.status?.trim().toLowerCase();
   const sotaOnly = opts?.sotaOnly === true;
+  const end = sotaOnly ? POSTDOC_TOP500 : Math.min(POSTDOC_IMPROVEMENT_COUNT, offset + limit + 4_000);
 
   const matched: PostdocImprovement[] = [];
-  const end = sotaOnly ? POSTDOC_TOP500 : POSTDOC_IMPROVEMENT_COUNT;
-  for (let i = 0; i < end; i++) {
+  for (let i = 0; i < end && matched.length < offset + limit; i++) {
     const item = buildPostdocImprovement(i);
     if (sotaOnly && item.sotaTier !== "top500-sota") continue;
     if (axisId && item.axisId !== axisId) continue;
@@ -182,7 +111,7 @@ export function listPostdocImprovements(opts?: {
   }
 
   return {
-    total: matched.length,
+    total: sotaOnly ? POSTDOC_TOP500 : POSTDOC_IMPROVEMENT_COUNT,
     generated: POSTDOC_IMPROVEMENT_COUNT,
     top500: POSTDOC_TOP500,
     offset,
@@ -945,47 +874,26 @@ export function compileAnomalyTracker(opts?: {
       constrainedCount: researchAgendaDoc.questions.filter((q) => q.status === "constrained").length,
     },
     postdocCatalog: (() => {
-      // Full 5,500 forensic queries; TOP 500 SOTA are the first window (sotaTier).
-      const listed = listPostdocImprovements({ limit: POSTDOC_IMPROVEMENT_COUNT, offset: 0 });
-      const compactData = listed.data.map((p) =>
-        p.sotaTier === "top500-sota"
-          ? p
-          : {
-              id: p.id,
-              index: p.index,
-              axisId: p.axisId,
-              axisLabel: p.axisLabel,
-              title: p.title,
-              question: p.question,
-              method: p.method,
-              falsifier: p.falsifier,
-              deliverable: p.deliverable,
-              categoryLabel: p.categoryLabel,
-              entityTypeLabel: p.entityTypeLabel,
-              fbiCategory: p.fbiCategory,
-              artifact: p.artifact,
-              rqAnchor: p.rqAnchor,
-              status: p.status,
-              wontDo: p.wontDo,
-              priority: p.priority,
-              sotaRank: p.sotaRank,
-              sotaTier: p.sotaTier,
-              sotaSourceId: p.sotaSourceId,
-              forensicQuery: p.forensicQuery,
-              lyraBinding: p.lyraBinding.slice(0, 120) + "…",
-            },
-      );
-      const top500 = compactData.filter((p) => p.sotaTier === "top500-sota");
+      // Virtual 95,500 catalog: bake TOP 500 SOTA + sample window + expandSeed for /tracker.
+      const top500 = listPostdocImprovements({ sotaOnly: true, limit: POSTDOC_TOP500, offset: 0 });
+      const sample = listPostdocImprovements({
+        limit: POSTDOC_BAKE_SAMPLE,
+        offset: POSTDOC_TOP500,
+      });
+      const seed = postdocSeed();
       const sotaSources =
         "sotaSources" in postdocImprovementsDoc
           ? (postdocImprovementsDoc as { sotaSources?: unknown }).sotaSources
           : [];
+      const data = [...top500.data, ...sample.data];
       return {
         object: "lyra.postdoc-improvements" as const,
         title: postdocImprovementsDoc.title,
         classified: false,
         governmentProgram: false,
         note: postdocImprovementsDoc.note,
+        trackerTab: true,
+        virtualExpand: true,
         sotaSources,
         axes: postdocImprovementsDoc.axes,
         axisCount: postdocImprovementsDoc.axes.length,
@@ -995,16 +903,18 @@ export function compileAnomalyTracker(opts?: {
         methods: postdocImprovementsDoc.methods,
         falsifiers: postdocImprovementsDoc.falsifiers,
         deliverables: postdocImprovementsDoc.deliverables,
-        generated: listed.generated,
+        expandSeed: seed,
+        generated: POSTDOC_IMPROVEMENT_COUNT,
         top500Count: POSTDOC_TOP500,
-        offset: listed.offset,
-        limit: listed.limit,
-        data: compactData,
+        bakedWindow: data.length,
+        offset: 0,
+        limit: data.length,
+        data,
         total: POSTDOC_IMPROVEMENT_COUNT,
-        matched: listed.total,
-        openCount: compactData.filter((p) => p.status === "open").length,
-        constrainedCount: compactData.filter((p) => p.status === "constrained").length,
-        sotaOpenCount: top500.filter((p) => p.status === "open").length,
+        matched: POSTDOC_IMPROVEMENT_COUNT,
+        openCount: data.filter((p) => p.status === "open").length,
+        constrainedCount: data.filter((p) => p.status === "constrained").length,
+        sotaOpenCount: top500.data.filter((p) => p.status === "open").length,
       };
     })(),
     inventoryLedger: {
@@ -1147,9 +1057,9 @@ export function compileAnomalyTracker(opts?: {
           detail: `${p1Events.length} P1 incidents in p1Queue`,
         },
         {
-          id: "postdoc-5500",
-          ok: POSTDOC_IMPROVEMENT_COUNT === 5500,
-          detail: `Post-doc forensic catalog locked at ${POSTDOC_IMPROVEMENT_COUNT} (+5,000) · TOP ${POSTDOC_TOP500} SOTA`,
+          id: "postdoc-95500",
+          ok: POSTDOC_IMPROVEMENT_COUNT === 95500,
+          detail: `Post-doc forensic catalog locked at ${POSTDOC_IMPROVEMENT_COUNT} (+90,000) · TOP ${POSTDOC_TOP500} SOTA · tracker-tab virtual expand`,
         },
         {
           id: "telemetry-24x7",
@@ -1256,8 +1166,8 @@ export function compileAnomalyTracker(opts?: {
         },
         {
           id: "pipe-tracker-3d-smoke",
-          ok: entities.length >= 15 && anomalies.length >= 51 && POSTDOC_IMPROVEMENT_COUNT === 5500,
-          detail: "tracker-3d-smoke floors: nodes≥15 events≥51 postdoc=5500 top500-sota",
+          ok: entities.length >= 15 && anomalies.length >= 51 && POSTDOC_IMPROVEMENT_COUNT === 95500,
+          detail: "tracker-3d-smoke floors: nodes≥15 events≥51 postdoc=95500 top500-sota virtual",
         },
         {
           id: "pipe-aip-static-smoke",

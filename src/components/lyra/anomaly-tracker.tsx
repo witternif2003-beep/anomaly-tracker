@@ -11,6 +11,11 @@ import { cn } from "@/lib/utils";
 import { fetchJsonWithStaticFallback } from "@/lib/static-data";
 import { LiveTelemetryFeed, type TelemetryPayload } from "@/components/lyra/live-telemetry-feed";
 import {
+  listPostdocRange,
+  seedFromCatalogPayload,
+  type PostdocImprovement as VirtualPostdoc,
+} from "@/lib/postdoc-forensic-catalog";
+import {
   BlackOwnedScanBot,
   BusinessCrimeCatalogPanel,
   type BlackOwnedScanBotPayload,
@@ -174,6 +179,10 @@ interface TrackerBook {
     note: string;
     total: number;
     top500Count?: number;
+    virtualExpand?: boolean;
+    trackerTab?: boolean;
+    expandSeed?: unknown;
+    bakedWindow?: number;
     axisCount: number;
     sotaAxisCount?: number;
     openCount: number;
@@ -476,22 +485,61 @@ export function AnomalyTracker({ initialData }: { initialData?: TrackerBook }) {
   const filteredPostdoc = useMemo(() => {
     if (!book?.postdocCatalog) return [];
     const needle = postdocQ.trim().toLowerCase();
-    const pool = postdocSotaOnly
-      ? (book.postdocCatalog.top500Sota ?? book.postdocCatalog.data.filter((d) => d.sotaTier === "top500-sota"))
-      : book.postdocCatalog.data;
-    return pool.filter((item) => {
+    const catalog = book.postdocCatalog;
+
+    if (postdocSotaOnly) {
+      const pool =
+        catalog.top500Sota ??
+        catalog.data.filter((d) => d.sotaTier === "top500-sota");
+      return pool.filter((item) => {
+        if (postdocAxis && item.axisId !== postdocAxis) return false;
+        if (!needle) return true;
+        return `${item.title} ${item.question} ${item.method} ${item.forensicQuery ?? ""} ${item.artifact ?? ""} ${item.fbiCategory ?? ""} ${item.axisLabel}`
+          .toLowerCase()
+          .includes(needle);
+      });
+    }
+
+    // Virtual 95.5k expand on TRACKER tab — generate pages from expandSeed.
+    if (catalog.virtualExpand) {
+      const seed = seedFromCatalogPayload(catalog as any);
+      if (seed) {
+        const page = listPostdocRange(seed, {
+          offset: 0,
+          limit: Math.max(postdocShow, 50),
+          q: postdocQ,
+          axisId: postdocAxis || undefined,
+          sotaOnly: false,
+          total: catalog.total,
+          top500: catalog.top500Count ?? 500,
+        });
+        return page.data as VirtualPostdoc[];
+      }
+    }
+
+    return catalog.data.filter((item) => {
       if (postdocAxis && item.axisId !== postdocAxis) return false;
       if (!needle) return true;
       return `${item.title} ${item.question} ${item.method} ${item.forensicQuery ?? ""} ${item.artifact ?? ""} ${item.fbiCategory ?? ""} ${item.axisLabel}`
         .toLowerCase()
         .includes(needle);
     });
-  }, [book, postdocQ, postdocAxis, postdocSotaOnly]);
+  }, [book, postdocQ, postdocAxis, postdocSotaOnly, postdocShow]);
 
   const top500Rows = useMemo(() => {
     if (!book?.postdocCatalog) return [];
-    return book.postdocCatalog.top500Sota ?? book.postdocCatalog.data.filter((d) => d.sotaTier === "top500-sota");
+    return (
+      book.postdocCatalog.top500Sota ??
+      book.postdocCatalog.data.filter((d) => d.sotaTier === "top500-sota")
+    );
   }, [book]);
+
+  const postdocMatchedTotal = useMemo(() => {
+    if (!book?.postdocCatalog) return 0;
+    if (postdocSotaOnly) return top500Rows.length;
+    if (book.postdocCatalog.virtualExpand) return book.postdocCatalog.total;
+    return filteredPostdoc.length;
+  }, [book, postdocSotaOnly, top500Rows.length, filteredPostdoc.length]);
 
   return (
     <div className="relative flex flex-1 flex-col">
@@ -915,9 +963,10 @@ export function AnomalyTracker({ initialData }: { initialData?: TrackerBook }) {
                   </CardTitle>
                   <CardDescription>
                     {book.postdocCatalog.axisCount} axes · {book.postdocCatalog.sotaAxisCount ?? 0} SOTA ·
-                    TOP {book.postdocCatalog.top500Count ?? 500} · {book.postdocCatalog.openCount} open ·{" "}
-                    {book.postdocCatalog.constrainedCount} constrained · showing{" "}
-                    {Math.min(postdocShow, filteredPostdoc.length)} of {filteredPostdoc.length} matched
+                    TOP {book.postdocCatalog.top500Count ?? 500} · tracker-tab
+                    {book.postdocCatalog.virtualExpand ? " · virtual 95.5k" : ""} · showing{" "}
+                    {Math.min(postdocShow, filteredPostdoc.length)} of{" "}
+                    {postdocMatchedTotal.toLocaleString()} matched
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -998,7 +1047,7 @@ export function AnomalyTracker({ initialData }: { initialData?: TrackerBook }) {
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
                     <div className="flex-1">
                       <label className="mb-1 block text-xs text-muted-foreground" htmlFor="postdoc-q">
-                        Filter full post-doc forensic catalog (+5,000)
+                        Filter TRACKER forensic catalog (+90,000 virtual)
                       </label>
                       <Input
                         id="postdoc-q"
@@ -1107,23 +1156,33 @@ export function AnomalyTracker({ initialData }: { initialData?: TrackerBook }) {
                       </div>
                     ))}
                   </div>
-                  {filteredPostdoc.length > postdocShow ? (
+                  {postdocMatchedTotal > postdocShow ? (
                     <div className="flex flex-wrap gap-2">
                       <Button
                         type="button"
                         size="sm"
                         variant="outline"
-                        onClick={() => setPostdocShow((n) => Math.min(n + 50, filteredPostdoc.length))}
+                        onClick={() =>
+                          setPostdocShow((n) =>
+                            Math.min(n + 50, book.postdocCatalog?.virtualExpand ? 500 : postdocMatchedTotal),
+                          )
+                        }
                       >
                         Show 50 more
                       </Button>
-                      <Button
-                        type="button"
-                        size="sm"
-                        onClick={() => setPostdocShow(filteredPostdoc.length)}
-                      >
-                        Show all {filteredPostdoc.length}
-                      </Button>
+                      {!book.postdocCatalog.virtualExpand ? (
+                        <Button
+                          type="button"
+                          size="sm"
+                          onClick={() => setPostdocShow(postdocMatchedTotal)}
+                        >
+                          Show all {postdocMatchedTotal}
+                        </Button>
+                      ) : (
+                        <Badge variant="outline">
+                          Virtual catalog · {book.postdocCatalog.total.toLocaleString()} total · page ≤500
+                        </Badge>
+                      )}
                     </div>
                   ) : null}
                   {!filteredPostdoc.length ? (

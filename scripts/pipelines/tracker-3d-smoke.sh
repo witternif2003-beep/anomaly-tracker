@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Post-doc pipeline smoke: orbital globe scene + postdoc-5500 + TOP 500 SOTA + telemetry bake.
+# Post-doc pipeline smoke: orbital globe scene + postdoc-95500 virtual + TOP 500 SOTA + telemetry bake.
 set -euo pipefail
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$root"
@@ -38,13 +38,21 @@ for e in events[:5]:
     if not isinstance(e.get("lat"), (int, float)) or not isinstance(e.get("lon"), (int, float)):
         errors.append(f"event {e.get('id')} missing lat/lon")
         break
-if postdoc.get("total") != 5500 or len(postdoc.get("data") or []) != 5500:
-    errors.append(f"postdocCatalog expected 5500, got total={postdoc.get('total')} data={len(postdoc.get('data') or [])}")
+if postdoc.get("total") != 95500:
+    errors.append(f"postdocCatalog expected total=95500, got {postdoc.get('total')}")
+if not postdoc.get("virtualExpand"):
+    errors.append("postdocCatalog.virtualExpand required for 95.5k Pages-safe catalog")
+if not postdoc.get("expandSeed"):
+    errors.append("postdocCatalog.expandSeed missing")
+if not postdoc.get("trackerTab"):
+    errors.append("postdocCatalog.trackerTab must be true")
 top500 = [x for x in (postdoc.get("data") or []) if x.get("sotaTier") == "top500-sota" or (x.get("sotaRank") or 0) > 0]
 if len(top500) != 500:
     errors.append(f"postdoc TOP 500 SOTA expected 500, got {len(top500)}")
-if summary.get("postdocImprovements") != 5500:
-    errors.append("summary.postdocImprovements != 5500")
+if len(postdoc.get("data") or []) < 500:
+    errors.append(f"postdoc baked window underfilled ({len(postdoc.get('data') or [])})")
+if summary.get("postdocImprovements") != 95500:
+    errors.append("summary.postdocImprovements != 95500")
 if not telemetry.get("active"):
     errors.append("telemetry.active false")
 if (telemetry.get("totalTicks") or 0) < 1:
@@ -165,7 +173,7 @@ if errors:
 
 print(
     "PIPELINE OK tracker-3d-smoke",
-    f"nodes={len(nodes)} events={len(events)} postdoc=5500 top500-sota",
+    f"nodes={len(nodes)} events={len(events)} postdoc=95500 top500-sota virtual",
     f"telemetryTicks={telemetry.get('totalTicks')} health={len(checks)}",
     f"mayPackets={len(packets)} mayCats={may.get('categoryCount')}",
     f"boBot={bot.get('verifiedCount')}+{bot.get('candidateCount')}+pool{bot.get('discoveryPoolCount')} stream={len(bot.get('stream') or [])} harden={hardening.get('hardeningScore')}",
