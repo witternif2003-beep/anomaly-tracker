@@ -1,0 +1,20 @@
+# Documentation only — HashiCorp Vault is NOT deployed by Lyra.
+# Research-note §5.2 proposed this shape. Runtime substitute:
+#   Cloud Agent Secrets + gitignored .env.local + server/policy.ts
+# Do not start vault, write TLS certs here, or inject real KMS ARNs into git.
+
+# storage "file" {
+#   path = "/opt/vault/data"
+# }
+#
+# listener "tcp" {
+#   address     = "0.0.0.0:8200"
+#   tls_disable = false
+#   tls_cert_file = "/opt/vault/certs/vault.crt"
+#   tls_key_file  = "/opt/vault/certs/vault.key"
+# }
+#
+# seal "awskms" {
+#   region     = "us-east-1"
+#   kms_key_id = "arn:aws:kms:us-east-1:ACCOUNT:key/KEY"
+# }

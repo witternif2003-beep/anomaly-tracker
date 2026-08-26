@@ -94,6 +94,15 @@ export function policyStatus() {
       massSurveillance: false,
       note: "Unclassified 3D fixture tracker. Taxonomy-mapped improvements. Not a field collection system.",
     },
+    credentialsFramework: {
+      status: "activated",
+      envExample: ".env.example",
+      vaultExample: "vault.hcl.example",
+      vaultDeployed: false,
+      cjisLiveQueries: false,
+      secretsInGit: false,
+      note: "Placeholders + policy only. HashiCorp Vault is not started. Operator may skip optional secrets.",
+    },
   };
 }
 

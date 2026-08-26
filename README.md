@@ -31,11 +31,12 @@ npm run build
 npm start
 ```
 
-## Dependencies
+## Credentials
 
-- npm: `package-lock.json` (lockfileVersion 3). Product name stays **lyra** — do not invent unpublished `@law-research/*` lockfile entries.
-- Python closest installs: `requirements.txt`. Verify one-at-a-time with `npm run deps:verify`.
-- Expanded inventory closest installs: `npm run inventory:install`.
+- Empty placeholders in `.env.example`. Copy to `.env.local` or Cloud Agent Secrets — never commit values.
+- `vault.hcl.example` is documentation only (Vault is not deployed).
+- CJIS/NCIC names are applicable placeholders; live queries are refused (`POST /v1/cjis/search` → 403).
+- Optional secrets may be skipped; the studio still boots.
 
 ## Local application server (127.0.0.1:4040)
 

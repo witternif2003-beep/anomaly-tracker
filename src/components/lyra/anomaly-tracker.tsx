@@ -146,6 +146,24 @@ interface TrackerBook {
       commands: string[];
     };
   };
+  credentials?: {
+    title?: string;
+    note: string;
+    placeholderCount?: number;
+    configuredCount?: number;
+    secretsSkippedByOperator?: boolean;
+    vault?: { status: string; shipped: string; note: string; exampleFile?: string };
+    groups?: Array<{
+      id: string;
+      title: string;
+      liveQueries?: boolean;
+      variables: Array<{ name: string; purpose: string; status?: string }>;
+    }>;
+    cjis?: { liveQueries: boolean; certifiedInterface: boolean };
+    wontDo?: Array<{ id: string; title: string; reason: string }>;
+    commands?: string[];
+    variables: Array<{ name: string; configured: boolean }>;
+  };
 }
 
 function priorityTone(priority: string) {
@@ -603,6 +621,66 @@ export function AnomalyTracker() {
                 </CardContent>
               </Card>
             </div>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">5. Credentials & security</CardTitle>
+                <CardDescription>
+                  {book.credentials
+                    ? `${book.credentials.configuredCount ?? 0}/${book.credentials.placeholderCount ?? book.credentials.variables.length} configured · vault=${book.credentials.vault?.status ?? "wont-deploy"} · cjisLive=${String(book.credentials.cjis?.liveQueries ?? false)}`
+                    : "Placeholders only"}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {book.credentials ? (
+                  <>
+                    <p className="text-sm text-muted-foreground">{book.credentials.note}</p>
+                    {book.credentials.secretsSkippedByOperator ? (
+                      <Badge variant="outline">operator skipped optional secrets</Badge>
+                    ) : null}
+                    {book.credentials.vault ? (
+                      <p className="text-xs text-muted-foreground">
+                        Vault: {book.credentials.vault.shipped} ({book.credentials.vault.exampleFile})
+                      </p>
+                    ) : null}
+                    {book.credentials.groups?.map((group) => (
+                      <div key={group.id}>
+                        <p className="text-sm font-medium">{group.title}</p>
+                        <ul className="mt-1 space-y-1 text-xs text-muted-foreground">
+                          {group.variables.map((v) => (
+                            <li key={v.name}>
+                              <span className="font-mono text-foreground">{v.name}</span> — {v.purpose}
+                              {v.status ? ` · ${v.status}` : ""}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                    <div className="flex flex-wrap gap-2">
+                      {book.credentials.variables.map((v) => (
+                        <Badge key={v.name} variant={v.configured ? "secondary" : "outline"}>
+                          {v.name}
+                          {v.configured ? "=set" : "=empty"}
+                        </Badge>
+                      ))}
+                    </div>
+                    {book.credentials.wontDo?.map((w) => (
+                      <p key={w.id} className="text-xs text-muted-foreground">
+                        <span className="text-foreground">{w.title}: </span>
+                        {w.reason}
+                      </p>
+                    ))}
+                    <ul className="space-y-1 font-mono text-[11px] text-muted-foreground">
+                      {(book.credentials.commands ?? []).map((cmd) => (
+                        <li key={cmd}>{cmd}</li>
+                      ))}
+                    </ul>
+                  </>
+                ) : (
+                  <p className="text-sm text-muted-foreground">Credentials framework unavailable.</p>
+                )}
+              </CardContent>
+            </Card>
 
             <Card>
               <CardHeader>

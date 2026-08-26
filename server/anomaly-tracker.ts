@@ -5,12 +5,13 @@ import fixtures from "../data/anomaly/fixtures.json";
 import inventoryLedger from "../data/anomaly/inventory-ledger.json";
 import dependencyStrategyDoc from "../data/anomaly/dependency-strategy.json";
 import mcpAuditDoc from "../data/anomaly/mcp-audit.json";
+import credentialsFramework from "../data/anomaly/credentials-framework.json";
 import taxonomy from "../data/legal/corporate-taxonomy.json";
 import { listP1Slots } from "./p1-catalog";
 import { inventoryStatus } from "./inventory";
 import { envPlaceholderStatus } from "./load-env";
 import { oneShotStatus } from "./install-status";
-import { policyStatus } from "./policy";
+import { cjisStatus, policyStatus } from "./policy";
 
 const IMPROVEMENT_COUNT = 10080;
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -236,6 +237,7 @@ export function compileAnomalyTracker(opts?: {
   const inventory = inventoryStatus();
   const env = envPlaceholderStatus();
   const policy = policyStatus();
+  const cjis = cjisStatus();
   const mcpServers = listMcpServers();
   const p1 = listP1Slots({ limit: 1, offset: 0 });
   const improvements = listImprovements({
@@ -368,11 +370,30 @@ export function compileAnomalyTracker(opts?: {
       },
     },
     credentials: {
-      note: "Placeholders only unless the operator sets them in the environment. Never commit secrets.",
+      object: "lyra.credentials-framework" as const,
+      title: credentialsFramework.title,
+      classified: false,
+      governmentProgram: false,
+      note: credentialsFramework.note,
+      envFiles: credentialsFramework.envFiles,
+      groups: credentialsFramework.groups,
+      vault: credentialsFramework.vault,
+      commands: credentialsFramework.commands,
+      wontDo: credentialsFramework.wontDo,
       variables: env.variables.map((v) => ({
         name: v.name,
         configured: v.configured,
+        requiredFor: v.requiredFor,
+        closest: v.closest,
       })),
+      configuredCount: env.variables.filter((v) => v.configured).length,
+      placeholderCount: env.variables.length,
+      cjis: {
+        liveQueries: cjis.liveQueries,
+        certifiedInterface: cjis.certifiedInterface,
+        variables: cjis.variables,
+      },
+      secretsSkippedByOperator: true,
     },
     dependencyStrategy: {
       lockfile: "package-lock.json",
