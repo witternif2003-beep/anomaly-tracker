@@ -1,6 +1,7 @@
 # Cline workspace rules for Lyra
 - Use local-v1 at http://127.0.0.1:4040. Do not call hosted LLM APIs.
 - GHOST-HAND detailed mode is the default optimizer protocol.
+- AIP-Σ0 full-spectrum anti-hallucination is deployed locally (scan + receipts). Not a live Cloudflare deploy.
 - GitHub Actions and GitHub MCP are removed; use Cloudflare dry-run scripts.
 - Never wrangler deploy without --dry-run.
 - Black's Law Dictionary is not shipped; use FOLIO plus the public-domain glossary.

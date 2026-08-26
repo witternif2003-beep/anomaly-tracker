@@ -1,3 +1,5 @@
+import type { AipScan } from "../aip-sigma0/scanner";
+
 export type Mode = "basic" | "detail";
 
 export type RequestType = "creative" | "technical" | "educational" | "complex";
@@ -79,5 +81,11 @@ export interface OptimizeResult {
   platformNotes: string;
   inferredDefaults: string[];
   ghostHand: GhostHandReport;
+  aipSigma0?: {
+    protocol: "AIP-Σ0";
+    deployed: true;
+    simulated: false;
+    briefScan: AipScan;
+  };
 }
 

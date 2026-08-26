@@ -49,6 +49,14 @@ export function policyStatus() {
       defaultMode: "detail",
       note: "Detail mode is the default. GHOST intake (Goal, Handoffs, Output, Stakes, Taboos) plus HAND hardening (Hypotheses, Anchors, Negatives, Done-when).",
     },
+    aipSigma0: {
+      status: "deployed",
+      protocol: "AIP-Σ0",
+      spectrum: "full",
+      simulated: false,
+      cloudflareLiveDeploy: false,
+      note: "Anchor Inventory Protocol Σ0: real claim scan, tool receipts, chat footers. Not a live Cloudflare deploy.",
+    },
   };
 }
 

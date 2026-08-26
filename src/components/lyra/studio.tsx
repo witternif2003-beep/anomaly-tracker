@@ -117,7 +117,7 @@ export function Studio() {
             <div>
               <p className="font-heading text-2xl leading-none tracking-tight">Lyra</p>
               <p className="mt-1 text-xs tracking-[0.14em] text-muted-foreground uppercase">
-                GHOST-HAND detailed · 4-D optimizer
+                GHOST-HAND detailed · AIP-Σ0 full spectrum
               </p>
             </div>
           </div>
@@ -424,6 +424,11 @@ function ResultPanel({ result }: { result: OptimizeResult }) {
           <Badge className="capitalize">{result.requestType}</Badge>
           <Badge variant="outline">{PLATFORM_LABELS[result.platform]}</Badge>
           {result.ghostHand.active ? <Badge>GHOST-HAND</Badge> : null}
+          {result.aipSigma0 ? (
+            <Badge variant={result.aipSigma0.briefScan.verdict === "pass" ? "secondary" : "outline"}>
+              AIP-Σ0 {result.aipSigma0.briefScan.verdict}
+            </Badge>
+          ) : null}
           <Badge variant="secondary">{diagTone}</Badge>
         </div>
         <div className="flex gap-2">
@@ -506,6 +511,27 @@ function ResultPanel({ result }: { result: OptimizeResult }) {
         <p className="text-xs leading-5 text-muted-foreground">
           Inferred defaults: {result.inferredDefaults.join(" · ")}
         </p>
+      ) : null}
+
+      {result.aipSigma0?.briefScan.flags.length ? (
+        <Card size="sm">
+          <CardHeader>
+            <CardTitle>AIP-Σ0 brief scan</CardTitle>
+            <CardDescription>
+              Real scanner (not simulated). These spans in your draft are not grounded.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ul className="flex flex-col gap-2">
+              {result.aipSigma0.briefScan.flags.map((flag) => (
+                <li key={`${flag.kind}-${flag.span}`} className="text-sm leading-6">
+                  <span className="font-medium">{flag.kind}</span>
+                  <span className="text-muted-foreground"> — {flag.span}</span>
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
       ) : null}
     </div>
   );

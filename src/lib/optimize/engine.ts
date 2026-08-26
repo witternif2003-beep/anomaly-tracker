@@ -9,6 +9,7 @@ import type {
   RequestType,
 } from "./types";
 import { buildGhostHandReport, HAND_LAYERS } from "./ghost-hand";
+import { scanText } from "../aip-sigma0/scanner";
 
 const VAGUE = [
   "thing",
@@ -343,6 +344,7 @@ function techniquesFor(type: RequestType, complexity: DiagnoseResult["complexity
   const shared = ["Role assignment", "Context layering", "Explicit output contract"];
   if (mode === "detail") {
     shared.push("GHOST-HAND detailed protocol");
+    shared.push("AIP-Σ0 full-spectrum anti-hallucination");
   }
   if (type === "creative") {
     return [...shared, "Multi-perspective generation", "Tone and voice lock", "Anti-cliché constraints"];
@@ -556,6 +558,8 @@ function buildPrompt(
     sections["GHOST-HAND / Done-when"] = success
       ? `${HAND_LAYERS[3].rule} Explicit bar: ${success}`
       : HAND_LAYERS[3].rule;
+    sections["AIP-Σ0"] =
+      "Anchor Inventory Protocol Σ0 is active. Every factual claim must be (1) present in the original brief, (2) quoted from attached source text, or (3) marked UNKNOWN with the verification that would settle it. Do not mint citations, holdings, statistics, URLs, or quotations.";
   }
 
   return { prompt: wrapForPlatform(platform, sections), inferred };
@@ -584,6 +588,7 @@ function implementation(platform: Platform, mode: Mode, type: RequestType): stri
   if (mode === "detail") {
     steps.push(
       "GHOST-HAND is active. Answers from the GHOST intake are baked in. HAND rules (Hypotheses, Anchors, Negatives, Done-when) are already in the prompt — do not strip them.",
+      "AIP-Σ0 full spectrum is deployed. Scan the model's reply for unsourced citations, percents, URLs, and case names before you trust it.",
     );
   }
   if (type === "technical") {
@@ -728,6 +733,7 @@ export function optimize(request: OptimizeRequest): OptimizeResult {
   }
 
   const built = buildPrompt(input, type, request.platform, d, answers, request.mode);
+  const briefScan = scanText(input);
 
   return {
     status: "complete",
@@ -750,5 +756,11 @@ export function optimize(request: OptimizeRequest): OptimizeResult {
       answers,
       inferred: built.inferred,
     }),
+    aipSigma0: {
+      protocol: "AIP-Σ0",
+      deployed: true,
+      simulated: false,
+      briefScan,
+    },
   };
 }

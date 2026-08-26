@@ -4,6 +4,7 @@ import { searchGlossary } from "./legal/glossary";
 import type { LegalHit, LegalSearchResult, LegalSource } from "./legal/types";
 import { searchEdgar, searchFinra, searchOfac, searchPacer, searchUspto } from "./inventory/public-apis";
 import { searchP1, type P1Slot } from "./p1-catalog";
+import { aipReceipt } from "../src/lib/aip-sigma0/protocol";
 
 export type { LegalHit, LegalSearchResult, LegalSource };
 
@@ -341,13 +342,19 @@ export async function legalSearch(input: {
   if (requested.includes("uspto")) pushRemote(await searchUspto(query, limit));
   if (requested.includes("pacer")) pushRemote(await searchPacer(query, limit));
 
+  const withReceipts = results.map((hit) => ({
+    ...hit,
+    receipt: aipReceipt([hit.source, hit.id, hit.title, hit.citation, hit.url, hit.snippet]),
+  }));
+
   return {
     object: "legal.search",
     query,
     sources: requested,
-    count: results.length,
-    results,
+    count: withReceipts.length,
+    results: withReceipts,
     warnings,
+    aip: { protocol: "AIP-Σ0" as const, simulated: false as const, receipts: withReceipts.length },
   };
 }
 

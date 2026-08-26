@@ -170,7 +170,7 @@ if curl -fsS -o /dev/null --max-time 3 "${base}/"; then
   echo "${body}" | python3 -c "import json,sys; d=json.load(sys.stdin); assert d.get('status')=='complete' and d.get('optimizedPrompt'); assert d.get('ghostHand',{}).get('active') is False; print('VERIFY OK: optimize API', d['status'], len(d['optimizedPrompt']), 'chars')"
   detail='{"input":"write a launch email for our headphones. Make it good.","mode":"detail","skipQuestions":true,"requestType":"auto","platform":"chatgpt"}'
   dbody="$(curl -fsS --max-time 10 -H "Content-Type: application/json" -d "${detail}" "${base}/api/optimize")"
-  echo "${dbody}" | python3 -c "import json,sys; d=json.load(sys.stdin); assert d.get('status')=='complete'; assert d.get('ghostHand',{}).get('active') is True; assert d.get('ghostHand',{}).get('protocol')=='GHOST-HAND'; assert 'GHOST-HAND / Anchors' in d.get('optimizedPrompt',''); print('VERIFY OK: GHOST-HAND detailed', d['ghostHand']['mode'], len(d['optimizedPrompt']), 'chars')"
+  echo "${dbody}" | python3 -c "import json,sys; d=json.load(sys.stdin); assert d.get('status')=='complete'; assert d.get('ghostHand',{}).get('active') is True; assert d.get('ghostHand',{}).get('protocol')=='GHOST-HAND'; assert 'GHOST-HAND / Anchors' in d.get('optimizedPrompt',''); assert 'AIP-Σ0' in d.get('optimizedPrompt',''); print('VERIFY OK: GHOST-HAND detailed', d['ghostHand']['mode'], len(d['optimizedPrompt']), 'chars')"
 else
   echo "VERIFY WARN: ${base} is not up; skipped live API check"
 fi
@@ -192,6 +192,34 @@ assert inv["cuckooLiveSandbox"] is False
 shot = json.load(urllib.request.urlopen(base + "/v1/install", timeout=8))
 assert shot["stepCount"] >= 20, shot["stepCount"]
 assert shot["cuckooLiveSandbox"] is False
+aip = json.load(urllib.request.urlopen(base + "/v1/aip", timeout=8))
+assert aip["deployed"] is True and aip["simulated"] is False and aip["spectrum"] == "full", aip
+assert aip["cloudflareLiveDeploy"] is False
+scan_req = urllib.request.Request(
+    base + "/v1/aip/scan",
+    data=json.dumps({
+        "text": "Miranda v. Arizona held that 87% of suspects confess, see 384 U.S. 436.",
+        "anchors": [],
+    }).encode(),
+    headers={"Content-Type": "application/json"},
+    method="POST",
+)
+scan = json.load(urllib.request.urlopen(scan_req, timeout=8))
+assert scan["simulated"] is False
+assert scan["verdict"] == "review", scan
+assert scan["highCount"] >= 1, scan
+grounded_req = urllib.request.Request(
+    base + "/v1/aip/scan",
+    data=json.dumps({
+        "text": "Miranda v. Arizona held that 87% of suspects confess, see 384 U.S. 436.",
+        "anchors": ["Miranda v. Arizona", "87%", "384 U.S. 436"],
+    }).encode(),
+    headers={"Content-Type": "application/json"},
+    method="POST",
+)
+grounded = json.load(urllib.request.urlopen(grounded_req, timeout=8))
+assert grounded["highCount"] == 0, grounded
+print("VERIFY OK: AIP-Σ0 scan review/pass", scan["highCount"], "ungrounded high")
 req = urllib.request.Request(
     base + "/v1/chat/completions",
     data=json.dumps({
@@ -203,6 +231,7 @@ req = urllib.request.Request(
 )
 chat = json.load(urllib.request.urlopen(req, timeout=20))
 assert chat["choices"][0]["message"]["content"], chat
+assert "AIP-Σ0" in chat["choices"][0]["message"]["content"]
 env = json.load(urllib.request.urlopen(base + "/v1/env", timeout=8))
 names = {row["name"] for row in env["variables"]}
 needed = {

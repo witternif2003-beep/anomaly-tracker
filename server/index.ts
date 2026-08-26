@@ -16,6 +16,8 @@ import { inventoryStatus } from "./inventory";
 import { oneShotStatus } from "./install-status";
 import { listP1Slots } from "./p1-catalog";
 import { ghostHandStatus } from "../src/lib/optimize/ghost-hand";
+import { aipSigma0Status } from "../src/lib/aip-sigma0/protocol";
+import { scanText } from "../src/lib/aip-sigma0/scanner";
 
 loadEnvFiles();
 
@@ -73,6 +75,21 @@ app.get("/v1/install", (_req, res) => {
 
 app.get("/v1/mode", (_req, res) => {
   res.json({ object: "lyra.mode", defaultMode: "detail", ...ghostHandStatus() });
+});
+
+app.get("/v1/aip", (_req, res) => {
+  res.json(aipSigma0Status());
+});
+
+app.post("/v1/aip/scan", (req, res) => {
+  const body = (req.body ?? {}) as { text?: unknown; anchors?: unknown };
+  const text = String(body.text ?? "").trim();
+  if (!text) {
+    res.status(400).json({ error: "text is required" });
+    return;
+  }
+  const anchors = Array.isArray(body.anchors) ? body.anchors.map(String) : [];
+  res.json({ object: "aip.scan", ...scanText(text, anchors) });
 });
 
 app.post("/v1/legal/search", async (req, res) => {

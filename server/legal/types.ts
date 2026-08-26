@@ -24,6 +24,11 @@ export interface LegalHit {
   snippet: string;
   url?: string;
   citation?: string;
+  receipt?: {
+    protocol: "AIP-Σ0";
+    kind: "tool-receipt";
+    sha256: string;
+  };
 }
 
 export interface LegalSearchResult {
@@ -33,4 +38,9 @@ export interface LegalSearchResult {
   count: number;
   results: LegalHit[];
   warnings: string[];
+  aip?: {
+    protocol: "AIP-Σ0";
+    simulated: false;
+    receipts: number;
+  };
 }

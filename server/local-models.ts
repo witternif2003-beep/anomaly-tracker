@@ -1,6 +1,7 @@
 import { optimize } from "../src/lib/optimize/engine";
 import { legalSearch } from "./legal-search";
 import { searchP1 } from "./p1-catalog";
+import { formatScanFooter, scanText } from "../src/lib/aip-sigma0/scanner";
 
 export const LOCAL_MODELS = [
   {
@@ -62,6 +63,7 @@ async function buildAnswer(messages: ChatMessage[], model: LocalModelId): Promis
 
   const concise = model === "local-v1-concise";
   const sections: string[] = [];
+  const anchors: string[] = [user];
 
   if (looksLikePromptCraft(user)) {
     try {
@@ -104,6 +106,9 @@ async function buildAnswer(messages: ChatMessage[], model: LocalModelId): Promis
       if (found.warnings.length) {
         sections.push(`_Search notes: ${found.warnings.join("; ")}_`);
       }
+      for (const hit of found.results) {
+        anchors.push(hit.title, hit.snippet, hit.citation ?? "", hit.url ?? "", hit.court ?? "");
+      }
     }
     const slots = searchP1(user, concise ? 2 : 4);
     if (slots.length && !concise) {
@@ -141,8 +146,10 @@ async function buildAnswer(messages: ChatMessage[], model: LocalModelId): Promis
   }
 
   const text = sections.join("\n\n").trim();
-  if (concise && text.length > 1200) return `${text.slice(0, 1190).trim()}…`;
-  return text;
+  const scan = scanText(text, anchors);
+  const withAip = `${text}\n\n---\n${formatScanFooter(scan)}`;
+  if (concise && withAip.length > 1400) return `${withAip.slice(0, 1390).trim()}…`;
+  return withAip;
 }
 
 export async function completeChat(messages: ChatMessage[], model: LocalModelId): Promise<{
