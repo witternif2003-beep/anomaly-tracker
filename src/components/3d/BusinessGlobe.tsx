@@ -122,30 +122,33 @@ function GlobeScene({
   );
 }
 
-export default function BusinessGlobe() {
-  const [payload, setPayload] = useState<GlobePayload | null>(null);
+export default function BusinessGlobe({ initialData }: { initialData?: GlobePayload }) {
+  const [payload, setPayload] = useState<GlobePayload | null>(initialData ?? null);
   const [error, setError] = useState<string | null>(null);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(initialData?.scene?.nodes?.[0]?.id ?? null);
 
   useEffect(() => {
+    if (initialData?.scene?.nodes?.length) return;
     let cancelled = false;
     (async () => {
       try {
-        const response = await fetch(withBasePath("/static/anomaly.json"));
+        const response = await fetch(withBasePath("/static/anomaly.json"), { cache: "no-store" });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const type = response.headers.get("content-type") ?? "";
+        if (!type.includes("json")) throw new Error("not-json");
         const data = (await response.json()) as GlobePayload;
         if (!cancelled) {
           setPayload(data);
           setSelectedId(data.scene?.nodes?.[0]?.id ?? null);
         }
       } catch {
-        if (!cancelled) setError("Could not load fixture globe data.");
+        if (!cancelled && !initialData) setError("Could not load fixture globe data.");
       }
     })();
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [initialData]);
 
   const nodes = useMemo(() => payload?.scene?.nodes ?? [], [payload]);
   const selected = nodes.find((n) => n.id === selectedId) ?? null;

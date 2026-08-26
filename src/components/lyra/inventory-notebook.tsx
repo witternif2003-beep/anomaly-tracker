@@ -96,10 +96,10 @@ interface NotebookView {
   }>;
 }
 
-export function InventoryNotebook() {
-  const [book, setBook] = useState<NotebookView | null>(null);
+export function InventoryNotebook({ initialData }: { initialData?: NotebookView }) {
+  const [book, setBook] = useState<NotebookView | null>(initialData ?? null);
   const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(true);
+  const [busy, setBusy] = useState(!initialData);
   const [q, setQ] = useState("");
 
   async function load() {
@@ -109,22 +109,31 @@ export function InventoryNotebook() {
       const { data } = await fetchJsonWithStaticFallback<NotebookView & { error?: string }>(
         "/api/notebook",
         "/static/notebook.json",
+        { preferStatic: true },
       );
       if (data.error) {
-        setBook(null);
-        setError(data.error);
+        if (!initialData) {
+          setBook(null);
+          setError(data.error);
+        }
         return;
       }
       setBook(data);
     } catch {
-      setBook(null);
-      setError("Could not reach the inventory notebook.");
+      if (!initialData) {
+        setBook(null);
+        setError("Could not reach the inventory notebook.");
+      }
     } finally {
       setBusy(false);
     }
   }
 
   useEffect(() => {
+    if (initialData) {
+      setBusy(false);
+      return;
+    }
     void load();
   }, []);
 

@@ -224,13 +224,13 @@ function priorityTone(priority: string) {
   return "bg-muted text-muted-foreground";
 }
 
-export function AnomalyTracker() {
-  const [book, setBook] = useState<TrackerBook | null>(null);
+export function AnomalyTracker({ initialData }: { initialData?: TrackerBook }) {
+  const [book, setBook] = useState<TrackerBook | null>(initialData ?? null);
   const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(true);
+  const [busy, setBusy] = useState(!initialData);
   const [q, setQ] = useState("");
   const [priority, setPriority] = useState<string>("");
-  const [selected, setSelected] = useState<string | null>(null);
+  const [selected, setSelected] = useState<string | null>(initialData?.p1Queue?.[0]?.id ?? null);
   const [tick, setTick] = useState(0);
 
   async function load() {
@@ -244,23 +244,32 @@ export function AnomalyTracker() {
       const { data } = await fetchJsonWithStaticFallback<TrackerBook & { error?: string }>(
         `/api/anomaly?${params.toString()}`,
         "/static/anomaly.json",
+        { preferStatic: true },
       );
       if (data.error) {
-        setBook(null);
-        setError(data.error);
+        if (!initialData) {
+          setBook(null);
+          setError(data.error);
+        }
         return;
       }
       setBook(data);
       if (!selected && data.p1Queue[0]) setSelected(data.p1Queue[0].id);
     } catch {
-      setBook(null);
-      setError("Could not reach the anomaly tracker.");
+      if (!initialData) {
+        setBook(null);
+        setError("Could not reach the anomaly tracker.");
+      }
     } finally {
       setBusy(false);
     }
   }
 
   useEffect(() => {
+    if (initialData) {
+      setBusy(false);
+      return;
+    }
     void load();
   }, []);
 

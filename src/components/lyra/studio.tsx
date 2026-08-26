@@ -34,9 +34,11 @@ import type {
   Platform,
   RequestTypeChoice,
 } from "@/lib/optimize";
+import { optimize } from "@/lib/optimize";
 import { ghostHandEngaged, parseMode } from "@/lib/optimize/types";
 import type { AipScan } from "@/lib/aip-sigma0/scanner";
 import { cn } from "@/lib/utils";
+import { withBasePath } from "@/lib/static-data";
 
 const PHASES: FourDPhase[] = ["deconstruct", "diagnose", "develop", "deliver"];
 
@@ -66,7 +68,7 @@ export function Studio() {
       if (tick < PHASES.length) setPhase(PHASES[tick]);
     }, 280);
     try {
-      const response = await fetch("/api/optimize", {
+      const response = await fetch(withBasePath("/api/optimize"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -78,20 +80,44 @@ export function Studio() {
           skipQuestions: opts?.skipQuestions ?? false,
         }),
       });
-      const data = (await response.json()) as OptimizeResult & { error?: string };
-      const wait = Math.max(0, 900 - (Date.now() - started));
-      if (wait) await new Promise((r) => window.setTimeout(r, wait));
-      if (!response.ok) {
-        setResult(null);
-        setError(data.error ?? "Optimization failed.");
-        setPhase("idle");
+      const type = response.headers.get("content-type") ?? "";
+      if (response.ok && type.includes("json")) {
+        const data = (await response.json()) as OptimizeResult & { error?: string };
+        const wait = Math.max(0, 900 - (Date.now() - started));
+        if (wait) await new Promise((r) => window.setTimeout(r, wait));
+        setResult(data);
+        setPhase(data.status === "questions" ? "questions" : "complete");
         return;
       }
+      // Static Pages: run the same optimizer in-browser (no Node API).
+      const data = optimize({
+        input,
+        mode: parseMode(mode),
+        requestType,
+        platform,
+        answers: opts?.nextAnswers ?? answers,
+        skipQuestions: opts?.skipQuestions ?? false,
+      });
+      const wait = Math.max(0, 900 - (Date.now() - started));
+      if (wait) await new Promise((r) => window.setTimeout(r, wait));
       setResult(data);
       setPhase(data.status === "questions" ? "questions" : "complete");
-    } catch {
-      setError("Could not reach the optimizer. Try again.");
-      setPhase("idle");
+    } catch (error) {
+      try {
+        const data = optimize({
+          input,
+          mode: parseMode(mode),
+          requestType,
+          platform,
+          answers: opts?.nextAnswers ?? answers,
+          skipQuestions: opts?.skipQuestions ?? false,
+        });
+        setResult(data);
+        setPhase(data.status === "questions" ? "questions" : "complete");
+      } catch {
+        setError(error instanceof Error ? error.message : "Could not reach the optimizer. Try again.");
+        setPhase("idle");
+      }
     } finally {
       window.clearInterval(stepper);
       setBusy(false);
