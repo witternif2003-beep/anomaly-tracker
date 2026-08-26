@@ -33,6 +33,7 @@ npx --no-install playwright install chromium
 
 npm install -g "folio-mcp@${FOLIO_MCP_VERSION}"
 npm install -g wrangler@4
+bash scripts/install-mcp.sh
 
 npx --no-install next typegen
 

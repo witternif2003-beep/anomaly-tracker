@@ -100,3 +100,24 @@ npm install -g wrangler@4
 ```
 
 `npm run verify` checks these versions, `tsc --noEmit`, and ESLint.
+
+## MCP servers (configured, not authenticated)
+
+`.cursor/mcp.json` lists stdio/OAuth MCP servers. Remote ones need OAuth or API keys injected as environment secrets — nothing is stored in git. Reinstall with `bash scripts/install-mcp.sh`.
+
+| Server | Purpose | Requested package | Installed | Credentials |
+| --- | --- | --- | --- | --- |
+| Amplitude | Analytics | `@amplitude/mcp` | `amplitude-mcp@0.0.2` (closest; requested name not on npm) | API + secret key |
+| AWS CloudWatch | Infra / logs | `@aws/mcp` | `@teolin/mcp-cloudwatch-logs@3.3.9` (`mcp-aws` is a stub) | IAM keys |
+| Figma | Design tokens | `@figma/mcp` | `figma-developer-mcp@0.13.2` | API key (OAuth is Figma's hosted MCP) |
+| Linear | Project management | `@linear/mcp` | `mcp-remote` → `https://mcp.linear.app/sse` plus `@tacticlaunch/mcp-linear` | OAuth |
+| Stripe | Payments | `@stripe/mcp` | `@stripe/mcp@0.3.3` | Restricted secret key |
+| Cloudflare Code Mode | Infrastructure | `@cloudflare/mcp` | `mcp-remote` → `https://mcp.cloudflare.com/mcp` plus `@cloudflare/mcp-server-cloudflare` | OAuth / API token |
+| Playwright | Browser automation | `@playwright/mcp` | `@playwright/mcp@0.0.79` | None (local) |
+| Firecrawl | Web scraping | `firecrawl-mcp` | `firecrawl-mcp@3.24.0` | API key |
+| Postgres MCP Pro | Database | `@postgres/mcp-pro` | PyPI `postgres-mcp==0.3.0` (Crystal DBA) plus npm `mcp-postgres` | `DATABASE_URI` |
+| Sentry | Error monitoring | `@sentry/mcp` | `@sentry/mcp-server@0.37.0` | Auth token / device OAuth |
+| Kubernetes | Cluster ops | `@kubernetes/mcp` | `mcp-server-kubernetes@4.1.4` | Kubeconfig |
+| Slack | Messaging | `@slack/mcp` | `@chinchillaenterprises/mcp-slack@4.14.0` (official Slack MCP unpublished; Anthropic package deprecated) | Bot token |
+| Context7 | Live docs | `context7-mcp` | `@upstash/context7-mcp@4.0.3` | API key |
+| FOLIO | Legal ontology | `folio-mcp@0.4.1` | Installed | None (CC-BY cards locally; document pulls need `folio login`) |

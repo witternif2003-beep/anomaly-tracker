@@ -16,6 +16,7 @@
     "verify": "bash scripts/verify-build.sh",
     "telemetry": "bash scripts/build-telemetry.sh",
     "toolchain": "bash scripts/install-toolchain.sh",
+    "mcp:install": "bash scripts/install-mcp.sh",
     "local-api": "tsx server/index.ts",
     "start:local": "tsx server/index.ts"
   },

@@ -101,6 +101,21 @@ ok "typescript --noEmit"
 bash scripts/eslint.sh src server --max-warnings=0
 ok "eslint"
 
+python3 - <<'PY'
+import json
+from pathlib import Path
+cfg = json.loads(Path(".cursor/mcp.json").read_text())
+servers = cfg["mcpServers"]
+required = {
+    "amplitude", "aws-cloudwatch", "figma", "linear", "stripe",
+    "cloudflare-code-mode", "playwright", "firecrawl", "postgres-mcp-pro",
+    "sentry", "kubernetes", "slack", "context7", "folio",
+}
+missing = sorted(required - set(servers))
+assert not missing, missing
+print("VERIFY OK: mcp.json servers", len(servers), "including", ", ".join(sorted(required)))
+PY
+
 base="${VERIFY_BASE_URL:-http://127.0.0.1:43127}"
 if curl -fsS -o /dev/null --max-time 3 "${base}/"; then
   payload='{"input":"write a launch email for our headphones","mode":"basic","requestType":"auto","platform":"chatgpt"}'
