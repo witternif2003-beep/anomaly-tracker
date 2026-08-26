@@ -8,4 +8,8 @@ echo "SKILLS"
 ls -1 .cursor/skills/*/skill.yaml
 echo "AGENTS"
 ls -1 .cursor/agents/*.md
-echo "PIPELINE OK skill-agent-roster 16 skills 10 agents"
+n_skills="$(ls -1 .cursor/skills/*/skill.yaml | wc -l)"
+n_agents="$(ls -1 .cursor/agents/*.md | wc -l)"
+[[ "${n_skills}" -eq 19 ]] || { echo "expected 19 skills, got ${n_skills}" >&2; exit 1; }
+[[ "${n_agents}" -eq 11 ]] || { echo "expected 11 agents, got ${n_agents}" >&2; exit 1; }
+echo "PIPELINE OK skill-agent-roster ${n_skills} skills ${n_agents} agents"

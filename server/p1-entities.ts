@@ -15,6 +15,9 @@ export const P1_SKILLS = [
   { id: "p1-jurisdiction-map", path: ".cursor/skills/p1-jurisdiction-map/skill.yaml" },
   { id: "p1-work-product", path: ".cursor/skills/p1-work-product/skill.yaml" },
   { id: "p1-ci-health", path: ".cursor/skills/p1-ci-health/skill.yaml" },
+  { id: "p1-corporate-taxonomy", path: ".cursor/skills/p1-corporate-taxonomy/skill.yaml" },
+  { id: "p1-legal-hold", path: ".cursor/skills/p1-legal-hold/skill.yaml" },
+  { id: "p1-compliance-matrix", path: ".cursor/skills/p1-compliance-matrix/skill.yaml" },
 ] as const;
 
 export const P1_AGENTS = [
@@ -28,6 +31,7 @@ export const P1_AGENTS = [
   { id: "citation-checker", path: ".cursor/agents/citation-checker.md" },
   { id: "issue-memo-writer", path: ".cursor/agents/issue-memo-writer.md" },
   { id: "local-api-operator", path: ".cursor/agents/local-api-operator.md" },
+  { id: "corporate-counsel", path: ".cursor/agents/corporate-counsel.md" },
 ] as const;
 
 export const P1_PIPELINES = [

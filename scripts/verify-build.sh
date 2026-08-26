@@ -142,8 +142,8 @@ from pathlib import Path
 skills = list(Path(".cursor/skills").glob("*/skill.yaml"))
 agents = list(Path(".cursor/agents").glob("*.md"))
 pipelines = list(Path("scripts/pipelines").glob("*.sh"))
-assert len(skills) == 16, len(skills)
-assert len(agents) == 10, len(agents)
+assert len(skills) == 19, len(skills)
+assert len(agents) == 11, len(agents)
 assert len(pipelines) >= 8, len(pipelines)
 assert Path("workers/ci-gate.js").is_file()
 assert Path("data/legal/glossary.json").is_file()
@@ -179,7 +179,9 @@ if curl -fsS -o /dev/null --max-time 3 "${base}/"; then
   dip="$(curl -fsS --max-time 15 "${base}/api/aip/dive")"
   echo "${dip}" | python3 -c "import json,sys; d=json.load(sys.stdin); assert d.get('ok') is True and d.get('simulated') is False; assert d.get('fixturesOk') is True; print('VERIFY OK: AIP-Σ0 deep dive', d['proofHash'][:12], d['elapsedMs'], 'ms')"
   nb="$(curl -fsS --max-time 15 "${base}/api/notebook")"
-  echo "${nb}" | python3 -c "import json,sys; d=json.load(sys.stdin); assert d.get('classified') is False; assert d.get('summary',{}).get('p1Slots',0)>=11000; print('VERIFY OK: inventory notebook', d['summary']['p1Slots'], 'p1 slots')"
+  echo "${nb}" | python3 -c "import json,sys; d=json.load(sys.stdin); assert d.get('classified') is False; assert d.get('summary',{}).get('p1Slots',0)>=11000; assert d.get('summary',{}).get('corporateTaxonomy') is True; print('VERIFY OK: inventory notebook', d['summary']['p1Slots'], 'p1 slots')"
+  corp="$(curl -fsS --max-time 15 "${base}/api/corporate")"
+  echo "${corp}" | python3 -c "import json,sys; d=json.load(sys.stdin); assert d.get('classified') is False and d.get('governmentProgram') is False; assert d['summary']['categories']>=10; assert any(w['id']=='sigint-intercepts' for w in d['wontDo']); assert all(e.get('liveAction') is False for e in d['enforcement']); print('VERIFY OK: corporate taxonomy', d['summary']['categories'], 'categories', d['summary']['bindingsPresent'], 'bindings')"
 else
   echo "VERIFY WARN: ${base} is not up; skipped live API check"
 fi
@@ -204,6 +206,12 @@ assert any(s["id"] == "causal-without-id" for s in sug["suggestions"]), sug
 nb = json.load(urllib.request.urlopen(base + "/v1/notebook", timeout=12))
 assert nb["classified"] is False and nb["governmentProgram"] is False, nb
 assert nb["summary"]["p1Slots"] >= 11000, nb["summary"]
+assert nb["summary"]["corporateTaxonomy"] is True
+corp = json.load(urllib.request.urlopen(base + "/v1/corporate", timeout=12))
+assert corp["classified"] is False and corp["simulated"] is False
+assert corp["summary"]["categories"] >= 10
+assert any(w["id"] == "sigint-intercepts" for w in corp["wontDo"])
+assert "express" in corp["commandOutput"]["lockfileCore"]
 assert nb["summary"]["cuckooLiveSandbox"] is False
 assert nb["oneShot"]["stepCount"] >= 20
 inv = json.load(urllib.request.urlopen(base + "/v1/inventory", timeout=8))

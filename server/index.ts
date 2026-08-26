@@ -15,6 +15,7 @@ import {
 import { inventoryStatus } from "./inventory";
 import { oneShotStatus } from "./install-status";
 import { installNotebook } from "./notebook";
+import { compileCorporateTaxonomy } from "./corporate-taxonomy";
 import { listP1Slots } from "./p1-catalog";
 import { ghostHandStatus } from "../src/lib/optimize/ghost-hand";
 import { parseMode } from "../src/lib/optimize/types";
@@ -80,6 +81,10 @@ app.get("/v1/install", (_req, res) => {
 
 app.get("/v1/notebook", (_req, res) => {
   res.json(installNotebook());
+});
+
+app.get("/v1/corporate", (_req, res) => {
+  res.json(compileCorporateTaxonomy());
 });
 
 app.get("/v1/mode", (_req, res) => {

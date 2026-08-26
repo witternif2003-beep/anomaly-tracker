@@ -1,0 +1,17 @@
+id: p1-legal-hold
+name: p1-legal-hold
+description: Run the eight-step corporate investigation workflow (hold, image, custody, privilege, notice, liaison, insurance, remediate).
+p1:
+  capability: legal-hold
+  catalog: /v1/p1
+  local_api: http://127.0.0.1:4040
+when_to_use: |
+  Use when the company must preserve ESI and financials. Follow GET /v1/corporate workflow. Do not collect from systems the company does not control.
+steps:
+  - Issue the hold from the workflow on GET /v1/corporate.
+  - Point imaging at inventory closest tools (hachoir/pefile). Do not start Cuckoo.
+  - Privilege review against FRE 501 via POST /v1/legal/search.
+  - Law-enforcement liaison is through counsel. GET /v1/compliance/cjis must stay non-live.
+resources:
+  - path: .cursor/skills/p1-legal-hold/SKILL.md
+  - path: data/legal/corporate-taxonomy.json

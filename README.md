@@ -14,7 +14,7 @@ It does not call ChatGPT, Claude, or Gemini. The optimizer runs locally in this 
 - **Basic mode** — immediate rewrite using core techniques (role, constraints, output contract).
 - **Request types** — auto-detect, or lock Creative, Technical, Educational, or Complex.
 - **Platform formatting** — markdown sections for ChatGPT, XML-style tags for Claude, numbered comparative structure for Gemini.
-- **4-D trace** — see intent, gaps, techniques, GHOST-HAND layers, and what changed.
+- **Corporate forensic taxonomy** — business-law evidence map (records, ESI, financials, compliance) bound to this repo's files, `package-lock.json`, `.cursor/mcp.json`, and empty credential placeholders. Intercepts/SIGINT/NCIC are won't-do. Open `/corporate`.
 
 ## Run locally
 
@@ -23,7 +23,7 @@ npm install
 npm run dev
 ```
 
-Open [http://localhost:43127](http://localhost:43127) for the studio, [http://localhost:43127/aip](http://localhost:43127/aip) for AIP-Σ0, or [http://localhost:43127/inventory](http://localhost:43127/inventory) for the live install notebook.
+Open [http://localhost:43127](http://localhost:43127) for the studio, [http://localhost:43127/aip](http://localhost:43127/aip) for AIP-Σ0, [http://localhost:43127/inventory](http://localhost:43127/inventory) for the live install notebook, or [http://localhost:43127/corporate](http://localhost:43127/corporate) for the corporate evidence taxonomy.
 
 ```bash
 npm run build
@@ -51,6 +51,7 @@ npm run local-api
 | `/v1/p1` | GET | 11,280 P1 slots (`q`, `limit`, `offset`) — 1,280 core + 10,000 Tier-1 | None |
 | `/v1/inventory` | GET | Requested packages vs closest installs | None |
 | `/v1/notebook` | GET | Live install inventory + expansion plan (not classified) | None |
+| `/v1/corporate` | GET | Corporate forensic taxonomy bound to lockfile/MCP/credentials | None |
 | `/v1/mode` | GET | GHOST-HAND / Post-doc / live-bot status (default still detail) | None |
 | `/v1/suggest` | GET/POST | Hard-coded live suggestion bot (`input`/`q`, `mode`) | None |
 | `/v1/aip` | GET | AIP-Σ0 full-spectrum status (real, not simulated) | None |

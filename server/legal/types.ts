@@ -13,7 +13,8 @@ export type LegalSource =
   | "ofac"
   | "finra"
   | "uspto"
-  | "pacer";
+  | "pacer"
+  | "corporate";
 
 export interface LegalHit {
   source: LegalSource;

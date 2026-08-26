@@ -8,6 +8,7 @@ import { oneShotStatus } from "./install-status";
 import { legalSearchStatus } from "./legal-search";
 import { listP1Slots } from "./p1-catalog";
 import { cjisStatus, policyStatus } from "./policy";
+import { compileCorporateTaxonomy } from "./corporate-taxonomy";
 
 const EXPANSION = [
   {
@@ -70,6 +71,12 @@ const EXPANSION = [
     status: "done" as const,
     note: "1,280 core + 10,000 Tier-1 slots are already generated. Do not mint a second 10k of fake law-enforcement products.",
   },
+  {
+    id: "sigint-intercepts",
+    title: "SIGINT / VoIP intercept / WeChat decrypt",
+    status: "wont-do" as const,
+    note: "This studio maps corporate records the company already holds. It does not intercept communications or clone RF hardware.",
+  },
 ];
 
 export function installNotebook() {
@@ -81,6 +88,7 @@ export function installNotebook() {
   const env = envPlaceholderStatus();
   const policy = policyStatus();
   const cjis = cjisStatus();
+  const corporate = compileCorporateTaxonomy();
   const aip = aipSigma0Status();
   const mode = ghostHandStatus();
   const postdoc = postdocStatus();
@@ -115,6 +123,8 @@ export function installNotebook() {
       lyra2: mode.engine === "lyra-2" && mode.hyperDimensional,
       postdoc: true,
       liveSuggestionBot: bot.hardcoded && bot.live,
+      corporateTaxonomy: true,
+      corporateBindings: `${corporate.summary.bindingsPresent}/${corporate.summary.bindingsTotal}`,
     },
     protocols: {
       ghostHand: {
@@ -137,6 +147,13 @@ export function installNotebook() {
         hardcoded: bot.hardcoded,
         simulated: bot.simulated,
         ruleCount: bot.ruleCount,
+      },
+      corporate: {
+        categories: corporate.summary.categories,
+        enforcement: corporate.summary.enforcement,
+        wontDo: corporate.summary.wontDo,
+        intercepts: false,
+        classified: false,
       },
       aipSigma0: {
         protocol: aip.protocol,

@@ -12,4 +12,5 @@ curl -fsS --max-time 5 "${base}/v1/install" >/dev/null
 curl -fsS --max-time 5 "${base}/v1/mode" >/dev/null
 curl -fsS --max-time 8 "${base}/v1/aip/dive" >/dev/null
 curl -fsS --max-time 8 "${base}/v1/notebook" >/dev/null
+curl -fsS --max-time 8 "${base}/v1/corporate" >/dev/null
 echo "PIPELINE OK local-api-smoke ${base}"

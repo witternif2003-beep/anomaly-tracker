@@ -139,6 +139,31 @@
       "text": "A rule that shields certain communications or information from disclosure or use, such as attorney-client communications or, in some settings, a spousal privilege."
     },
     {
+      "id": "gl-esi",
+      "term": "electronically stored information",
+      "text": "Data stored in electronic form that may be requested in discovery (FRCP 34), including email, databases, logs, and cloud objects in a party's possession, custody, or control."
+    },
+    {
+      "id": "gl-legal-hold",
+      "term": "legal hold",
+      "text": "An instruction to preserve potentially relevant information when litigation or a government inquiry is reasonably anticipated. It suspends ordinary deletion for the scoped custodians and systems."
+    },
+    {
+      "id": "gl-spoliation",
+      "term": "spoliation",
+      "text": "The destruction or material alteration of evidence that should have been preserved. FRCP 37(e) addresses ESI. Remedies range from curative measures to adverse inferences when intent is shown."
+    },
+    {
+      "id": "gl-business-records",
+      "term": "business records exception",
+      "text": "FRE 803(6): a record of a regularly conducted activity may be admitted despite hearsay if it was made near the time from knowledge, kept in the regular course, making it was regular practice, and it is not shown to be untrustworthy."
+    },
+    {
+      "id": "gl-sar",
+      "term": "suspicious activity report",
+      "text": "A report certain financial institutions must file under the Bank Secrecy Act when they know, suspect, or have reason to suspect a transaction involves illicit activity. It is a filing duty, not a public records search."
+    },
+    {
       "id": "gl-precedent",
       "term": "precedent",
       "text": "A prior decision that a later court must follow (binding) or may follow (persuasive) when the later case presents the same legal question."

@@ -1,0 +1,18 @@
+id: p1-corporate-taxonomy
+name: p1-corporate-taxonomy
+description: Map internal-investigation facts onto the corporate forensic taxonomy bound to this repo.
+p1:
+  capability: corporate-taxonomy
+  catalog: /v1/p1
+  local_api: http://127.0.0.1:4040
+when_to_use: |
+  Use for corporate evidence categories, business-records exceptions, ESI holds, and what this checkout actually installs. GET /v1/corporate.
+steps:
+  - Load GET http://127.0.0.1:4040/v1/corporate and name the category.
+  - Bind the answer to on-disk files, package-lock.json, .cursor/mcp.json, and empty credential placeholders.
+  - Search FOLIO/FRE via POST /v1/legal/search. Do not invent intercepts or bank wires.
+  - Return a concrete memo or checklist, not a classified case file.
+resources:
+  - path: .cursor/skills/p1-corporate-taxonomy/SKILL.md
+  - path: data/legal/corporate-taxonomy.json
+  - path: server/corporate-taxonomy.ts

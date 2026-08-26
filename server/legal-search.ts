@@ -5,6 +5,7 @@ import type { LegalHit, LegalSearchResult, LegalSource } from "./legal/types";
 import { searchEdgar, searchFinra, searchOfac, searchPacer, searchUspto } from "./inventory/public-apis";
 import { searchP1, type P1Slot } from "./p1-catalog";
 import { aipReceipt } from "../src/lib/aip-sigma0/protocol";
+import { searchCorporateTaxonomy } from "./corporate-taxonomy";
 
 export type { LegalHit, LegalSearchResult, LegalSource };
 
@@ -103,6 +104,41 @@ const FOLIO_DOCS: FolioDoc[] = [
     tags: ["Winter", "irreparable harm", "equity"],
     body: "A preliminary injunction requires likelihood of success, irreparable harm, balance of equities, and public interest. Winter rejected a mere possibility of irreparable harm. Mandatory injunctions altering the status quo draw extra scrutiny in many circuits.",
   },
+  {
+    id: "folio-8036-01",
+    title: "Business records — FRE 803(6)",
+    topic: "Evidence",
+    tags: ["FRE 803(6)", "regularly conducted activity", "custodian"],
+    body: "A record of a regularly conducted activity is excepted from hearsay if it was made at or near the time from someone with knowledge, kept in the course of a regularly conducted activity, making the record was a regular practice, and the opponent does not show a lack of trustworthiness. A custodian or qualified witness, or a FRE 902(11) certification, lays the foundation. The exception covers the company's own regularly kept files — not intercepts this studio cannot collect.",
+  },
+  {
+    id: "folio-hold-01",
+    title: "Legal hold and ESI spoliation — FRCP 37(e)",
+    topic: "Civil procedure",
+    tags: ["legal hold", "ESI", "FRCP 37(e)", "FRCP 34"],
+    body: "FRCP 34 reaches electronically stored information in the responding party's possession, custody, or control. FRCP 37(e) addresses failure to preserve ESI that should have been preserved in the anticipation of litigation. Counsel issues a hold, suspends routine deletion, and documents the scope. This studio lists the hold workflow; it does not image third-party phones.",
+  },
+  {
+    id: "folio-carpenter-01",
+    title: "CSLI and location data after Carpenter",
+    topic: "Fourth Amendment",
+    tags: ["Carpenter", "CSLI", "geolocation"],
+    body: "Carpenter v. United States treats prolonged cell-site location information as a search ordinarily requiring a warrant. Corporate counsel uses the opinion when the government seeks location history. It is not a license to triangulate handsets from this app. Use only location records the company already lawfully holds.",
+  },
+  {
+    id: "folio-cfaa-01",
+    title: "CFAA — preserve, do not probe",
+    topic: "Computer crime",
+    tags: ["CFAA", "§1030", "protected computer"],
+    body: "18 U.S.C. § 1030 addresses unauthorized access and damage to protected computers. A company's first move is preservation of logs and images it controls, then notice decisions through counsel. This studio does not run exploits, password scrambles, or live intrusion tests.",
+  },
+  {
+    id: "folio-sar-01",
+    title: "BSA SAR timing is a filing duty",
+    topic: "Bank Secrecy Act",
+    tags: ["SAR", "§5318(g)", "AML"],
+    body: "A financial institution's suspicious-activity report is a statutory filing with a clock, not a research query. Lyra can remind counsel of the obligation and search public OFAC/EDGAR stubs. It does not transmit a SAR or open a SWIFT session.",
+  },
 ];
 
 function folioFromP1(): FolioDoc[] {
@@ -139,6 +175,16 @@ function searchFolio(query: string, limit: number): LegalHit[] {
       snippet: doc.body,
       citation: doc.topic,
     }));
+}
+
+function corporateHits(query: string, limit: number): LegalHit[] {
+  return searchCorporateTaxonomy(query, limit).map((row) => ({
+    source: "corporate" as const,
+    id: `corp-${row.id}`,
+    title: row.title,
+    snippet: row.snippet,
+    citation: "Corporate forensic taxonomy",
+  }));
 }
 
 function p1Hits(query: string, limit: number): LegalHit[] {
@@ -258,6 +304,7 @@ function normalizeSource(raw: string): LegalSource | "blacks" | null {
     "finra",
     "uspto",
     "pacer",
+    "corporate",
   ];
   return known.includes(s as LegalSource) ? (s as LegalSource) : null;
 }
@@ -293,6 +340,7 @@ export async function legalSearch(input: {
       "finra",
       "uspto",
       "pacer",
+      "corporate",
     );
   }
   for (const item of raw) {
@@ -341,6 +389,7 @@ export async function legalSearch(input: {
   if (requested.includes("finra")) pushRemote(await searchFinra(query, limit));
   if (requested.includes("uspto")) pushRemote(await searchUspto(query, limit));
   if (requested.includes("pacer")) pushRemote(await searchPacer(query, limit));
+  if (requested.includes("corporate")) results.push(...corporateHits(query, Math.min(limit, 8)));
 
   const withReceipts = results.map((hit) => ({
     ...hit,

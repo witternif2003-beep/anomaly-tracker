@@ -1,0 +1,17 @@
+id: p1-compliance-matrix
+name: p1-compliance-matrix
+description: Map a corporate incident to CFAA, BSA/SAR, FCPA, FEC, ITAR, trade-secret, or RICO response obligations without live filings.
+p1:
+  capability: compliance-matrix
+  catalog: /v1/p1
+  local_api: http://127.0.0.1:4040
+when_to_use: |
+  Use when the user asks what statute or filing a company should consider. liveAction is always false. Search FOLIO; do not call DOJ/SEC/FEC portals.
+steps:
+  - Match the incident to an enforcement row on GET /v1/corporate.
+  - POST /v1/legal/search with that row's searchQuery.
+  - State the corporate response obligation. Do not file, freeze accounts, or notify CISA from this app.
+  - Refuse NCIC/CJIS live queries.
+resources:
+  - path: .cursor/skills/p1-compliance-matrix/SKILL.md
+  - path: server/policy.ts

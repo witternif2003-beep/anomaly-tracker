@@ -158,6 +158,9 @@ export function InventoryNotebook() {
             <Link href="/aip" className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}>
               AIP-Σ0
             </Link>
+            <Link href="/corporate" className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}>
+              Corporate
+            </Link>
             <Button size="sm" variant="ghost" onClick={() => void load()} disabled={busy}>
               Refresh
             </Button>

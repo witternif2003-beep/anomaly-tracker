@@ -72,6 +72,16 @@ export function policyStatus() {
       cloudflareLiveDeploy: false,
       note: "Anchor Inventory Protocol Σ0: live claim scan, tool receipts, chat footers, deep-dive fixtures. Not a live Cloudflare deploy.",
     },
+    corporateTaxonomy: {
+      status: "activated",
+      endpoint: "/v1/corporate",
+      skills: ["p1-corporate-taxonomy", "p1-legal-hold", "p1-compliance-matrix"],
+      agent: "corporate-counsel",
+      intercepts: false,
+      sigint: false,
+      liveNcic: false,
+      note: "Business-law forensic map bound to lockfile, MCP, and placeholders. Not a classified case file.",
+    },
   };
 }
 

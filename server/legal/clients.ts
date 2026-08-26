@@ -213,6 +213,7 @@ export function legalSourceStatus() {
     { id: "ofac", name: "OFAC SDN", install: "curl treasury.gov/ofac/downloads/sdn.csv", credentials: "none (public list)", status: "live" },
     { id: "uspto", name: "USPTO patents", install: "developer.uspto.gov REST", credentials: "optional USPTO_API_KEY", status: "optional" },
     { id: "pacer", name: "PACER", install: "pacer-tools (pacer-client on PyPI is unrelated)", credentials: "PACER_USERNAME / PACER_PASSWORD", status: present("PACER_USERNAME") || present("PACER_PASSWORD") ? "wired-session-not-opened" : "wired-awaiting-key" },
+    { id: "corporate", name: "Corporate forensic taxonomy", install: "data/legal/corporate-taxonomy.json + server/corporate-taxonomy.ts", credentials: "none", status: "live", notes: "Business-law map bound to lockfile, MCP, and placeholders. Not a classified case file. Intercepts/SIGINT are wont-do." },
     { id: "cjis", name: "CJIS / NCIC / federal", install: "placeholders only (not a CJIS-certified interface)", credentials: "CJIS_ORI / NCIC_ORI / NCIC_MNEMONIC", status: "applicable-placeholders", notes: "Live NCIC/III queries are refused." },
   ];
 }
