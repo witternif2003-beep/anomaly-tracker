@@ -74,6 +74,26 @@ export const ENV_PLACEHOLDERS = [
     requiredFor: "Federal UCR / NIBRS agency id",
     closest: "Public Crime Data Explorer identifiers, not NCIC live access",
   },
+  {
+    name: "PACER_USERNAME",
+    requiredFor: "PACER court documents",
+    closest: "PACER_USERNAME (REST stub; PyPI pacer-client is unrelated)",
+  },
+  {
+    name: "PACER_PASSWORD",
+    requiredFor: "PACER court documents",
+    closest: "PACER_PASSWORD (session is never opened from this studio)",
+  },
+  {
+    name: "FINRA_API_KEY",
+    requiredFor: "FINRA TRACE",
+    closest: "FINRA_API_KEY (REST api.finra.org; no public PyPI SDK)",
+  },
+  {
+    name: "USPTO_API_KEY",
+    requiredFor: "USPTO patent search",
+    closest: "USPTO_API_KEY (developer.uspto.gov REST)",
+  },
 ] as const;
 
 export type EnvPlaceholderName = (typeof ENV_PLACEHOLDERS)[number]["name"];

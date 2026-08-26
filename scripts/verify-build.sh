@@ -147,6 +147,7 @@ assert len(agents) == 10, len(agents)
 assert len(pipelines) >= 8, len(pipelines)
 assert Path("workers/ci-gate.js").is_file()
 assert Path("data/legal/glossary.json").is_file()
+assert Path("data/p1/inventory-manifest.json").is_file()
 assert Path(".cursor/permissions.json").is_file()
 assert Path(".cursor/marketplace.json").is_file()
 print("VERIFY OK: P1 roster", len(skills), "skills", len(agents), "agents", len(pipelines), "pipelines")
@@ -178,7 +179,11 @@ models = json.load(urllib.request.urlopen(base + "/v1/models", timeout=8))
 ids = {m["id"] for m in models["data"]}
 assert {"local-v1", "local-v1-concise"} <= ids, ids
 p1 = json.load(urllib.request.urlopen(base + "/v1/p1?limit=1", timeout=8))
-assert p1["totalSlots"] >= 1000, p1["totalSlots"]
+assert p1["totalSlots"] >= 11000, p1["totalSlots"]
+inv = json.load(urllib.request.urlopen(base + "/v1/inventory", timeout=8))
+assert inv["additionalSlots"] == 10000, inv["additionalSlots"]
+assert len(inv["assets"]) >= 20, len(inv["assets"])
+assert inv["cuckooLiveSandbox"] is False
 req = urllib.request.Request(
     base + "/v1/chat/completions",
     data=json.dumps({

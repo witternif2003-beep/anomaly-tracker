@@ -4,12 +4,8 @@ set -euo pipefail
 base="${LOCAL_API_URL:-http://127.0.0.1:4040}"
 curl -fsS --max-time 5 "${base}/health" >/dev/null
 curl -fsS --max-time 5 "${base}/v1/models" >/dev/null
-# Smoke the local Express API used by P1 playground and catalog.
-set -euo pipefail
-base="${LOCAL_API_URL:-http://127.0.0.1:4040}"
-curl -fsS --max-time 5 "${base}/health" >/dev/null
-curl -fsS --max-time 5 "${base}/v1/models" >/dev/null
 curl -fsS --max-time 5 "${base}/v1/p1?limit=1" >/dev/null
 curl -fsS --max-time 5 "${base}/v1/env" >/dev/null
 curl -fsS --max-time 5 "${base}/v1/policy" >/dev/null
+curl -fsS --max-time 5 "${base}/v1/inventory" >/dev/null
 echo "PIPELINE OK local-api-smoke ${base}"

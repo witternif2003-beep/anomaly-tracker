@@ -35,6 +35,7 @@ npm install -g "folio-mcp@${FOLIO_MCP_VERSION}"
 npm install -g wrangler@4
 bash scripts/install-mcp.sh
 bash scripts/install-extensions.sh
+bash scripts/install-p1-inventory.sh
 
 npx --no-install next typegen
 

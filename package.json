@@ -20,6 +20,7 @@
     "local-api": "tsx server/index.ts",
     "start:local": "tsx server/index.ts",
     "env:check": "bash scripts/check-env-placeholders.sh",
+    "inventory:install": "bash scripts/install-p1-inventory.sh",
     "cf:dry-run": "bash scripts/wrangler-safe.sh deploy --dry-run --config workers/wrangler.toml",
     "cf:deploy": "bash scripts/wrangler-safe.sh deploy --config workers/wrangler.toml",
     "pipelines": "bash scripts/pipelines/p1-catalog-audit.sh && bash scripts/pipelines/skill-agent-roster.sh && bash scripts/pipelines/cloudflare-ci.sh && bash scripts/pipelines/cloudflare-p1-health.sh && bash scripts/pipelines/local-api-smoke.sh && bash scripts/pipelines/env-placeholders.sh && bash scripts/pipelines/no-github-actions.sh && bash scripts/pipelines/policy-guard.sh"

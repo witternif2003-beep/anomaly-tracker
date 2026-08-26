@@ -24,6 +24,10 @@ required = [
     "NCIC_ORI",
     "NCIC_MNEMONIC",
     "FBI_UCR_AGENCY_ID",
+    "PACER_USERNAME",
+    "PACER_PASSWORD",
+    "FINRA_API_KEY",
+    "USPTO_API_KEY",
 ]
 missing = [name for name in required if not re.search(rf"^{re.escape(name)}=", example, re.M)]
 if missing:

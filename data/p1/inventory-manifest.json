@@ -1,0 +1,215 @@
+{
+  "title": "P1 Tier-1 expanded inventory",
+  "additionalSlots": 10000,
+  "note": "Requested scoped names are mostly unpublished. Closest public packages are installed. Docker is unavailable in this VM; in-process libraries replace those images. Cuckoo is not installed (live malware sandbox); pefile is the static-analysis substitute.",
+  "assets": [
+    {
+      "id": "npm-opinion-parser",
+      "family": "npm",
+      "requested": "@law-research/opinion-parser",
+      "closest": "pdf-parse",
+      "kind": "npm",
+      "packages": ["pdf-parse", "citation-js", "compromise"]
+    },
+    {
+      "id": "npm-disk-imaging",
+      "family": "npm",
+      "requested": "@forensic-tools/disk-imaging",
+      "closest": "hachoir (PyPI) + pefile; no public npm disk imager",
+      "kind": "pip",
+      "packages": ["hachoir", "pefile"]
+    },
+    {
+      "id": "npm-geospatial",
+      "family": "npm",
+      "requested": "@crime-analytics/geospatial",
+      "closest": "@turf/turf",
+      "kind": "npm",
+      "packages": ["@turf/turf", "geojson", "geolib"]
+    },
+    {
+      "id": "npm-sanctions",
+      "family": "npm",
+      "requested": "@financial-intel/sanctions-screen",
+      "closest": "ofac",
+      "kind": "npm",
+      "packages": ["ofac"]
+    },
+    {
+      "id": "npm-osint-social",
+      "family": "npm",
+      "requested": "@osint-collector/social-media",
+      "closest": "sherlock-project (PyPI)",
+      "kind": "pip",
+      "packages": ["sherlock-project"]
+    },
+    {
+      "id": "npm-hash-verifier",
+      "family": "npm",
+      "requested": "@evidence-chain/hash-verifier",
+      "closest": "hash-wasm + ssri + hasha + object-hash",
+      "kind": "npm",
+      "packages": ["hash-wasm", "ssri", "hasha", "object-hash"]
+    },
+    {
+      "id": "pip-crimemapping",
+      "family": "pypi",
+      "requested": "crimemapping",
+      "closest": "folium",
+      "kind": "pip",
+      "packages": ["folium"]
+    },
+    {
+      "id": "pip-forensic-accounting",
+      "family": "pypi",
+      "requested": "forensic-accounting",
+      "closest": "pyod",
+      "kind": "pip",
+      "packages": ["pyod"]
+    },
+    {
+      "id": "pip-legal-ner",
+      "family": "pypi",
+      "requested": "legal-ner",
+      "closest": "eyecite + reporters-db",
+      "kind": "pip",
+      "packages": ["eyecite", "reporters-db"]
+    },
+    {
+      "id": "pip-db-forensics",
+      "family": "pypi",
+      "requested": "db-forensics",
+      "closest": "sqlite-utils",
+      "kind": "pip",
+      "packages": ["sqlite-utils"]
+    },
+    {
+      "id": "pip-stego",
+      "family": "pypi",
+      "requested": "steganography-tools",
+      "closest": "steganography-tools",
+      "kind": "pip",
+      "packages": ["steganography-tools", "stegano", "pillow"]
+    },
+    {
+      "id": "docker-elasticsearch",
+      "family": "docker",
+      "requested": "elastic/elasticsearch:8.12",
+      "closest": "minisearch (no Docker in this VM)",
+      "kind": "npm",
+      "packages": ["minisearch"]
+    },
+    {
+      "id": "docker-neo4j",
+      "family": "docker",
+      "requested": "neo4j/neo4j:5.0",
+      "closest": "graphology (no Docker in this VM)",
+      "kind": "npm",
+      "packages": ["graphology"]
+    },
+    {
+      "id": "docker-osint",
+      "family": "docker",
+      "requested": "osint-framework/alpine",
+      "closest": "sherlock-project + recon-ng clone",
+      "kind": "git",
+      "repo": "https://github.com/lanmaster53/recon-ng.git"
+    },
+    {
+      "id": "docker-sherlock",
+      "family": "docker",
+      "requested": "sherlock/sherlock",
+      "closest": "sherlock-project/sherlock",
+      "kind": "git",
+      "repo": "https://github.com/sherlock-project/sherlock.git"
+    },
+    {
+      "id": "docker-harvester",
+      "family": "docker",
+      "requested": "the-harvester/email-gatherer",
+      "closest": "theHarvester (PyPI) + laramies/theHarvester",
+      "kind": "git",
+      "repo": "https://github.com/laramies/theHarvester.git"
+    },
+    {
+      "id": "gh-automate",
+      "family": "github",
+      "requested": "Project-AUTOMATE",
+      "closest": "cyb3rfox/Aurora-Incident-Response",
+      "kind": "git",
+      "repo": "https://github.com/cyb3rfox/Aurora-Incident-Response.git"
+    },
+    {
+      "id": "gh-foca",
+      "family": "github",
+      "requested": "FOCA",
+      "closest": "ElevenPaths/FOCA + exifread",
+      "kind": "git",
+      "repo": "https://github.com/ElevenPaths/FOCA.git"
+    },
+    {
+      "id": "gh-maltego",
+      "family": "github",
+      "requested": "Maltego",
+      "closest": "graphology (Maltego CE is a proprietary installer, not a public git clone)",
+      "kind": "npm",
+      "packages": ["graphology"]
+    },
+    {
+      "id": "gh-recon-ng",
+      "family": "github",
+      "requested": "Recon-ng",
+      "closest": "lanmaster53/recon-ng",
+      "kind": "git",
+      "repo": "https://github.com/lanmaster53/recon-ng.git"
+    },
+    {
+      "id": "gh-cuckoo",
+      "family": "github",
+      "requested": "Cuckoo",
+      "closest": "pefile (static PE metadata only; live malware sandbox is not installed)",
+      "kind": "pip",
+      "packages": ["pefile"]
+    },
+    {
+      "id": "api-edgar",
+      "family": "legal-api",
+      "requested": "sec-edgar",
+      "closest": "edgartools + SEC EFTS REST",
+      "kind": "pip",
+      "packages": ["edgartools", "sec-edgar-downloader"]
+    },
+    {
+      "id": "api-finra",
+      "family": "legal-api",
+      "requested": "FINRA TRACE",
+      "closest": "REST https://api.finra.org (no public PyPI SDK)",
+      "kind": "rest",
+      "endpoint": "https://api.finra.org"
+    },
+    {
+      "id": "api-ofac",
+      "family": "legal-api",
+      "requested": "OFAC SDN List",
+      "closest": "https://www.treasury.gov/ofac/downloads/sdn.csv",
+      "kind": "rest",
+      "endpoint": "https://www.treasury.gov/ofac/downloads/sdn.csv"
+    },
+    {
+      "id": "api-uspto",
+      "family": "legal-api",
+      "requested": "USPTO Patent Data",
+      "closest": "https://developer.uspto.gov (bulk/search REST)",
+      "kind": "rest",
+      "endpoint": "https://developer.uspto.gov"
+    },
+    {
+      "id": "api-pacer",
+      "family": "legal-api",
+      "requested": "pacer-client",
+      "closest": "pacer-tools (PyPI pacer-client is an unrelated NLR app)",
+      "kind": "pip",
+      "packages": ["pacer-tools"]
+    }
+  ]
+}

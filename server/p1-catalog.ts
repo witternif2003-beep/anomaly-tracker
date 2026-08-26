@@ -1,26 +1,8 @@
 import { mapP1Entities } from "./p1-entities";
+import { TIER1_CATALOG } from "./p1-tier1";
+import type { P1Slot } from "./p1-types";
 
-export interface P1Slot {
-  id: string;
-  slot: number;
-  title: string;
-  practiceArea: string;
-  jurisdiction: string;
-  workProduct: string;
-  folioTopic: string;
-  courtlistenerQuery: string;
-  status: "available";
-  tags: string[];
-  skillId: string;
-  skillPath: string;
-  agentId: string;
-  agentPath: string;
-  pipelineId: string;
-  pipelinePath: string;
-  workerPath: string;
-  workerId: string;
-  resource: { kind: string; id: string; path: string };
-}
+export type { P1Slot };
 
 const PRACTICE_AREAS = [
   "Civil procedure",
@@ -145,18 +127,19 @@ function buildSlot(index: number): P1Slot {
     courtlistenerQuery: `${practiceArea} ${jurisdiction}`,
     status: "available",
     tags: [practiceArea, jurisdiction, workProduct, folioTopic, "p1", mapped.skillId, mapped.agentId],
+    tier: "core",
     ...mapped,
   };
 }
 
-export const P1_CATALOG: P1Slot[] = Array.from({ length: SLOT_COUNT }, (_, i) => buildSlot(i));
+export const P1_CATALOG: P1Slot[] = [...Array.from({ length: SLOT_COUNT }, (_, i) => buildSlot(i)), ...TIER1_CATALOG];
 
 export function listP1Slots(opts: { q?: string; limit?: number; offset?: number } = {}) {
   const q = opts.q?.trim().toLowerCase();
   let rows = P1_CATALOG;
   if (q) {
     rows = rows.filter((slot) =>
-      [slot.id, slot.title, slot.practiceArea, slot.jurisdiction, slot.workProduct, slot.folioTopic, slot.skillId, slot.agentId]
+      [slot.id, slot.title, slot.practiceArea, slot.jurisdiction, slot.workProduct, slot.folioTopic, slot.skillId, slot.agentId, slot.assetFamily, slot.requestedPackage, slot.installedPackage]
         .join(" ")
         .toLowerCase()
         .includes(q),
@@ -169,6 +152,8 @@ export function listP1Slots(opts: { q?: string; limit?: number; offset?: number 
     object: "list" as const,
     catalog: "p1",
     count: rows.length,
+    coreSlots: SLOT_COUNT,
+    tier1Slots: TIER1_CATALOG.length,
     totalSlots: P1_CATALOG.length,
     offset,
     limit: limit ?? null,

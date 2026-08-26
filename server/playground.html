@@ -84,6 +84,11 @@
           <div id="p1-meta" class="muted">Loading slots…</div>
           <div id="p1-out"></div>
         </div>
+        <h2>Tier-1 inventory</h2>
+        <div class="card">
+          <div id="inv-meta" class="muted">Loading closest-match installs…</div>
+          <div id="inv-out"></div>
+        </div>
       </aside>
     </main>
     <script>
@@ -121,9 +126,22 @@
           })
           .join("");
         const p1 = await fetch("/v1/p1?limit=8").then((r) => r.json());
-        document.getElementById("p1-meta").textContent = p1.totalSlots + " slots in catalog";
+        document.getElementById("p1-meta").textContent =
+          (p1.totalSlots || 0) + " slots (" + (p1.coreSlots || 0) + " core + " + (p1.tier1Slots || 0) + " Tier-1)";
         document.getElementById("p1-out").innerHTML = (p1.data || [])
           .map((s) => "<div><strong>" + s.id + "</strong><span class='muted'> " + s.title + "</span></div>")
+          .join("");
+        const inv = await fetch("/v1/inventory").then((r) => r.json());
+        const okCount = (inv.assets || []).filter((a) => a.install && a.install.ok).length;
+        document.getElementById("inv-meta").textContent =
+          okCount + "/" + (inv.assets || []).length + " closest matches recorded · Docker " +
+          (inv.dockerAvailable ? "yes" : "unavailable") + " · Cuckoo sandbox off";
+        document.getElementById("inv-out").innerHTML = (inv.assets || [])
+          .map((a) => {
+            const mark = a.install && a.install.ok ? "<span class='ok'>installed</span>" : "<span class='muted'>missing</span>";
+            return "<div><strong>" + a.requested + "</strong> " + mark +
+              "<div class='muted'>→ " + a.closest + "</div></div>";
+          })
           .join("");
       }
 

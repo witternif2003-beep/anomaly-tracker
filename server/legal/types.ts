@@ -8,7 +8,12 @@ export type LegalSource =
   | "lexisnexis"
   | "congress"
   | "govinfo"
-  | "glossary";
+  | "glossary"
+  | "edgar"
+  | "ofac"
+  | "finra"
+  | "uspto"
+  | "pacer";
 
 export interface LegalHit {
   source: LegalSource;

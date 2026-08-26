@@ -23,7 +23,7 @@ export default {
         const slots = Number(body.totalSlots || 0);
         const row = (body.data && body.data[0]) || {};
         const mapped = Boolean(row.skillId && row.agentId && row.resource);
-        const pass = slots >= 1000 && mapped;
+        const pass = slots >= 11000 && mapped;
         return json(
           {
             ok: pass,

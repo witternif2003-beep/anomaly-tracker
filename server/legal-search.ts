@@ -2,6 +2,7 @@ import { searchCongress, searchGovInfo, searchLexisNexis, searchOpenLaws, search
 import { searchFre } from "./legal/fre";
 import { searchGlossary } from "./legal/glossary";
 import type { LegalHit, LegalSearchResult, LegalSource } from "./legal/types";
+import { searchEdgar, searchFinra, searchOfac, searchPacer, searchUspto } from "./inventory/public-apis";
 import { searchP1, type P1Slot } from "./p1-catalog";
 
 export type { LegalHit, LegalSearchResult, LegalSource };
@@ -232,7 +233,11 @@ function normalizeSource(raw: string): LegalSource | "blacks" | null {
   if (s === "lexis" || s === "lexis-nexis") return "lexisnexis";
   if (s === "congress.gov" || s === "congressgov") return "congress";
   if (s === "govinfo.gov") return "govinfo";
-  if (s === "open-laws") return "openlaws";
+  if (s === "sec" || s === "sec-edgar" || s === "edgar") return "edgar";
+  if (s === "sdn" || s === "sanctions" || s === "ofac") return "ofac";
+  if (s === "trace" || s === "finra") return "finra";
+  if (s === "patent" || s === "uspto") return "uspto";
+  if (s === "pacer") return "pacer";
   if (s === "blacks" || s === "black's" || s.includes("black's law") || s === "bouvier" || s === "glossary") {
     return s === "glossary" || s === "bouvier" ? "glossary" : "blacks";
   }
@@ -247,6 +252,11 @@ function normalizeSource(raw: string): LegalSource | "blacks" | null {
     "congress",
     "govinfo",
     "glossary",
+    "edgar",
+    "ofac",
+    "finra",
+    "uspto",
+    "pacer",
   ];
   return known.includes(s as LegalSource) ? (s as LegalSource) : null;
 }
@@ -277,6 +287,11 @@ export async function legalSearch(input: {
       "congress",
       "govinfo",
       "glossary",
+      "edgar",
+      "ofac",
+      "finra",
+      "uspto",
+      "pacer",
     );
   }
   for (const item of raw) {
@@ -320,6 +335,11 @@ export async function legalSearch(input: {
   if (requested.includes("lexisnexis")) pushRemote(await searchLexisNexis(query, limit));
   if (requested.includes("congress")) pushRemote(await searchCongress(query, limit));
   if (requested.includes("govinfo")) pushRemote(await searchGovInfo(query, limit));
+  if (requested.includes("edgar")) pushRemote(await searchEdgar(query, limit));
+  if (requested.includes("ofac")) pushRemote(await searchOfac(query, limit));
+  if (requested.includes("finra")) pushRemote(await searchFinra(query, limit));
+  if (requested.includes("uspto")) pushRemote(await searchUspto(query, limit));
+  if (requested.includes("pacer")) pushRemote(await searchPacer(query, limit));
 
   return {
     object: "legal.search",

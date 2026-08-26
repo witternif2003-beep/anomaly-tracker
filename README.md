@@ -44,7 +44,8 @@ npm run local-api
 | `/v1/legal/sources` | GET | Install/credential status for legal research clients | None |
 | `/v1/policy` | GET | GitHub-removed / YOLO-off / dry-run / CJIS applicability | None |
 | `/v1/compliance/cjis` | GET | CJIS/NCIC placeholder status (never values) | None |
-| `/v1/p1` | GET | 1,280 P1 catalog slots (`q`, `limit`, `offset`) | None |
+| `/v1/p1` | GET | 11,280 P1 slots (`q`, `limit`, `offset`) — 1,280 core + 10,000 Tier-1 | None |
+| `/v1/inventory` | GET | Requested packages vs closest installs | None |
 | `/v1/playground` | GET | Streaming chat UI | None |
 
 ```bash
@@ -135,7 +136,7 @@ Local P1 files. No extra packages.
 | Agents | 10 | `.cursor/agents/*.md` |
 | Pipelines | 8 | `scripts/pipelines/` |
 | Cloudflare Worker | 1 | `workers/ci-gate.js` |
-| Catalog slots | 1,280 | `GET /v1/p1` maps each slot to a skill, agent, pipeline, and the CI worker |
+| Catalog slots | 11,280 | `GET /v1/p1` — 1,280 core + 10,000 Tier-1 inventory slots |
 
 ```bash
 npm run pipelines
@@ -178,10 +179,52 @@ No values are stored in git. Copy `.env.example` to `.env.local` or inject Cloud
 | `NCIC_ORI` | NCIC applicability | Same ORI family; live queries refused | empty |
 | `NCIC_MNEMONIC` | NCIC applicability | Placeholder only | empty |
 | `FBI_UCR_AGENCY_ID` | Federal UCR / NIBRS id | Public Crime Data Explorer, not NCIC | empty |
+| `PACER_USERNAME` | PACER REST stub | `pacer-tools` failed to build; `pacer-client` is unrelated | empty |
+| `PACER_PASSWORD` | PACER REST stub | session never opened from this studio | empty |
+| `FINRA_API_KEY` | FINRA TRACE | REST `api.finra.org` | empty |
+| `USPTO_API_KEY` | USPTO patents | `developer.uspto.gov` REST | empty |
 
 ```bash
 npm run env:check
 ```
+
+## P1 Tier-1 expanded inventory (10,000 additional slots)
+
+Requested scoped packages (`@law-research/opinion-parser`, `crimemapping`, Docker Hub names, etc.) are mostly unpublished. Closest public npm/PyPI packages are installed; Docker images are replaced by in-process libraries because this VM has no Docker. Cuckoo is not installed (live malware sandbox); `pefile` is the static substitute.
+
+```bash
+npm run inventory:install
+```
+
+`GET /v1/inventory` lists requested vs closest. Core catalog remains `p1-0001`…`p1-1280`. Tier-1 slots are `p1-t1-00001`…`p1-t1-10000`.
+
+| Requested | Closest installed / wired |
+| --- | --- |
+| `@law-research/opinion-parser` | `pdf-parse`, `citation-js`, `compromise` |
+| `@forensic-tools/disk-imaging` | `hachoir` + `pefile` (no public npm imager) |
+| `@crime-analytics/geospatial` | `@turf/turf`, `geojson`, `geolib` |
+| `@financial-intel/sanctions-screen` | npm `ofac` |
+| `@osint-collector/social-media` | `sherlock-project` + clone `vendor/p1/sherlock` |
+| `@evidence-chain/hash-verifier` | `hash-wasm`, `ssri`, `hasha`, `object-hash` |
+| `crimemapping` | `folium` |
+| `forensic-accounting` | `pyod` |
+| `legal-ner` | `eyecite` + `reporters-db` |
+| `db-forensics` | `sqlite-utils` |
+| `steganography-tools` | `stegano` + Pillow (`steganography-tools` fails to build) |
+| `elastic/elasticsearch:8.12` | `minisearch` (no Docker/Podman in this VM) |
+| `neo4j/neo4j:5.0` / Maltego CE | `graphology` (Maltego is a proprietary installer) |
+| `osint-framework/alpine` | `recon-ng` clone |
+| `sherlock/sherlock` | `sherlock-project/sherlock` clone |
+| `the-harvester/email-gatherer` | `laramies/theHarvester` clone |
+| `Project-AUTOMATE` | `cyb3rfox/Aurora-Incident-Response` |
+| `FOCA` | `ElevenPaths/FOCA` + `exifread` |
+| `Recon-ng` | `lanmaster53/recon-ng` |
+| `Cuckoo` | **not installed** (live malware sandbox). Closest: `pefile` static PE metadata |
+| SEC EDGAR | `edgartools` + public EFTS REST |
+| FINRA TRACE | REST `api.finra.org` |
+| OFAC SDN | public `treasury.gov` CSV |
+| USPTO patents | `developer.uspto.gov` REST |
+| PACER / `pacer-client` | REST stub; PyPI `pacer-client` is unrelated |
 
 ## Editor extensions
 

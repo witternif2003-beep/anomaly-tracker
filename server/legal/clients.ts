@@ -208,6 +208,11 @@ export function legalSourceStatus() {
     { id: "lexisnexis", name: "LexisNexis", install: "REST stub (no public SDK on PyPI)", credentials: "LEXISNEXIS_*", status: present("LEXISNEXIS_API_KEY") || present("LEXISNEXIS_CLIENT_ID") ? "live" : "wired-dev-portal-needed" },
     { id: "congress", name: "Congress.gov", install: "REST https://api.congress.gov (PyPI congress is alpha)", credentials: "optional CONGRESS_GOV_API_KEY", status: "optional" },
     { id: "govinfo", name: "GovInfo", install: "REST https://api.govinfo.gov (PyPI govinfo needs Python 3.13)", credentials: "optional GOVINFO_API_KEY", status: "optional" },
+    { id: "edgar", name: "SEC EDGAR", install: "edgartools (pip sec-edgar is a stub; closest edgartools)", credentials: "none for public EFTS", status: "live" },
+    { id: "finra", name: "FINRA TRACE", install: "REST api.finra.org", credentials: "optional FINRA_API_KEY", status: "optional" },
+    { id: "ofac", name: "OFAC SDN", install: "curl treasury.gov/ofac/downloads/sdn.csv", credentials: "none (public list)", status: "live" },
+    { id: "uspto", name: "USPTO patents", install: "developer.uspto.gov REST", credentials: "optional USPTO_API_KEY", status: "optional" },
+    { id: "pacer", name: "PACER", install: "pacer-tools (pacer-client on PyPI is unrelated)", credentials: "PACER_USERNAME / PACER_PASSWORD", status: present("PACER_USERNAME") || present("PACER_PASSWORD") ? "wired-session-not-opened" : "wired-awaiting-key" },
     { id: "cjis", name: "CJIS / NCIC / federal", install: "placeholders only (not a CJIS-certified interface)", credentials: "CJIS_ORI / NCIC_ORI / NCIC_MNEMONIC", status: "applicable-placeholders", notes: "Live NCIC/III queries are refused." },
   ];
 }

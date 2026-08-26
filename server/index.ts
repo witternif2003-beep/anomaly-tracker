@@ -12,6 +12,7 @@ import {
   resolveModel,
   type ChatMessage,
 } from "./local-models";
+import { inventoryStatus } from "./inventory";
 import { listP1Slots } from "./p1-catalog";
 
 loadEnvFiles();
@@ -58,6 +59,10 @@ app.get("/v1/p1", (req, res) => {
       offset: Number.isFinite(offsetRaw) && (offsetRaw as number) > 0 ? offsetRaw : 0,
     }),
   );
+});
+
+app.get("/v1/inventory", (_req, res) => {
+  res.json(inventoryStatus());
 });
 
 app.post("/v1/legal/search", async (req, res) => {
