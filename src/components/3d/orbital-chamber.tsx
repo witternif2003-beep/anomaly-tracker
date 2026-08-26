@@ -38,6 +38,9 @@ const TILT = (16 * Math.PI) / 180;
 const PERSPECTIVE = 1280;
 const LABEL_W = 168;
 const LABEL_H = 52;
+/** Control strip height; labels anchor below this so translate(-50%,-100%) stays clear. */
+const HUD_CONTROL_HEIGHT = 78;
+const HUD_SAFE_TOP = HUD_CONTROL_HEIGHT + LABEL_H;
 
 function priorityClass(priority: string) {
   if (priority === "P1") return "chamber-orb--p1";
@@ -137,7 +140,7 @@ function resolveCollisions(labels: OverlayLabel[], width: number, height: number
   out.sort((a, b) => b.depth - a.depth);
   const minX = LABEL_W * 0.78;
   const minY = LABEL_H * 0.9;
-  const top = 52;
+  const top = HUD_SAFE_TOP;
   const bottom = Math.max(top + 80, height - 12);
   const left = 10;
   const right = Math.max(left + 40, width - 10);
@@ -285,7 +288,7 @@ export function OrbitalChamber({
         title: `${node.label}${node.blackOwned ? " · BO" : ""}`,
         meta: `${node.city} · ${node.anomalyCount} anomalies`,
         x: p.sx,
-        y: p.sy - 18,
+        y: Math.max(HUD_SAFE_TOP, p.sy - 18),
         depth: p.depth,
         selected: selectedEntityId === node.id,
       });
@@ -304,7 +307,7 @@ export function OrbitalChamber({
         title: event.title,
         meta: event.artifact ?? event.entityName ?? undefined,
         x: p.sx,
-        y: p.sy - 22,
+        y: Math.max(HUD_SAFE_TOP, p.sy - 22),
         depth: p.depth,
         hot: isHot,
         selected: isSelected,
@@ -388,17 +391,66 @@ export function OrbitalChamber({
 
       <div className="chamber-hud-top">
         <span className="chamber-hud-title">3D anomaly chamber · crisp labels</span>
-        <div className="chamber-hud-controls">
-          <button type="button" className="chamber-pause" onClick={() => bumpZoom(-ZOOM_STEP)} aria-label="Zoom out">
+        <div className="chamber-hud-controls" role="toolbar" aria-label="Chamber view controls">
+          <button
+            type="button"
+            className="chamber-pause"
+            onPointerDown={(e) => {
+              e.stopPropagation();
+            }}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              bumpZoom(-ZOOM_STEP);
+            }}
+            aria-label="Zoom out"
+          >
             − Zoom
           </button>
-          <button type="button" className="chamber-pause" onClick={() => setZoom(1)} aria-label="Reset zoom">
+          <button
+            type="button"
+            className="chamber-pause"
+            onPointerDown={(e) => {
+              e.stopPropagation();
+            }}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setZoom(1);
+            }}
+            aria-label="Reset zoom"
+          >
             {zoomPct}%
           </button>
-          <button type="button" className="chamber-pause" onClick={() => bumpZoom(ZOOM_STEP)} aria-label="Zoom in">
+          <button
+            type="button"
+            className="chamber-pause"
+            onPointerDown={(e) => {
+              e.stopPropagation();
+            }}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              bumpZoom(ZOOM_STEP);
+            }}
+            aria-label="Zoom in"
+          >
             + Zoom
           </button>
-          <button type="button" className="chamber-pause" onClick={() => setPaused((p) => !p)}>
+          <button
+            type="button"
+            className="chamber-pause"
+            onPointerDown={(e) => {
+              e.stopPropagation();
+            }}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setPaused((p) => !p);
+            }}
+            aria-pressed={paused}
+            aria-label={paused ? "Resume rotate" : "Pause rotate"}
+          >
             {paused ? "Resume rotate" : "Pause rotate"}
           </button>
         </div>
