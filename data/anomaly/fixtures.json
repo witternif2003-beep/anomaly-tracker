@@ -303,6 +303,130 @@
     }
   ],
   "architecture": {
+    "title": "3D Realtime Business Anomaly Tracker — architectural blueprint",
+    "classified": false,
+    "note": "Research blueprint hard-coded against this checkout. Aspirational stack names stay narrative; runtime uses fixtures, public stubs, and closest installs.",
+    "systemOverview": [
+      {
+        "id": "data-ingestion",
+        "layer": "Data Ingestion",
+        "proposed": "Kafka + Debezium + Firecrawl MCP",
+        "function": "Real-time ingestion from business registries, financial systems, social media, and public records",
+        "status": "closest",
+        "shipped": "Firecrawl MCP (optional key) + EDGAR/OFAC/FINRA REST stubs + data/anomaly/fixtures.json",
+        "note": "No Kafka/Debezium cluster. No Dun & Bradstreet scrape."
+      },
+      {
+        "id": "stream-processing",
+        "layer": "Stream Processing",
+        "proposed": "Apache Flink + Python Streamz",
+        "function": "Anomaly detection, pattern recognition, and P1 event classification",
+        "status": "shipped",
+        "shipped": "server/anomaly-tracker.ts deterministic P1/P2/P3 classifier over hard-coded fixtures",
+        "note": "In-process TypeScript. Flink/Streamz are not installed."
+      },
+      {
+        "id": "viz-3d",
+        "layer": "3D Visualization",
+        "proposed": "Three.js + Mapbox GL + Deck.gl",
+        "function": "3D geospatial rendering of business entities, anomalies, and threat vectors",
+        "status": "shipped",
+        "shipped": "CSS perspective scene on /tracker (fixture city lat/lon)",
+        "note": "No Mapbox token or Deck.gl dependency. Coordinates are fixtures."
+      },
+      {
+        "id": "evidence-store",
+        "layer": "Forensic Evidence Store",
+        "proposed": "PostgreSQL + TimescaleDB + Elasticsearch",
+        "function": "Immutable storage of all evidence with chain-of-custody hashing",
+        "status": "closest",
+        "shipped": "Postgres MCP placeholder + MiniSearch in-process ES substitute + fixture hash narratives",
+        "note": "No TimescaleDB. Docker ES falls back when daemon absent."
+      },
+      {
+        "id": "ai-ml",
+        "layer": "AI/ML Layer",
+        "proposed": "LLM (local-v1) + RAG (FOLIO/CourtListener)",
+        "function": "Semantic analysis of communications, legal reasoning, and threat scoring",
+        "status": "shipped",
+        "shipped": "local-v1 / local-v1-concise + FOLIO MCP + CourtListener stub + POST /v1/legal/search",
+        "note": "Scores company-held / public text only. No intercept corpus."
+      },
+      {
+        "id": "mcp-orchestration",
+        "layer": "MCP Orchestration",
+        "proposed": "Cursor Cloud Agents + 50+ MCP servers",
+        "function": "Autonomous agent workflows for continuous scanning and alerting",
+        "status": "closest",
+        "shipped": ".cursor/mcp.json (16 wired servers) + anomaly-tracker / corporate-counsel agents",
+        "note": "Does not invent unpublished MCP packages. Continuous field scanning is fixture rehearsal."
+      },
+      {
+        "id": "security-compliance",
+        "layer": "Security & Compliance",
+        "proposed": "Vault + OPA + Istio",
+        "function": "Zero-trust access, policy enforcement, and audit logging",
+        "status": "closest",
+        "shipped": "server/policy.ts + .env placeholders + CJIS always-403 + wrangler dry-run only",
+        "note": "No HashiCorp Vault, OPA, or Istio mesh in this studio."
+      }
+    ],
+    "dataFlow": [
+      {
+        "step": 1,
+        "id": "ingest",
+        "title": "Ingest",
+        "proposed": "Pull business registry data (Secretary of State, EDGAR, Dun & Bradstreet) via Firecrawl MCP and public APIs.",
+        "status": "closest",
+        "shipped": "EDGAR stub + Firecrawl MCP optional + fixture entity roster",
+        "live": false
+      },
+      {
+        "step": 2,
+        "id": "enrich",
+        "title": "Enrich",
+        "proposed": "Cross-reference with OFAC sanctions, FINRA TRACE, and PACER litigation records.",
+        "status": "closest",
+        "shipped": "OFAC/FINRA stubs + pacer-client placeholder (no CM/ECF session)",
+        "live": false
+      },
+      {
+        "step": 3,
+        "id": "monitor",
+        "title": "Monitor",
+        "proposed": "Continuously scan business communications (email, VoIP, WeChat, Slack) via intercept APIs (where legally authorized).",
+        "status": "wont-do",
+        "shipped": "Slack MCP reads a company workspace token only when set. No VoIP/WeChat intercept.",
+        "live": false
+      },
+      {
+        "step": 4,
+        "id": "detect",
+        "title": "Detect",
+        "proposed": "Apply FBI indicators (CFAA, money laundering, FCPA, RICO) to flag P1 anomalies.",
+        "status": "shipped",
+        "shipped": "Hard-coded typology labels on fixtures + corporate taxonomy doctrine cues. Not a live FBI feed.",
+        "live": false
+      },
+      {
+        "step": 5,
+        "id": "visualize",
+        "title": "Visualize",
+        "proposed": "Render 3D geospatial map with entity nodes, anomaly heatmaps, and real-time alert feeds.",
+        "status": "shipped",
+        "shipped": "/tracker CSS 3D nodes + P1 pulse + event queue tick",
+        "live": false
+      },
+      {
+        "step": 6,
+        "id": "escalate",
+        "title": "Escalate",
+        "proposed": "Automatically generate SARs, CISA notifications, and law-enforcement liaison reports.",
+        "status": "wont-do",
+        "shipped": "Counsel checklists and doctrine search only. No SAR/CISA auto-filing from this process.",
+        "live": false
+      }
+    ],
     "layers": [
       {
         "id": "ingest",
@@ -370,6 +494,11 @@
       "id": "imei-triangulation",
       "title": "Live IMEI / IMSI triangulation",
       "reason": "Geolocation uses fixture city coordinates and company address fields."
+    },
+    {
+      "id": "sar-cisa-autofile",
+      "title": "Automatic SAR / CISA filing",
+      "reason": "Escalation stays a counsel checklist. Filing duties remain with the regulated institution."
     },
     {
       "id": "classified-program",

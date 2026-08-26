@@ -61,7 +61,27 @@ interface TrackerBook {
   };
   priorityCounts: { P1: number; P2: number; P3: number };
   architecture: {
+    title?: string;
+    note?: string;
     layers: Array<{ id: string; title: string; detail: string }>;
+    systemOverview?: Array<{
+      id: string;
+      layer: string;
+      proposed: string;
+      function: string;
+      status: string;
+      shipped: string;
+      note: string;
+    }>;
+    dataFlow?: Array<{
+      step: number;
+      id: string;
+      title: string;
+      proposed: string;
+      status: string;
+      shipped: string;
+      live: boolean;
+    }>;
   };
   scene: { nodes: SceneNode[] };
   anomalies: Anomaly[];
@@ -384,11 +404,73 @@ export function AnomalyTracker() {
               </CardContent>
             </Card>
 
+            <div className="grid gap-4 lg:grid-cols-2">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">1.1 System overview</CardTitle>
+                  <CardDescription>
+                    {book.architecture.note ?? "Blueprint layers bound to this checkout"}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {(book.architecture.systemOverview ?? []).map((row) => (
+                    <div key={row.id} className="rounded-lg border border-border/50 px-3 py-2">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="text-sm font-medium">{row.layer}</p>
+                        <Badge variant="outline" className="text-[10px]">
+                          {row.status}
+                        </Badge>
+                      </div>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        Proposed: {row.proposed}
+                      </p>
+                      <p className="mt-1 text-xs">{row.shipped}</p>
+                      <p className="mt-1 text-[11px] text-muted-foreground">{row.note}</p>
+                    </div>
+                  ))}
+                  {!book.architecture.systemOverview?.length
+                    ? book.architecture.layers.map((layer) => (
+                        <div key={layer.id}>
+                          <p className="text-sm font-medium">{layer.title}</p>
+                          <p className="text-xs text-muted-foreground">{layer.detail}</p>
+                        </div>
+                      ))
+                    : null}
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">1.2 Data flow</CardTitle>
+                  <CardDescription>Six-step pipeline · live flags stay false</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {(book.architecture.dataFlow ?? []).map((step) => (
+                    <div key={step.id} className="rounded-lg border border-border/50 px-3 py-2">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Badge variant="secondary" className="text-[10px]">
+                          {step.step}
+                        </Badge>
+                        <p className="text-sm font-medium">{step.title}</p>
+                        <Badge variant="outline" className="text-[10px]">
+                          {step.status}
+                        </Badge>
+                        <Badge variant="outline" className="text-[10px]">
+                          live={String(step.live)}
+                        </Badge>
+                      </div>
+                      <p className="mt-1 text-xs text-muted-foreground">{step.proposed}</p>
+                      <p className="mt-1 text-xs">{step.shipped}</p>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            </div>
+
             <div className="grid gap-4 md:grid-cols-2">
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-base">Architecture</CardTitle>
-                  <CardDescription>Hard-coded blueprint layers</CardDescription>
+                  <CardTitle className="text-base">Runtime layers</CardTitle>
+                  <CardDescription>What the tracker executes locally</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   {book.architecture.layers.map((layer) => (

@@ -283,6 +283,8 @@ export function compileAnomalyTracker(opts?: {
       lockfilePresent: true,
       envPlaceholders: env.variables.length,
       dockerAvailable: install.dockerAvailable,
+      blueprintLayers: fixtures.architecture.systemOverview?.length ?? fixtures.architecture.layers.length,
+      dataFlowSteps: fixtures.architecture.dataFlow?.length ?? 0,
       intercepts: false,
       cjisLiveQueries: false,
       cuckooLiveSandbox: false,

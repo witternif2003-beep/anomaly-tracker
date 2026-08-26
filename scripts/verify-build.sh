@@ -183,7 +183,7 @@ if curl -fsS -o /dev/null --max-time 3 "${base}/"; then
   corp="$(curl -fsS --max-time 15 "${base}/api/corporate")"
   echo "${corp}" | python3 -c "import json,sys; d=json.load(sys.stdin); assert d.get('classified') is False and d.get('governmentProgram') is False; assert d['summary']['categories']>=10; assert any(w['id']=='sigint-intercepts' for w in d['wontDo']); assert all(e.get('liveAction') is False for e in d['enforcement']); print('VERIFY OK: corporate taxonomy', d['summary']['categories'], 'categories', d['summary']['bindingsPresent'], 'bindings')"
   anom="$(curl -fsS --max-time 15 "${base}/api/anomaly")"
-  echo "${anom}" | python3 -c "import json,sys; d=json.load(sys.stdin); assert d.get('classified') is False and d.get('governmentProgram') is False; assert d.get('simulated') is True and d.get('liveSurveillance') is False; assert d['summary']['improvements']>=10000; assert d['summary']['entityTypes']>=15; assert d['summary']['p1Events']>=1; assert any(w['id']=='sigint-intercepts' for w in d['wontDo']); assert any(w['id']=='mass-us-business-surveillance' for w in d['wontDo']); print('VERIFY OK: anomaly tracker', d['summary']['entities'], 'entities', d['summary']['improvements'], 'improvements')"
+  echo "${anom}" | python3 -c "import json,sys; d=json.load(sys.stdin); assert d.get('classified') is False and d.get('governmentProgram') is False; assert d.get('simulated') is True and d.get('liveSurveillance') is False; assert d['summary']['improvements']>=10000; assert d['summary']['entityTypes']>=15; assert d['summary']['p1Events']>=1; assert len(d['architecture'].get('systemOverview',[]))>=7; assert len(d['architecture'].get('dataFlow',[]))==6; assert all(s.get('live') is False for s in d['architecture']['dataFlow']); assert any(w['id']=='sigint-intercepts' for w in d['wontDo']); assert any(w['id']=='mass-us-business-surveillance' for w in d['wontDo']); print('VERIFY OK: anomaly tracker', d['summary']['entities'], 'entities', d['summary']['improvements'], 'improvements')"
 else
   echo "VERIFY WARN: ${base} is not up; skipped live API check"
 fi
@@ -222,7 +222,11 @@ assert anom["simulated"] is True and anom["liveSurveillance"] is False
 assert anom["summary"]["improvements"] >= 10000
 assert anom["summary"]["entityTypes"] >= 15
 assert anom["summary"]["p1Events"] >= 1
+assert len(anom["architecture"].get("systemOverview", [])) >= 7
+assert len(anom["architecture"].get("dataFlow", [])) == 6
+assert all(s.get("live") is False for s in anom["architecture"]["dataFlow"])
 assert any(w["id"] == "mass-us-business-surveillance" for w in anom["wontDo"])
+assert any(w["id"] == "sar-cisa-autofile" for w in anom["wontDo"])
 imps = json.load(urllib.request.urlopen(base + "/v1/anomaly/improvements?limit=3&categoryId=financial-records", timeout=12))
 assert imps["generated"] >= 10000 and len(imps["data"]) >= 1
 assert nb["summary"]["cuckooLiveSandbox"] is False
