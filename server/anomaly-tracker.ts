@@ -475,6 +475,7 @@ function buildBlackOwnedScanBot(entities: ReturnType<typeof enrichEntity>[]) {
     status: "scanning" | "queued" | "logged-new" | "revalidated" | "crime-search" | "documented";
     target: (typeof targets)[number];
     message: string;
+    priority?: string;
     crimeCategoryId?: string;
     crimeCategoryLabel?: string;
     caseId?: string | null;
@@ -547,11 +548,12 @@ function buildBlackOwnedScanBot(entities: ReturnType<typeof enrichEntity>[]) {
         caseId: hitCase?.id ?? null,
         caseTitle: hitCase?.title ?? null,
         documentation: isHit
-          ? `DOCUMENTED typology hit · ${cat.label} · ${target.name} · ref ${hitCase?.title ?? cat.id}`
-          : `SEARCHED ${cat.label} against ${target.name} · no company-held indicator (fixture)`,
+          ? `${cat.priority} DOCUMENTED typology hit · ${cat.label} · ${target.name} · ref ${hitCase?.title ?? cat.id}`
+          : `${cat.priority} SEARCHED ${cat.label} against ${target.name} · no company-held indicator (fixture)`,
         message: isHit
-          ? `DOCUMENTED · ${target.name} · ${cat.label}${hitCase ? ` · case ref: ${hitCase.title}` : ""}`
-          : `SEARCH · ${target.name} · ${cat.label} (${categories.length} crime categories in DB)`,
+          ? `${cat.priority} DOCUMENTED · ${target.name} · ${cat.label}${hitCase ? ` · case ref: ${hitCase.title}` : ""}${hitCase?.financialImpact && hitCase.financialImpact !== "N/A" ? ` · impact ${hitCase.financialImpact}` : ""}`
+          : `${cat.priority} SEARCH · ${target.name} · ${cat.label} (${categories.length} crime categories in DB)`,
+        priority: cat.priority,
       });
     }
   }

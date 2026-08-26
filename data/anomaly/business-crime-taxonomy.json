@@ -37,364 +37,526 @@
       "label": "Accounting Fraud / Financial Statement Fraud",
       "definition": "Misrepresenting a company's financial health.",
       "priority": "P1",
-      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist",
+      "searchAliases": [
+        "Accounting Fraud / Financial Statement Fraud"
+      ]
     },
     {
       "id": "securities-fraud",
       "label": "Securities Fraud",
       "definition": "Deceiving investors about the value of securities.",
       "priority": "P1",
-      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist",
+      "searchAliases": [
+        "Securities Fraud"
+      ]
     },
     {
       "id": "wire-fraud",
       "label": "Wire Fraud",
       "definition": "Using electronic communications to defraud.",
       "priority": "P1",
-      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist",
+      "searchAliases": [
+        "Wire Fraud"
+      ]
     },
     {
       "id": "money-laundering",
       "label": "Money Laundering",
       "definition": "Concealing the origins of illegally obtained money.",
       "priority": "P1",
-      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist",
+      "searchAliases": [
+        "Money Laundering",
+        "Fraud, Money Laundering"
+      ]
     },
     {
       "id": "investment-fraud",
       "label": "Investment Fraud",
       "definition": "Scams involving fake or fraudulent investments.",
       "priority": "P1",
-      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist",
+      "searchAliases": [
+        "Investment Fraud"
+      ]
     },
     {
       "id": "ponzi-scheme",
       "label": "Ponzi Schemes",
       "definition": "Paying returns to existing investors with new investors' money.",
       "priority": "P1",
-      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist",
+      "searchAliases": [
+        "Ponzi Schemes"
+      ]
     },
     {
       "id": "bec",
       "label": "Business Email Compromise (BEC)",
       "definition": "Compromising business emails to steal funds.",
       "priority": "P1",
-      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist",
+      "searchAliases": [
+        "Business Email Compromise (BEC)"
+      ]
     },
     {
       "id": "corporate-fraud",
       "label": "Corporate Fraud",
       "definition": "A broad category covering various deceptive practices.",
       "priority": "P1",
-      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist",
+      "searchAliases": [
+        "Corporate Fraud"
+      ]
     },
     {
       "id": "insider-trading",
       "label": "Insider Trading",
       "definition": "Trading a public company's stock based on non-public information.",
       "priority": "P1",
-      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist",
+      "searchAliases": [
+        "Insider Trading"
+      ]
     },
     {
       "id": "market-manipulation",
       "label": "Market Manipulation",
       "definition": "Artificially inflating or deflating the price of a security.",
       "priority": "P1",
-      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist",
+      "searchAliases": [
+        "Market Manipulation"
+      ]
     },
     {
       "id": "antitrust",
       "label": "Antitrust Violations (Price-Fixing, Bid-Rigging)",
       "definition": "Colluding to fix prices or rig bids.",
       "priority": "P1",
-      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist",
+      "searchAliases": [
+        "Antitrust Violations (Price-Fixing, Bid-Rigging)"
+      ]
     },
     {
       "id": "fcpa",
       "label": "Foreign Corrupt Practices Act (FCPA) Violations",
       "definition": "Bribing foreign officials.",
       "priority": "P1",
-      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist",
+      "searchAliases": [
+        "Foreign Corrupt Practices Act (FCPA) Violations"
+      ]
     },
     {
       "id": "healthcare-fraud",
       "label": "Healthcare Fraud",
       "definition": "Fraud against healthcare programs (Medicare, Medicaid).",
       "priority": "P1",
-      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist",
+      "searchAliases": [
+        "Healthcare Fraud"
+      ]
     },
     {
       "id": "bank-fraud",
       "label": "Bank Fraud",
       "definition": "Fraud against financial institutions.",
       "priority": "P1",
-      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist",
+      "searchAliases": [
+        "Bank Fraud"
+      ]
     },
     {
       "id": "tax-fraud",
       "label": "Tax Fraud",
       "definition": "Willfully evading tax obligations.",
       "priority": "P2",
-      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist",
+      "searchAliases": [
+        "Tax Fraud"
+      ]
     },
     {
       "id": "trade-secret-theft",
       "label": "Trade Secret Theft",
       "definition": "Stealing proprietary business information.",
       "priority": "P1",
-      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist",
+      "searchAliases": [
+        "IP Theft",
+        "Trade Secret Theft"
+      ]
     },
     {
       "id": "cybercrime",
       "label": "Cybercrime",
       "definition": "Crimes committed via the internet.",
       "priority": "P1",
-      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist",
+      "searchAliases": [
+        "Cybercrime"
+      ]
     },
     {
       "id": "government-fraud",
       "label": "Government Fraud (PPP, Section 8)",
       "definition": "Fraud against government programs.",
       "priority": "P1",
-      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist",
+      "searchAliases": [
+        "Government Fraud (PPP, Section 8)"
+      ]
     },
     {
       "id": "crypto-fraud",
       "label": "Crypto Fraud / Cryptocurrency Scams",
       "definition": "Fraud involving digital assets.",
       "priority": "P1",
-      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist",
+      "searchAliases": [
+        "Crypto Ponzi",
+        "Crypto Fraud / Cryptocurrency Scams"
+      ]
     },
     {
       "id": "offering-fraud",
       "label": "Offering Fraud",
       "definition": "Fraud in the sale of securities.",
       "priority": "P1",
-      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist",
+      "searchAliases": [
+        "Offering Fraud"
+      ]
     },
     {
       "id": "false-books",
       "label": "False Books and Records",
       "definition": "Falsifying corporate documents.",
       "priority": "P1",
-      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist",
+      "searchAliases": [
+        "Books & Records Fraud",
+        "False Books and Records"
+      ]
     },
     {
       "id": "misappropriation",
       "label": "Misappropriation of Funds",
       "definition": "Theft or misuse of funds.",
       "priority": "P1",
-      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist",
+      "searchAliases": [
+        "Misappropriation of Funds"
+      ]
     },
     {
       "id": "embezzlement",
       "label": "Embezzlement",
       "definition": "Theft of assets by a person in a position of trust.",
       "priority": "P1",
-      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist",
+      "searchAliases": [
+        "Embezzlement"
+      ]
     },
     {
       "id": "kickbacks-bribery",
       "label": "Kickbacks / Bribery",
       "definition": "Illegally providing money or favors for business.",
       "priority": "P1",
-      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist",
+      "searchAliases": [
+        "Kickbacks, Fraud",
+        "Kickbacks / Bribery"
+      ]
     },
     {
       "id": "disclosure-fraud",
       "label": "Disclosure Fraud",
       "definition": "Failing to disclose material information.",
       "priority": "P1",
-      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist",
+      "searchAliases": [
+        "Disclosure Fraud"
+      ]
     },
     {
       "id": "economic-espionage",
       "label": "Economic Espionage",
       "definition": "Theft of trade secrets for a foreign government.",
       "priority": "P1",
-      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist",
+      "searchAliases": [
+        "Economic Espionage"
+      ]
     },
     {
       "id": "consumer-fraud",
       "label": "Consumer Fraud",
       "definition": "Deceptive practices against consumers.",
       "priority": "P2",
-      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist",
+      "searchAliases": [
+        "Consumer Fraud"
+      ]
     },
     {
       "id": "insurance-fraud",
       "label": "Insurance Fraud",
       "definition": "Fraud against insurance companies.",
       "priority": "P2",
-      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist",
+      "searchAliases": [
+        "Insurance Fraud"
+      ]
     },
     {
       "id": "mortgage-fraud",
       "label": "Mortgage Fraud",
       "definition": "Fraud in the mortgage lending process.",
       "priority": "P2",
-      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist",
+      "searchAliases": [
+        "Mortgage Fraud"
+      ]
     },
     {
       "id": "procurement-fraud",
       "label": "Procurement Fraud",
       "definition": "Fraud in government or corporate procurement.",
       "priority": "P1",
-      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist",
+      "searchAliases": [
+        "Procurement Fraud"
+      ]
     },
     {
       "id": "rico",
       "label": "Racketeering (RICO)",
       "definition": "Engaging in a pattern of criminal activity.",
       "priority": "P1",
-      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist",
+      "searchAliases": [
+        "Racketeering (RICO)"
+      ]
     },
     {
       "id": "identity-theft",
       "label": "Identity Theft",
       "definition": "Stealing personal information for fraud.",
       "priority": "P2",
-      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist",
+      "searchAliases": [
+        "Identity Theft"
+      ]
     },
     {
       "id": "phishing",
       "label": "Phishing",
       "definition": "Fraudulently obtaining sensitive information.",
       "priority": "P2",
-      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist",
+      "searchAliases": [
+        "Phishing"
+      ]
     },
     {
       "id": "extortion",
       "label": "Extortion",
       "definition": "Threatening to reveal information unless demands are met.",
       "priority": "P2",
-      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist",
+      "searchAliases": [
+        "Extortion"
+      ]
     },
     {
       "id": "romance-scams",
       "label": "Confidence and Romance Scams",
       "definition": "Scams exploiting personal relationships.",
       "priority": "P3",
-      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist",
+      "searchAliases": [
+        "Confidence and Romance Scams"
+      ]
     },
     {
       "id": "document-fraud",
       "label": "Document Fraud",
       "definition": "Creating or using fake documents.",
       "priority": "P2",
-      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist",
+      "searchAliases": [
+        "Document Fraud"
+      ]
     },
     {
       "id": "ai-facilitated-fraud",
       "label": "AI-Facilitated Fraud",
       "definition": "Using AI to commit fraud.",
       "priority": "P1",
-      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist",
+      "searchAliases": [
+        "AI-Facilitated Fraud"
+      ]
     },
     {
       "id": "data-theft",
       "label": "Data Theft / Data Misuse",
       "definition": "Unauthorized access to and use of data.",
       "priority": "P1",
-      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist",
+      "searchAliases": [
+        "Data Theft / Data Misuse"
+      ]
     },
     {
       "id": "breach-confidentiality",
       "label": "Breach of Confidentiality",
       "definition": "Unauthorized disclosure of secrets.",
       "priority": "P2",
-      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist",
+      "searchAliases": [
+        "Breach of Confidentiality"
+      ]
     },
     {
       "id": "trade-secret-betrayal",
       "label": "Trade Secret Betrayal",
       "definition": "Disclosure of trade secrets.",
       "priority": "P1",
-      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist",
+      "searchAliases": [
+        "Trade Secret Betrayal"
+      ]
     },
     {
       "id": "corruption",
       "label": "Corruption",
       "definition": "Abuse of power for private gain.",
       "priority": "P1",
-      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist",
+      "searchAliases": [
+        "Corruption"
+      ]
     },
     {
       "id": "manipulation",
       "label": "Manipulation",
       "definition": "Unethical or illegal manipulation of processes.",
       "priority": "P2",
-      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist",
+      "searchAliases": [
+        "Manipulation"
+      ]
     },
     {
       "id": "fraud-general",
       "label": "Fraud",
       "definition": "Intentional deception to gain an unfair advantage.",
       "priority": "P1",
-      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist",
+      "searchAliases": [
+        "Fraud"
+      ]
     },
     {
       "id": "unfair-commercial",
       "label": "Unfair Commercial Practices",
       "definition": "Deceptive or unfair business methods.",
       "priority": "P2",
-      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist",
+      "searchAliases": [
+        "Unfair Commercial Practices"
+      ]
     },
     {
       "id": "labor-standards",
       "label": "Labor Standards Violation",
       "definition": "Violations of labor laws.",
       "priority": "P2",
-      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist",
+      "searchAliases": [
+        "Labor Standards Violation"
+      ]
     },
     {
       "id": "commodities-fraud",
       "label": "Commodities Fraud",
       "definition": "Fraud in the commodities market.",
       "priority": "P1",
-      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist",
+      "searchAliases": [
+        "Commodities Fraud"
+      ]
     },
     {
       "id": "futures-fraud",
       "label": "Futures Fraud",
       "definition": "Fraud in the futures market.",
       "priority": "P1",
-      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist",
+      "searchAliases": [
+        "Futures Fraud"
+      ]
     },
     {
       "id": "options-fraud",
       "label": "Options Fraud",
       "definition": "Fraud in the options market.",
       "priority": "P1",
-      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist",
+      "searchAliases": [
+        "Options Fraud"
+      ]
     },
     {
       "id": "benchmark-manipulation",
       "label": "Benchmark Manipulation",
       "definition": "Manipulating financial benchmarks.",
       "priority": "P1",
-      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist",
+      "searchAliases": [
+        "Benchmark Manipulation"
+      ]
     },
     {
       "id": "sanctions-evasion",
       "label": "Sanctions Evasion",
       "definition": "Illegally evading economic sanctions.",
       "priority": "P1",
-      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist",
+      "searchAliases": [
+        "Sanctions Evasion"
+      ]
     },
     {
       "id": "financial-fraud",
       "label": "Financial Fraud",
       "definition": "Broad financial deception including SPAC-related fraud.",
       "priority": "P1",
-      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist",
+      "searchAliases": [
+        "Financial Fraud"
+      ]
     },
     {
       "id": "ppp-fraud",
       "label": "PPP Fraud",
       "definition": "Fraud against Paycheck Protection Program and related relief.",
       "priority": "P1",
-      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist",
+      "searchAliases": [
+        "Bank Fraud, PPP Fraud",
+        "PPP Fraud"
+      ]
     }
   ],
   "cases": [

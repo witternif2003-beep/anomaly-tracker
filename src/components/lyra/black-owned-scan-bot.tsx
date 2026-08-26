@@ -27,6 +27,7 @@ export type BlackOwnedScanTick = {
   status: "scanning" | "queued" | "logged-new" | "revalidated" | "crime-search" | "documented";
   target: BlackOwnedScanTarget;
   message: string;
+  priority?: string;
   crimeCategoryId?: string;
   crimeCategoryLabel?: string;
   caseId?: string | null;
@@ -166,7 +167,9 @@ export function BlackOwnedScanBot({ bot }: { bot: BlackOwnedScanBotPayload }) {
           {head ? (
             <div className="space-y-2">
               <div className="flex flex-wrap gap-2">
-                <Badge className={priorityTone(head.target.priority)}>{head.target.priority}</Badge>
+                <Badge className={priorityTone(head.priority ?? head.target.priority)}>
+                  {head.priority ?? head.target.priority}
+                </Badge>
                 <Badge variant="outline" className={cn("border", statusTone(head.status))}>
                   {head.status}
                 </Badge>
@@ -225,7 +228,10 @@ export function BlackOwnedScanBot({ bot }: { bot: BlackOwnedScanBotPayload }) {
                   className={cn("rounded-lg border px-2.5 py-2 text-xs", statusTone(row.status))}
                 >
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <span className="font-medium text-foreground">{row.target.name}</span>
+                    <span className="font-medium text-foreground">
+                      {(row.priority ?? row.target.priority) + " · "}
+                      {row.target.name}
+                    </span>
                     <span className="font-mono text-[10px] uppercase opacity-80">{row.status}</span>
                   </div>
                   <p className="mt-0.5 text-muted-foreground">
