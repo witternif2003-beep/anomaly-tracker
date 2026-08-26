@@ -840,8 +840,8 @@ export function compileAnomalyTracker(opts?: {
       postdocExtreme: scoutBotDoc.postdocExtreme === true,
       hiddenCodeScan: scoutBotDoc.hiddenCodeScan === true,
       repairRescan: scoutBotDoc.repairRescan === true,
-      repairRescanPasses: scoutBotDoc.repairRescanPasses ?? 81,
-      gateTarget: scoutBotDoc.gateTarget ?? 10935,
+      repairRescanPasses: scoutBotDoc.repairRescanPasses ?? 243,
+      gateTarget: scoutBotDoc.gateTarget ?? 32805,
       note: scoutBotDoc.note,
       healActions: scoutBotDoc.healActions,
       baselines: scoutBotDoc.baselines,
@@ -1103,11 +1103,11 @@ export function compileAnomalyTracker(opts?: {
             scoutBotDoc.extremeScan === true &&
             scoutBotDoc.hiddenCodeScan === true &&
             scoutBotDoc.repairRescan === true &&
-            (scoutBotDoc.repairRescanPasses ?? 0) >= 81 &&
-            (scoutBotDoc.tickMs ?? 9999) <= 2 &&
-            (scoutBotDoc.gateTarget ?? 0) >= 10935 &&
-            scoutBotDoc.mode === "postdoc-x81-extreme-24x7",
-          detail: `scout postdoc ×81 extreme 2ms · gates≥10935 · hidden-code deep · repair→rescan ×81 · ${scoutBotDoc.healActions.length} heal actions`,
+            (scoutBotDoc.repairRescanPasses ?? 0) >= 243 &&
+            (scoutBotDoc.tickMs ?? 9999) <= 1 &&
+            (scoutBotDoc.gateTarget ?? 0) >= 32805 &&
+            scoutBotDoc.mode === "postdoc-x243-extreme-24x7",
+          detail: `scout postdoc ×243 extreme 1ms · gates≥32805 · hidden-code deep · repair→rescan ×243 · ${scoutBotDoc.healActions.length} heal actions`,
         },
         {
           id: "business-crime-taxonomy",
@@ -1233,7 +1233,8 @@ export function compileAnomalyTracker(opts?: {
             (scoutBotDoc.repairRescanPasses ?? 0) >= 27 &&
             (
               scoutBotDoc.mode === "postdoc-x27-extreme-24x7" ||
-              scoutBotDoc.mode === "postdoc-x81-extreme-24x7"
+              scoutBotDoc.mode === "postdoc-x81-extreme-24x7" ||
+              scoutBotDoc.mode === "postdoc-x243-extreme-24x7"
             ),
           detail: "×27 floor retained: ≤7ms · gates≥3645 · repair→rescan ≥27 (satisfied by ×81)",
         },
@@ -1243,8 +1244,20 @@ export function compileAnomalyTracker(opts?: {
             (scoutBotDoc.tickMs ?? 9999) <= 2 &&
             (scoutBotDoc.gateTarget ?? 0) >= 10935 &&
             (scoutBotDoc.repairRescanPasses ?? 0) >= 81 &&
-            scoutBotDoc.mode === "postdoc-x81-extreme-24x7",
-          detail: "×81 pressure: 2ms tick · gates≥10935 · repair→rescan ×81 · hidden-code deep dive ≥648",
+            (
+              scoutBotDoc.mode === "postdoc-x81-extreme-24x7" ||
+              scoutBotDoc.mode === "postdoc-x243-extreme-24x7"
+            ),
+          detail: "×81 floor retained: ≤2ms · gates≥10935 · repair→rescan ≥81 (satisfied by ×243)",
+        },
+        {
+          id: "scout-x243-pressure",
+          ok:
+            (scoutBotDoc.tickMs ?? 9999) <= 1 &&
+            (scoutBotDoc.gateTarget ?? 0) >= 32805 &&
+            (scoutBotDoc.repairRescanPasses ?? 0) >= 243 &&
+            scoutBotDoc.mode === "postdoc-x243-extreme-24x7",
+          detail: "×243 pressure: 1ms tick · gates≥32805 · repair→rescan ×243 · hidden-code deep dive ≥1944",
         },
       ],
     },

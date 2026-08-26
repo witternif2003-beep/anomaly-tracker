@@ -163,7 +163,7 @@ export function ScoutBotPanel({
     const maxPasses =
       currentBook?.scoutBot?.repairRescan === false
         ? 0
-        : Math.max(1, currentBook?.scoutBot?.repairRescanPasses ?? 81);
+        : Math.max(1, currentBook?.scoutBot?.repairRescanPasses ?? 243);
     for (let pass = 1; pass < maxPasses; pass += 1) {
       const stillOpen = inspectTrackerBook(workingBook, {
         selectedAnomalyId: lastResult.selectedAnomalyId ?? selA,
@@ -276,22 +276,23 @@ export function ScoutBotPanel({
             meta?.mode === "postdoc-x3-extreme-24x7" ||
             meta?.mode === "postdoc-x9-extreme-24x7" ||
             meta?.mode === "postdoc-x27-extreme-24x7" ||
-            meta?.mode === "postdoc-x81-extreme-24x7" ? (
-              <Badge className="bg-violet-500/20 text-violet-100">POSTDOC ×81 EXTREME</Badge>
+            meta?.mode === "postdoc-x81-extreme-24x7" ||
+            meta?.mode === "postdoc-x243-extreme-24x7" ? (
+              <Badge className="bg-violet-500/20 text-violet-100">POSTDOC ×243 EXTREME</Badge>
             ) : null}
             {meta?.hiddenCodeScan ? (
               <Badge className="bg-amber-500/20 text-amber-100">HIDDEN-CODE DEEP</Badge>
             ) : null}
             {meta?.repairRescan ? (
               <Badge className="bg-emerald-500/20 text-emerald-100">
-                REPAIR→RESCAN ×{meta?.repairRescanPasses ?? 81}
+                REPAIR→RESCAN ×{meta?.repairRescanPasses ?? 243}
               </Badge>
             ) : null}
             <Badge variant="outline">{status}</Badge>
             <Badge variant="outline">cycle {cycle}</Badge>
             <Badge variant="secondary">healed={healedTotal}</Badge>
-            <Badge variant="outline">gates≥{meta?.gateTarget ?? lastSnapshot?.gateCount ?? 10935}</Badge>
-            <Badge variant="outline">{meta?.tickMs ?? 2}ms</Badge>
+            <Badge variant="outline">gates≥{meta?.gateTarget ?? lastSnapshot?.gateCount ?? 32805}</Badge>
+            <Badge variant="outline">{meta?.tickMs ?? 1}ms</Badge>
             {meta?.additiveOnly ? <Badge variant="outline">additive only</Badge> : null}
           </div>
         </div>
@@ -330,10 +331,10 @@ export function ScoutBotPanel({
             {baselines.envPlaceholders ? ` · env ${baselines.envPlaceholders}` : ""}
             {baselines.pipelineScripts ? ` · pipelines ${baselines.pipelineScripts}` : ""}
             {" · tick "}
-            {meta?.tickMs ?? 2}ms (×81 harder) · gates≥{meta?.gateTarget ?? 10935}
+            {meta?.tickMs ?? 1}ms (×243 harder) · gates≥{meta?.gateTarget ?? 32805}
             {meta?.hiddenCodeScan ? " · hidden-code deep dive" : ""}
             {meta?.repairRescan
-              ? ` · repair→rescan ×${meta?.repairRescanPasses ?? 81}`
+              ? ` · repair→rescan ×${meta?.repairRescanPasses ?? 243}`
               : ""}
             {meta?.additiveOnly ? " · additive only" : ""} · all 12 pipelines
           </div>

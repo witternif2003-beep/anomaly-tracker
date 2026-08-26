@@ -1,8 +1,8 @@
 /**
- * 24/7 fixture scout + self-heal helpers (postdoc ×81 extreme scan).
+ * 24/7 fixture scout + self-heal helpers (postdoc ×243 extreme scan).
  * Never removes features — only restores / rehydrates missing state.
- * Target: ≥10935 gate pressure · 2ms tick (3× harder than prior 7ms ×27) ·
- * hidden-code thorough deep dive · all pipelines · repair→rescan ×81.
+ * Target: ≥32805 gate pressure · 1ms tick (3× harder than prior 2ms ×81) ·
+ * hidden-code thorough deep dive · all pipelines · repair→rescan ×243.
  */
 
 import { withBasePath } from "@/lib/static-data";
@@ -71,10 +71,10 @@ export const EXPECTED = {
   envFreeResolved: 16,
   pipelineScripts: 12,
   scoutHealActionsMin: 12,
-  gateTarget: 10935,
-  tickMsMax: 2,
-  hiddenCodeGatesMin: 648,
-  repairRescanPasses: 81,
+  gateTarget: 32805,
+  tickMsMax: 1,
+  hiddenCodeGatesMin: 1944,
+  repairRescanPasses: 243,
 } as const;
 
 export const SCOUT_EXTREME_MODES = [
@@ -83,6 +83,7 @@ export const SCOUT_EXTREME_MODES = [
   "postdoc-x9-extreme-24x7",
   "postdoc-x27-extreme-24x7",
   "postdoc-x81-extreme-24x7",
+  "postdoc-x243-extreme-24x7",
 ] as const;
 
 /** All pipeline script ids the scout expects to see reflected in bake or local markers. */
@@ -772,18 +773,18 @@ export function inspectTrackerBook(
         id: "scout-extreme-mode",
         severity: "P2",
         title: "Scout extreme/postdoc mode marker off",
-        detail: "Enable extremeScan + postdoc-x81-extreme mode (additive)",
+        detail: "Enable extremeScan + postdoc-x243-extreme mode (additive)",
         healable: true,
         healAction: "attach-scout-marker",
         gateGroup: "scout",
       });
     }
-    if (scout.mode !== "postdoc-x81-extreme-24x7") {
+    if (scout.mode !== "postdoc-x243-extreme-24x7") {
       push(findings, {
-        id: "scout-x81-mode",
+        id: "scout-x243-mode",
         severity: "P2",
-        title: "Scout not at postdoc ×81 extreme mode",
-        detail: `mode=${scout.mode ?? "?"} expected=postdoc-x81-extreme-24x7`,
+        title: "Scout not at postdoc ×243 extreme mode",
+        detail: `mode=${scout.mode ?? "?"} expected=postdoc-x243-extreme-24x7`,
         healable: true,
         healAction: "attach-scout-marker",
         gateGroup: "scout",
@@ -791,9 +792,9 @@ export function inspectTrackerBook(
     }
     if ((scout.tickMs ?? 9999) > EXPECTED.tickMsMax) {
       push(findings, {
-        id: "scout-tick-2",
+        id: "scout-tick-1",
         severity: "P1",
-        title: "Scout tick not at ×81 extreme pressure (2ms)",
+        title: "Scout tick not at ×243 extreme pressure (1ms)",
         detail: `tickMs=${scout.tickMs} expected<=${EXPECTED.tickMsMax}`,
         healable: true,
         healAction: "attach-scout-marker",
@@ -802,9 +803,9 @@ export function inspectTrackerBook(
     }
     if ((scout.gateTarget ?? 0) < EXPECTED.gateTarget) {
       push(findings, {
-        id: "scout-gate-target-10935",
+        id: "scout-gate-target-32805",
         severity: "P1",
-        title: "Scout gateTarget below 10935",
+        title: "Scout gateTarget below 32805",
         detail: `gateTarget=${scout.gateTarget ?? 0}`,
         healable: true,
         healAction: "attach-scout-marker",
@@ -826,7 +827,7 @@ export function inspectTrackerBook(
       push(findings, {
         id: "scout-repair-rescan-passes",
         severity: "P1",
-        title: "Repair→rescan passes below ×81",
+        title: "Repair→rescan passes below ×243",
         detail: `passes=${scout.repairRescanPasses ?? 0} expected>=${EXPECTED.repairRescanPasses}`,
         healable: true,
         healAction: "attach-scout-marker",
@@ -995,7 +996,7 @@ export function inspectTrackerBook(
     }
   }
   if (extreme) {
-    // Ensure expanded bake pipeline roster is present (postdoc ×81 thorough deep dive)
+    // Ensure expanded bake pipeline roster is present (postdoc ×243 thorough deep dive)
     const requiredBakeChecks = [
       "scene-nodes-geo",
       "scene-events-populated",
@@ -1012,6 +1013,7 @@ export function inspectTrackerBook(
       "scout-false-heal-guard",
       "scout-x27-pressure",
       "scout-x81-pressure",
+      "scout-x243-pressure",
     ];
     const missingBake = requiredBakeChecks.filter((id) => !checkIds.has(id));
     if (missingBake.length) {
@@ -1171,7 +1173,7 @@ export async function runScoutHeal(
         ...prev,
         object: "lyra.scout-bot",
         title: prev.title ?? "Error scout bot",
-        mode: "postdoc-x81-extreme-24x7",
+        mode: "postdoc-x243-extreme-24x7",
         tickMs: Math.min(prev.tickMs ?? EXPECTED.tickMsMax, EXPECTED.tickMsMax),
         active: true,
         selfHealing: true,
@@ -1184,7 +1186,7 @@ export async function runScoutHeal(
         gateTarget: EXPECTED.gateTarget,
         note:
           prev.note ??
-          "24/7 postdoc ×81 extreme scout · 2ms tick · hidden-code + all pipelines · repair→rescan ×81. Additive only — never removes features.",
+          "24/7 postdoc ×243 extreme scout · 1ms tick · hidden-code + all pipelines · repair→rescan ×243. Additive only — never removes features.",
         healActions: [
           "reload-static",
           "reset-selected-anomaly",
@@ -1260,5 +1262,5 @@ export function snapshotFromBook(book: any): ScoutSnapshot {
   };
 }
 
-/** ×81 extreme tick: 2ms = 3× harder than prior 7ms postdoc ×27 extreme pass. */
-export const SCOUT_TICK_MS = 2;
+/** ×243 extreme tick: 1ms = 3× harder than prior 2ms postdoc ×81 extreme pass. */
+export const SCOUT_TICK_MS = 1;
