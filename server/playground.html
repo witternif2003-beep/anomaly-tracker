@@ -89,6 +89,11 @@
           <div id="inv-meta" class="muted">Loading closest-match installs…</div>
           <div id="inv-out"></div>
         </div>
+        <h2>One-shot install</h2>
+        <div class="card">
+          <div id="shot-meta" class="muted">Loading install sequence…</div>
+          <div id="shot-out"></div>
+        </div>
       </aside>
     </main>
     <script>
@@ -141,6 +146,17 @@
             const mark = a.install && a.install.ok ? "<span class='ok'>installed</span>" : "<span class='muted'>missing</span>";
             return "<div><strong>" + a.requested + "</strong> " + mark +
               "<div class='muted'>→ " + a.closest + "</div></div>";
+          })
+          .join("");
+        const shot = await fetch("/v1/install").then((r) => r.json());
+        document.getElementById("shot-meta").textContent =
+          (shot.okCount || 0) + "/" + (shot.stepCount || 0) + " steps · Cuckoo source " +
+          (shot.cuckooSourceCloned ? "cloned" : "missing") + " · live sandbox off";
+        document.getElementById("shot-out").innerHTML = (shot.steps || [])
+          .map((s) => {
+            const mark = s.result && s.result.ok ? "<span class='ok'>ok</span>" : "<span class='muted'>pending</span>";
+            return "<div><strong>" + s.id + "</strong> " + mark +
+              "<div class='muted'>" + (s.result && s.result.installed ? s.result.installed : s.closest) + "</div></div>";
           })
           .join("");
       }

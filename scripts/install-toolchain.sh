@@ -8,7 +8,6 @@ cd "$root"
 
 NODE_VERSION="22.14.0"
 NPM_VERSION="10.9.7"
-FOLIO_MCP_VERSION="0.4.1"
 
 export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
 if [[ ! -s "$NVM_DIR/nvm.sh" ]]; then
@@ -31,11 +30,7 @@ npm ci
 
 npx --no-install playwright install chromium
 
-npm install -g "folio-mcp@${FOLIO_MCP_VERSION}"
-npm install -g wrangler@4
-bash scripts/install-mcp.sh
-bash scripts/install-extensions.sh
-bash scripts/install-p1-inventory.sh
+bash scripts/install-one-shot.sh --after-core
 
 npx --no-install next typegen
 

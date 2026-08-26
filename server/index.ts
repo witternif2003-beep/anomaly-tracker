@@ -13,6 +13,7 @@ import {
   type ChatMessage,
 } from "./local-models";
 import { inventoryStatus } from "./inventory";
+import { oneShotStatus } from "./install-status";
 import { listP1Slots } from "./p1-catalog";
 
 loadEnvFiles();
@@ -63,6 +64,10 @@ app.get("/v1/p1", (req, res) => {
 
 app.get("/v1/inventory", (_req, res) => {
   res.json(inventoryStatus());
+});
+
+app.get("/v1/install", (_req, res) => {
+  res.json(oneShotStatus());
 });
 
 app.post("/v1/legal/search", async (req, res) => {

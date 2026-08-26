@@ -132,7 +132,7 @@ else
   record npm-disk-imaging 0 "hachoir/pefile missing"
 fi
 record_if_mod npm-osint-social sherlock_project "sherlock-project" "sherlock-project missing"
-record_if_mod gh-cuckoo pefile "pefile (static PE metadata only; live malware sandbox not installed)" "pefile missing"
+record_if_mod gh-cuckoo-pefile pefile "pefile (static PE metadata; live Cuckoo sandbox is not started)" "pefile missing"
 record_if_mod api-edgar edgar "edgartools + sec-edgar-downloader" "edgartools missing"
 record api-pacer 1 "REST stub (pacer-tools needs cchardet/Python.h; PyPI pacer-client is unrelated)"
 
@@ -156,6 +156,7 @@ clone_repo docker-harvester https://github.com/laramies/theHarvester.git vendor/
 clone_repo gh-automate https://github.com/cyb3rfox/Aurora-Incident-Response.git vendor/p1/aurora-ir
 clone_repo gh-foca https://github.com/ElevenPaths/FOCA.git vendor/p1/FOCA
 clone_repo gh-recon-ng https://github.com/lanmaster53/recon-ng.git vendor/p1/recon-ng
+clone_repo gh-cuckoo https://github.com/cuckoosandbox/cuckoo.git vendor/p1/cuckoo
 
 record api-finra 1 "REST stub https://api.finra.org"
 record api-ofac 1 "treasury.gov SDN CSV"

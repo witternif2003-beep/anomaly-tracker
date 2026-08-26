@@ -148,6 +148,8 @@ assert len(pipelines) >= 8, len(pipelines)
 assert Path("workers/ci-gate.js").is_file()
 assert Path("data/legal/glossary.json").is_file()
 assert Path("data/p1/inventory-manifest.json").is_file()
+assert Path("data/p1/one-shot-manifest.json").is_file()
+assert Path("scripts/install-one-shot.sh").is_file()
 assert Path(".cursor/permissions.json").is_file()
 assert Path(".cursor/marketplace.json").is_file()
 print("VERIFY OK: P1 roster", len(skills), "skills", len(agents), "agents", len(pipelines), "pipelines")
@@ -184,6 +186,9 @@ inv = json.load(urllib.request.urlopen(base + "/v1/inventory", timeout=8))
 assert inv["additionalSlots"] == 10000, inv["additionalSlots"]
 assert len(inv["assets"]) >= 20, len(inv["assets"])
 assert inv["cuckooLiveSandbox"] is False
+shot = json.load(urllib.request.urlopen(base + "/v1/install", timeout=8))
+assert shot["stepCount"] >= 20, shot["stepCount"]
+assert shot["cuckooLiveSandbox"] is False
 req = urllib.request.Request(
     base + "/v1/chat/completions",
     data=json.dumps({

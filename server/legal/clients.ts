@@ -201,7 +201,7 @@ export function legalSourceStatus() {
   return [
     { id: "glossary", name: "Public-domain glossary (Black's workaround)", install: "data/legal/glossary.json + FOLIO", credentials: "none", status: "live", notes: "Black's Law Dictionary is copyrighted. This glossary plus FOLIO is the installed workaround." },
     { id: "folio", name: "FOLIO Ontology", install: "npm i -g folio-mcp@0.4.1", credentials: "none", status: "live", notes: "CC-BY local cards; remote pulls need folio login." },
-    { id: "courtlistener", name: "CourtListener", install: "pip install court-listener (requested courtlistener is unpublished)", credentials: "optional COURTLISTENER_TOKEN", status: "live", notes: "Public REST v4; Python client used when token is set." },
+    { id: "courtlistener", name: "CourtListener", install: "pip install court-listener (requested courtlistener is unpublished)", credentials: "optional COURTLISTENER_TOKEN", status: "live", notes: "Public REST v4; Python client installed as court-listener." },
     { id: "fre", name: "FRE excerpts", install: "data/legal/fre-excerpts.json", credentials: "none", status: "offline-fallback", notes: "Public-domain Federal Rules of Evidence excerpts." },
     { id: "openlaws", name: "OpenLaws", install: "REST client (pip openlaws unpublished; openlaw on PyPI is unrelated)", credentials: "OPENLAWS_API_KEY", status: present("OPENLAWS_API_KEY") ? "live" : "wired-awaiting-key" },
     { id: "westlaw", name: "Westlaw", install: "proprietary REST stub (no public SDK on PyPI)", credentials: "WESTLAW_USERNAME / WESTLAW_PASSWORD", status: present("WESTLAW_USERNAME") || present("WESTLAW_PASSWORD") || present("WESTLAW_API_KEY") || present("WESTLAW_CLIENT_ID") ? "live" : "wired-contract-required" },

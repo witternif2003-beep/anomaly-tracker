@@ -46,6 +46,7 @@ npm run local-api
 | `/v1/compliance/cjis` | GET | CJIS/NCIC placeholder status (never values) | None |
 | `/v1/p1` | GET | 11,280 P1 slots (`q`, `limit`, `offset`) — 1,280 core + 10,000 Tier-1 | None |
 | `/v1/inventory` | GET | Requested packages vs closest installs | None |
+| `/v1/install` | GET | One-shot sequence: requested vs installed | None |
 | `/v1/playground` | GET | Streaming chat UI | None |
 
 ```bash
@@ -188,9 +189,43 @@ No values are stored in git. Copy `.env.example` to `.env.local` or inject Cloud
 npm run env:check
 ```
 
+## Complete one-shot install
+
+```bash
+npm run install:all
+# or: bash scripts/install-one-shot.sh
+```
+
+That is the full sequence: Node 22.14.0, `npm ci`, Playwright Chromium, MCP servers, editor extensions, Python legal clients, Docker images, recon-ng, and Cuckoo. Each requested name is tried first; unpublished names install the closest public match. `GET /v1/install` reports the result.
+
+| Requested | Closest installed |
+| --- | --- |
+| `@amplitude/mcp` | `amplitude-mcp@0.0.2` |
+| `@aws/mcp` | `@teolin/mcp-cloudwatch-logs@3.3.9` |
+| `@figma/mcp` | `figma-developer-mcp@0.13.2` |
+| `@linear/mcp` | `mcp-remote` → Linear hosted MCP + `@tacticlaunch/mcp-linear` |
+| `@stripe/mcp` | `@stripe/mcp@0.3.3` (requested name exists) |
+| `@cloudflare/mcp` | `@cloudflare/mcp-server-cloudflare@0.2.0` |
+| `firecrawl-mcp` | `firecrawl-mcp@3.24.0` (requested name exists) |
+| `@postgres/mcp-pro` | PyPI `postgres-mcp==0.3.0` + npm `mcp-postgres` |
+| `@sentry/mcp` | `@sentry/mcp-server@0.37.0` |
+| `@slack/mcp` | `@chinchillaenterprises/mcp-slack@4.14.0` |
+| `context7-mcp` | `@upstash/context7-mcp@4.0.3` |
+| `folio-mcp@0.4.1` | `folio-mcp@0.4.1` |
+| `wrangler` | `wrangler@4` (dry-run only) |
+| `openlaws` | unpublished — REST client in `server/legal/clients.ts` |
+| `courtlistener` | `court-listener` |
+| `sec-edgar` | `sec-edgar@0.0.2` plus `edgartools` |
+| `pacer-client` | installed (NLR Alfalfa, not PACER) plus PACER REST stub |
+| `elastic/elasticsearch:8.12` | pulled when Docker works; else `minisearch` |
+| `neo4j/neo4j:5.0` | pulled when Docker works; else `graphology` |
+| `osint-framework/alpine` | unpublished — `recon-ng` + Sherlock clones |
+| `lanmaster53/recon-ng` | `vendor/p1/recon-ng` |
+| `cuckoosandbox/cuckoo` | `vendor/p1/cuckoo` **source clone only** — live sandbox is not started |
+
 ## P1 Tier-1 expanded inventory (10,000 additional slots)
 
-Requested scoped packages (`@law-research/opinion-parser`, `crimemapping`, Docker Hub names, etc.) are mostly unpublished. Closest public npm/PyPI packages are installed; Docker images are replaced by in-process libraries because this VM has no Docker. Cuckoo is not installed (live malware sandbox); `pefile` is the static substitute.
+Requested scoped packages (`@law-research/opinion-parser`, `crimemapping`, Docker Hub names, etc.) are mostly unpublished. Closest public npm/PyPI packages are installed. Docker images are pulled when a daemon is available; otherwise in-process libraries replace them. Cuckoo is cloned as source only; the live sandbox is not started. `pefile` is the static PE substitute.
 
 ```bash
 npm run inventory:install
@@ -219,7 +254,7 @@ npm run inventory:install
 | `Project-AUTOMATE` | `cyb3rfox/Aurora-Incident-Response` |
 | `FOCA` | `ElevenPaths/FOCA` + `exifread` |
 | `Recon-ng` | `lanmaster53/recon-ng` |
-| `Cuckoo` | **not installed** (live malware sandbox). Closest: `pefile` static PE metadata |
+| `Cuckoo` | `vendor/p1/cuckoo` source clone (live sandbox not started) + `pefile` |
 | SEC EDGAR | `edgartools` + public EFTS REST |
 | FINRA TRACE | REST `api.finra.org` |
 | OFAC SDN | public `treasury.gov` CSV |
@@ -228,7 +263,7 @@ npm run inventory:install
 
 ## Editor extensions
 
-Recommended for VS Code / Cursor. This cloud VM has no `code` CLI, so they were installed from Open VSX into `~/.cursor/extensions` and `~/.vscode/extensions`. Locally, run `bash scripts/install-extensions.sh` or `code --install-extension <id>`.
+Recommended for VS Code / Cursor. Prefer `code --install-extension <id>`. This cloud VM ships a portable VS Code CLI at `~/.local/bin/code`; if the marketplace is unreachable, `scripts/install-extensions.sh` unpacks Open VSX VSIX files into `~/.cursor/extensions` and `~/.vscode/extensions`.
 
 | Extension | ID | Purpose | Installed |
 | --- | --- | --- | --- |

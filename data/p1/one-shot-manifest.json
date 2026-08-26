@@ -1,0 +1,175 @@
+{
+  "title": "Complete one-shot installation sequence",
+  "script": "scripts/install-one-shot.sh",
+  "note": "Each requested name is tried first. Unpublished or missing names install the closest public match. Docker images require a daemon; this VM may have none. Cuckoo is cloned as source only — the live malware sandbox is not started.",
+  "steps": [
+    {
+      "id": "core-nvm",
+      "group": "core",
+      "requested": "nvm install 22.14.0",
+      "closest": "nvm install 22.14.0"
+    },
+    {
+      "id": "core-npm-ci",
+      "group": "core",
+      "requested": "npm ci",
+      "closest": "npm ci (lockfile; Node 22.14.0 / npm 10.9.7)"
+    },
+    {
+      "id": "playwright-chromium",
+      "group": "playwright",
+      "requested": "npx playwright install chromium",
+      "closest": "npx playwright install chromium"
+    },
+    {
+      "id": "mcp-amplitude",
+      "group": "mcp",
+      "requested": "@amplitude/mcp",
+      "closest": "amplitude-mcp@0.0.2"
+    },
+    {
+      "id": "mcp-aws",
+      "group": "mcp",
+      "requested": "@aws/mcp",
+      "closest": "@teolin/mcp-cloudwatch-logs@3.3.9"
+    },
+    {
+      "id": "mcp-figma",
+      "group": "mcp",
+      "requested": "@figma/mcp",
+      "closest": "figma-developer-mcp@0.13.2"
+    },
+    {
+      "id": "mcp-linear",
+      "group": "mcp",
+      "requested": "@linear/mcp",
+      "closest": "mcp-remote@0.2.5 → https://mcp.linear.app/sse + @tacticlaunch/mcp-linear"
+    },
+    {
+      "id": "mcp-stripe",
+      "group": "mcp",
+      "requested": "@stripe/mcp",
+      "closest": "@stripe/mcp@0.3.3"
+    },
+    {
+      "id": "mcp-cloudflare",
+      "group": "mcp",
+      "requested": "@cloudflare/mcp",
+      "closest": "@cloudflare/mcp-server-cloudflare@0.2.0"
+    },
+    {
+      "id": "mcp-firecrawl",
+      "group": "mcp",
+      "requested": "firecrawl-mcp",
+      "closest": "firecrawl-mcp@3.24.0"
+    },
+    {
+      "id": "mcp-postgres",
+      "group": "mcp",
+      "requested": "@postgres/mcp-pro",
+      "closest": "PyPI postgres-mcp==0.3.0 + npm mcp-postgres"
+    },
+    {
+      "id": "mcp-sentry",
+      "group": "mcp",
+      "requested": "@sentry/mcp",
+      "closest": "@sentry/mcp-server@0.37.0"
+    },
+    {
+      "id": "mcp-slack",
+      "group": "mcp",
+      "requested": "@slack/mcp",
+      "closest": "@chinchillaenterprises/mcp-slack@4.14.0"
+    },
+    {
+      "id": "mcp-context7",
+      "group": "mcp",
+      "requested": "context7-mcp",
+      "closest": "@upstash/context7-mcp@4.0.3"
+    },
+    {
+      "id": "mcp-folio",
+      "group": "mcp",
+      "requested": "folio-mcp@0.4.1",
+      "closest": "folio-mcp@0.4.1"
+    },
+    {
+      "id": "mcp-wrangler",
+      "group": "mcp",
+      "requested": "wrangler",
+      "closest": "wrangler@4 (dry-run only; never deploy)"
+    },
+    {
+      "id": "ext-cline",
+      "group": "extensions",
+      "requested": "code --install-extension saoudrizwan.claude-dev",
+      "closest": "Open VSX unpack when code marketplace is unavailable"
+    },
+    {
+      "id": "ext-roo",
+      "group": "extensions",
+      "requested": "code --install-extension RooVeterinaryInc.roo-cline",
+      "closest": "Open VSX unpack when code marketplace is unavailable"
+    },
+    {
+      "id": "ext-continue",
+      "group": "extensions",
+      "requested": "code --install-extension Continue.continue",
+      "closest": "Open VSX unpack when code marketplace is unavailable"
+    },
+    {
+      "id": "pip-openlaws",
+      "group": "python-legal",
+      "requested": "openlaws",
+      "closest": "REST client in server/legal/clients.ts (PyPI openlaws unpublished; openlaw is unrelated)"
+    },
+    {
+      "id": "pip-courtlistener",
+      "group": "python-legal",
+      "requested": "courtlistener",
+      "closest": "court-listener (requested name unpublished)"
+    },
+    {
+      "id": "pip-sec-edgar",
+      "group": "python-legal",
+      "requested": "sec-edgar",
+      "closest": "sec-edgar@0.0.2 plus edgartools (useful SEC client)"
+    },
+    {
+      "id": "pip-pacer-client",
+      "group": "python-legal",
+      "requested": "pacer-client",
+      "closest": "pacer-client (NLR Alfalfa, not PACER) plus REST stub for PACER"
+    },
+    {
+      "id": "docker-elasticsearch",
+      "group": "docker",
+      "requested": "elastic/elasticsearch:8.12",
+      "closest": "minisearch when Docker is unavailable; tag 8.12.0 if 8.12 missing"
+    },
+    {
+      "id": "docker-neo4j",
+      "group": "docker",
+      "requested": "neo4j/neo4j:5.0",
+      "closest": "graphology when Docker is unavailable"
+    },
+    {
+      "id": "docker-osint",
+      "group": "docker",
+      "requested": "osint-framework/alpine",
+      "closest": "lanmaster53/recon-ng + sherlock-project (image unpublished)"
+    },
+    {
+      "id": "git-recon-ng",
+      "group": "git",
+      "requested": "https://github.com/lanmaster53/recon-ng.git",
+      "closest": "vendor/p1/recon-ng"
+    },
+    {
+      "id": "git-cuckoo",
+      "group": "git",
+      "requested": "https://github.com/cuckoosandbox/cuckoo.git",
+      "closest": "vendor/p1/cuckoo (source clone only; live sandbox not started) + pefile"
+    }
+  ]
+}

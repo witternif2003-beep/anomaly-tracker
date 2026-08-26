@@ -1,7 +1,7 @@
 {
   "title": "P1 Tier-1 expanded inventory",
   "additionalSlots": 10000,
-  "note": "Requested scoped names are mostly unpublished. Closest public packages are installed. Docker is unavailable in this VM; in-process libraries replace those images. Cuckoo is not installed (live malware sandbox); pefile is the static-analysis substitute.",
+  "note": "Requested scoped names are mostly unpublished. Closest public packages are installed. Docker images are pulled when a daemon is available; otherwise in-process libraries replace them. Cuckoo is cloned as source only — the live malware sandbox is not started. pefile remains the static PE substitute.",
   "assets": [
     {
       "id": "npm-opinion-parser",
@@ -167,9 +167,9 @@
       "id": "gh-cuckoo",
       "family": "github",
       "requested": "Cuckoo",
-      "closest": "pefile (static PE metadata only; live malware sandbox is not installed)",
-      "kind": "pip",
-      "packages": ["pefile"]
+      "closest": "cuckoosandbox/cuckoo source clone (live sandbox not started) + pefile",
+      "kind": "git",
+      "repo": "https://github.com/cuckoosandbox/cuckoo.git"
     },
     {
       "id": "api-edgar",
