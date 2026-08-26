@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Post-doc pipeline smoke: orbital globe scene + postdoc-455500 virtual + TOP 500 SOTA + Live P1 + Black-owned auto-queue bake.
+# Post-doc pipeline smoke: orbital globe scene + postdoc-545500 virtual + TOP 500 SOTA + Live P1 + BO auto-queue + chamber CRISP bake.
 set -euo pipefail
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$root"
@@ -38,10 +38,10 @@ for e in events[:5]:
     if not isinstance(e.get("lat"), (int, float)) or not isinstance(e.get("lon"), (int, float)):
         errors.append(f"event {e.get('id')} missing lat/lon")
         break
-if postdoc.get("total") != 455500:
-    errors.append(f"postdocCatalog expected total=455500, got {postdoc.get('total')}")
+if postdoc.get("total") != 545500:
+    errors.append(f"postdocCatalog expected total=545500, got {postdoc.get('total')}")
 if not postdoc.get("virtualExpand"):
-    errors.append("postdocCatalog.virtualExpand required for 455.5k Pages-safe catalog")
+    errors.append("postdocCatalog.virtualExpand required for 545.5k Pages-safe catalog")
 if not postdoc.get("expandSeed"):
     errors.append("postdocCatalog.expandSeed missing")
 if not postdoc.get("trackerTab"):
@@ -51,8 +51,8 @@ if len(top500) != 500:
     errors.append(f"postdoc TOP 500 SOTA expected 500, got {len(top500)}")
 if len(postdoc.get("data") or []) < 500:
     errors.append(f"postdoc baked window underfilled ({len(postdoc.get('data') or [])})")
-if summary.get("postdocImprovements") != 455500:
-    errors.append("summary.postdocImprovements != 455500")
+if summary.get("postdocImprovements") != 545500:
+    errors.append("summary.postdocImprovements != 545500")
 if not telemetry.get("active"):
     errors.append("telemetry.active false")
 if (telemetry.get("totalTicks") or 0) < 1:
@@ -177,7 +177,7 @@ if errors:
 
 print(
     "PIPELINE OK tracker-3d-smoke",
-    f"nodes={len(nodes)} events={len(events)} postdoc=455500 top500-sota live-p1 bo-auto-queue virtual",
+    f"nodes={len(nodes)} events={len(events)} postdoc=545500 top500-sota live-p1 bo-auto-queue chamber-crisp virtual",
     f"telemetryTicks={telemetry.get('totalTicks')} health={len(checks)}",
     f"mayPackets={len(packets)} mayCats={may.get('categoryCount')}",
     f"boBot={bot.get('verifiedCount')}+{bot.get('candidateCount')}+pool{bot.get('discoveryPoolCount')} stream={len(bot.get('stream') or [])} harden={hardening.get('hardeningScore')}",

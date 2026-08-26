@@ -965,7 +965,7 @@ export function AnomalyTracker({ initialData }: { initialData?: TrackerBook }) {
                     {book.postdocCatalog.axisCount} axes · {book.postdocCatalog.sotaAxisCount ?? 0} SOTA ·
                     TOP {book.postdocCatalog.top500Count ?? 500} · tracker-tab
                     {book.postdocCatalog.virtualExpand
-                      ? " · virtual 455.5k · Live P1 · BO auto-queue"
+                      ? " · virtual 545.5k · Live P1 · BO · Chamber CRISP"
                       : ""}{" "}
                     · showing{" "}
                     {Math.min(postdocShow, filteredPostdoc.length)} of{" "}
@@ -984,15 +984,15 @@ export function AnomalyTracker({ initialData }: { initialData?: TrackerBook }) {
                         <Badge className="bg-amber-500/20 text-amber-100">{top500Rows.length} SOTA</Badge>
                       </div>
                       <p className="mb-2 text-xs text-muted-foreground">
-                        Ranked from 2025–2026 DFIR + TRACKER Live P1 + Black-owned scan bot
-                        auto-queue discovery research (Magnet DFIR 2026, cloud forensics, AI+OSINT,
-                        AML/XAI, WeirdFlows, FIU graphs, ranked-signal UX, AI SOC P1 triage, AI
-                        supplier-diversity discovery, certification attestation queues). Fixture
-                        attestations only — no live CERT/SBA scrapes or intercepts.
+                        Ranked from 2025–2026 DFIR + TRACKER Live P1 + Black-owned auto-queue + 3D
+                        anomaly chamber CRISP research (Magnet DFIR 2026, AI SOC P1 triage, AI
+                        supplier-diversity discovery, Vectra decision dashboards, SIMURG realtime 3D
+                        threat viz, crisp flat-label / roster readability). Fixture-clock only — no
+                        live CERT/SBA scrapes or intercepts.
                       </p>
                       {book.postdocCatalog.sotaSources?.length ? (
                         <ul className="mb-3 flex flex-wrap gap-1.5 text-[10px] text-muted-foreground">
-                          {book.postdocCatalog.sotaSources.slice(0, 10).map((src) => (
+                          {book.postdocCatalog.sotaSources.slice(0, 12).map((src) => (
                             <li key={src.id}>
                               <a
                                 href={src.url}

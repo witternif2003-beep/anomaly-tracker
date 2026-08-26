@@ -2,9 +2,9 @@
   "title": "Post-doctoral forensic query catalog (tracker §8.1)",
   "classified": false,
   "governmentProgram": false,
-  "total": 455500,
+  "total": 545500,
   "top500": 500,
-  "note": "455,500 unclassified post-doctoral forensic queries for /tracker (+90,000). TRACKER-TAB · Live P1 telemetry · Black-owned business scan bot auto-queue discovery. TOP 500 are SOTA DFIR / SOC-telemetry / supplier-diversity discovery improvements (Magnet DFIR 2026, cloud forensics, AI+OSINT, AML/XAI, WeirdFlows, FIU graphs, ranked-signal UX, AI SOC P1 triage, AI supplier diversity discovery, certification attestation queues). Virtual expand on /tracker — bake ships TOP 500 + seed. Additive only. No live CERT/SBA queries, intercepts, CJIS, or SIGINT.",
+  "note": "545,500 unclassified post-doctoral forensic queries for /tracker (+90,000). TRACKER-TAB · Live P1 telemetry · Black-owned scan bot auto-queue · 3D anomaly chamber CRISP labels. TOP 500 are SOTA DFIR / SOC-telemetry / supplier-diversity / decision-focused 3D chamber improvements (Magnet DFIR 2026, AI SOC P1, AI supplier diversity discovery, Vectra decision dashboards, SIMURG realtime 3D threat viz). Virtual expand on /tracker — bake ships TOP 500 + seed. Additive only. No live CERT/SBA queries, intercepts, CJIS, or SIGINT.",
   "sotaSources": [
     {
       "id": "magnet-dfir-2026",
@@ -89,6 +89,24 @@
       "title": "Continuous diversity certification & minority-status verification",
       "url": "https://www.onecredential.io/products/diversity-certification-minority-status",
       "themes": ["ownership attestation", "re-verify without live scrape", "queue hygiene", "audit trail"]
+    },
+    {
+      "id": "chamber-decision-dashboard-ux",
+      "title": "How to design better security dashboards — decision over decoration",
+      "url": "https://www.vectra.ai/blog/how-to-design-better-security-dashboards",
+      "themes": ["decision surface", "not showroom globe", "investigation path", "3D chamber CRISP"]
+    },
+    {
+      "id": "chamber-simurg-3d-threat-viz",
+      "title": "SIMURG — realtime 3D WebGL cyber-threat visualization",
+      "url": "https://publications.eai.eu/index.php/inis/article/view/12740",
+      "themes": ["3D globe situational awareness", "priority encoding", "FPS budget", "anomaly chamber"]
+    },
+    {
+      "id": "chamber-threatstream-globe",
+      "title": "ThreatStream — interactive 3D threat globe UX patterns",
+      "url": "https://github.com/aadithya-vimal/threatstream",
+      "themes": ["crisp labels vs arcs", "zoom/pan controls", "feed + globe coupling", "performance caps"]
     }
   ],
   "axes": [
@@ -449,6 +467,41 @@
       "prompt": "How should Black-owned auto-queue admissions and Live P1 telemetry share fixture-clock epistemology so P1 queue ticks never imply live SBA/CERT surveillance?",
       "sota": true,
       "sourceId": "bo-supplier-diversity-tech-trends-2026"
+    },
+    {
+      "id": "sota-chamber-crisp-labels",
+      "label": "SOTA 3D chamber CRISP flat labels",
+      "prompt": "How should the 3D anomaly chamber keep CRISP flat labels + always-readable roster so entity/anomaly titles stay legible while the stage spins?",
+      "sota": true,
+      "sourceId": "chamber-decision-dashboard-ux"
+    },
+    {
+      "id": "sota-chamber-decision-not-decor",
+      "label": "SOTA chamber decision surface (not decoration)",
+      "prompt": "Which chamber interactions (select entity, hot anomaly, May packet) prove the globe is a decision surface rather than a showroom decoration?",
+      "sota": true,
+      "sourceId": "chamber-decision-dashboard-ux"
+    },
+    {
+      "id": "sota-chamber-priority-encoding",
+      "label": "SOTA chamber P1/P2/P3 priority encoding",
+      "prompt": "How should orb color, halo, and roster priority chips encode P1 without implying live mass surveillance on the fixture-clock chamber?",
+      "sota": true,
+      "sourceId": "chamber-simurg-3d-threat-viz"
+    },
+    {
+      "id": "sota-chamber-single-zoom-path",
+      "label": "SOTA chamber single zoom path",
+      "prompt": "Why must chamber zoom use one CSS variable path (no double scale3d) so CRISP labels and HUD controls stay aligned under pinch/wheel?",
+      "sota": true,
+      "sourceId": "chamber-threatstream-globe"
+    },
+    {
+      "id": "sota-chamber-live-p1-bo-coupling",
+      "label": "SOTA chamber × Live P1 × BO coupling",
+      "prompt": "How should the 3D anomaly chamber reflect Live P1 ticks and Black-owned auto-queue admissions with CRISP labels while staying fixture-attested?",
+      "sota": true,
+      "sourceId": "chamber-simurg-3d-threat-viz"
     }
   ],
   "methods": [
@@ -485,7 +538,10 @@
     "SOTA Black-owned discovery→auto-queue admit rehearsal",
     "SOTA fixture-attestation vs live CERT/SBA boundary drill",
     "SOTA BO hardening-gate scorecard (50+)",
-    "SOTA Live P1 × BO queue coupling epistemology check"
+    "SOTA Live P1 × BO queue coupling epistemology check",
+    "SOTA 3D chamber CRISP label + roster readability lab",
+    "SOTA chamber decision-surface vs decoration red-team",
+    "SOTA single-zoom-path chamber interaction drill"
   ],
   "falsifiers": [
     "Score presented as courtroom opinion",

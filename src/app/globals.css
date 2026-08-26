@@ -1036,6 +1036,11 @@
   color: oklch(0.8 0.04 95 / 90%);
 }
 
+.chamber-roster-sota {
+  letter-spacing: 0.12em;
+  color: oklch(0.86 0.12 85 / 92%);
+}
+
 .chamber-roster-list {
   margin: 0;
   padding: 0.25rem;

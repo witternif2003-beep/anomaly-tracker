@@ -390,7 +390,7 @@ export function OrbitalChamber({
       </div>
 
       <div className="chamber-hud-top">
-        <span className="chamber-hud-title">3D anomaly chamber · crisp labels</span>
+        <span className="chamber-hud-title">3D anomaly chamber · CRISP · SOTA</span>
         <div className="chamber-hud-controls" role="toolbar" aria-label="Chamber view controls">
           <button
             type="button"
@@ -560,10 +560,11 @@ export function OrbitalChamber({
       <div className="chamber-roster" aria-label="Complete readable chamber roster">
         <div className="chamber-roster-head">
           All entries · {visibleNodes.length} entities · {visibleEvents.length} anomalies · always
-          crisp
+          CRISP
           {visibleNodes.length + visibleEvents.length > 22
             ? " · overlay shows entities + P1/hot (roster has every label)"
             : ""}
+          <span className="chamber-roster-sota"> · SOTA flat labels</span>
         </div>
         <ul className="chamber-roster-list">
           {visibleNodes.map((node) => (
