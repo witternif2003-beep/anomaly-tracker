@@ -53,7 +53,7 @@ export const EXPECTED = {
   minAnomalies: 12,
   crimeCategories: 52,
   crimeCases: 60,
-  postdoc: 500,
+  postdoc: 5500,
   mayPackets: 15,
   mayCategories: 10,
   mayElements: 43,
@@ -420,9 +420,9 @@ export function inspectTrackerBook(
   // —— Postdoc / improvements ——
   if ((postdoc.total ?? 0) !== EXPECTED.postdoc) {
     push(findings, {
-      id: "postdoc-500",
+      id: "postdoc-5500",
       severity: "P2",
-      title: "Post-doc catalog not at 500",
+      title: "Post-doc forensic catalog not at 5500",
       detail: `total=${postdoc.total ?? 0}`,
       healable: true,
       healAction: "reload-static",
@@ -435,8 +435,25 @@ export function inspectTrackerBook(
       push(findings, {
         id: "postdoc-data-length",
         severity: "P2",
-        title: "Post-doc data array length ≠ 500",
+        title: "Post-doc data array length ≠ 5500",
         detail: `data.length=${postdocDataLen}`,
+        healable: true,
+        healAction: "reload-static",
+        gateGroup: "postdoc",
+      });
+    }
+    const top500Len = Array.isArray(postdoc.top500Sota)
+      ? postdoc.top500Sota.length
+      : Array.isArray(postdoc.data)
+        ? postdoc.data.filter((p: any) => p?.sotaTier === "top500-sota" || (p?.sotaRank ?? 0) > 0)
+            .length
+        : 0;
+    if (top500Len > 0 && top500Len < 500) {
+      push(findings, {
+        id: "postdoc-top500-sota",
+        severity: "P2",
+        title: "TOP 500 SOTA postdoc window underfilled",
+        detail: `top500=${top500Len}`,
         healable: true,
         healAction: "reload-static",
         gateGroup: "postdoc",
@@ -446,7 +463,7 @@ export function inspectTrackerBook(
       push(findings, {
         id: "postdoc-summary-parity",
         severity: "P2",
-        title: "Summary postdocImprovements ≠ 500",
+        title: "Summary postdocImprovements ≠ 5500",
         detail: `summary=${summary.postdocImprovements ?? 0}`,
         healable: true,
         healAction: "reload-static",
@@ -915,7 +932,7 @@ export function inspectTrackerBook(
     const requiredBakeChecks = [
       "scene-nodes-geo",
       "scene-events-populated",
-      "postdoc-500",
+      "postdoc-5500",
       "telemetry-24x7",
       "error-scout-bot",
       "business-crime-taxonomy",

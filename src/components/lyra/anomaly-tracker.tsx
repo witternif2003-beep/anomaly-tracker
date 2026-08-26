@@ -173,10 +173,37 @@ interface TrackerBook {
     title: string;
     note: string;
     total: number;
+    top500Count?: number;
     axisCount: number;
+    sotaAxisCount?: number;
     openCount: number;
     constrainedCount: number;
-    axes: Array<{ id: string; label: string; prompt: string }>;
+    sotaOpenCount?: number;
+    sotaSources?: Array<{ id: string; title: string; url: string; themes: string[] }>;
+    axes: Array<{ id: string; label: string; prompt: string; sota?: boolean }>;
+    top500Sota?: Array<{
+      id: string;
+      index: number;
+      axisId: string;
+      axisLabel: string;
+      title: string;
+      question: string;
+      method: string;
+      falsifier: string;
+      deliverable: string;
+      forensicQuery?: string;
+      sotaRank?: number | null;
+      sotaSourceId?: string | null;
+      categoryLabel: string;
+      entityTypeLabel: string;
+      fbiCategory: string | null;
+      artifact: string | null;
+      status: string;
+      priority: string;
+      rqAnchor?: string;
+      lyraBinding?: string;
+      wontDo?: string | null;
+    }>;
     data: Array<{
       id: string;
       index: number;
@@ -187,14 +214,17 @@ interface TrackerBook {
       method: string;
       falsifier: string;
       deliverable: string;
-      lyraBinding: string;
+      lyraBinding?: string;
+      forensicQuery?: string;
+      sotaRank?: number | null;
+      sotaTier?: string;
       categoryLabel: string;
       entityTypeLabel: string;
       fbiCategory: string | null;
       artifact: string | null;
-      rqAnchor: string;
+      rqAnchor?: string;
       status: string;
-      wontDo: string | null;
+      wontDo?: string | null;
       priority: string;
     }>;
   };
@@ -343,6 +373,8 @@ export function AnomalyTracker({ initialData }: { initialData?: TrackerBook }) {
   const [postdocQ, setPostdocQ] = useState("");
   const [postdocAxis, setPostdocAxis] = useState("");
   const [postdocShow, setPostdocShow] = useState(50);
+  const [top500Show, setTop500Show] = useState(24);
+  const [postdocSotaOnly, setPostdocSotaOnly] = useState(false);
   const [forensicOpen, setForensicOpen] = useState(false);
   const [forensicPacket, setForensicPacket] = useState<MayForensicPacket | null>(null);
   const [forensicFbi, setForensicFbi] = useState<string | null>(null);
@@ -444,14 +476,22 @@ export function AnomalyTracker({ initialData }: { initialData?: TrackerBook }) {
   const filteredPostdoc = useMemo(() => {
     if (!book?.postdocCatalog) return [];
     const needle = postdocQ.trim().toLowerCase();
-    return book.postdocCatalog.data.filter((item) => {
+    const pool = postdocSotaOnly
+      ? (book.postdocCatalog.top500Sota ?? book.postdocCatalog.data.filter((d) => d.sotaTier === "top500-sota"))
+      : book.postdocCatalog.data;
+    return pool.filter((item) => {
       if (postdocAxis && item.axisId !== postdocAxis) return false;
       if (!needle) return true;
-      return `${item.title} ${item.question} ${item.method} ${item.artifact ?? ""} ${item.fbiCategory ?? ""} ${item.axisLabel}`
+      return `${item.title} ${item.question} ${item.method} ${item.forensicQuery ?? ""} ${item.artifact ?? ""} ${item.fbiCategory ?? ""} ${item.axisLabel}`
         .toLowerCase()
         .includes(needle);
     });
-  }, [book, postdocQ, postdocAxis]);
+  }, [book, postdocQ, postdocAxis, postdocSotaOnly]);
+
+  const top500Rows = useMemo(() => {
+    if (!book?.postdocCatalog) return [];
+    return book.postdocCatalog.top500Sota ?? book.postdocCatalog.data.filter((d) => d.sotaTier === "top500-sota");
+  }, [book]);
 
   return (
     <div className="relative flex flex-1 flex-col">
@@ -871,20 +911,94 @@ export function AnomalyTracker({ initialData }: { initialData?: TrackerBook }) {
               <Card>
                 <CardHeader>
                   <CardTitle className="font-display text-base">
-                    8.1 Post-doctoral improvement catalog ({book.postdocCatalog.total})
+                    8.1 Post-doctoral forensic queries ({book.postdocCatalog.total.toLocaleString()})
                   </CardTitle>
                   <CardDescription>
-                    {book.postdocCatalog.axisCount} axes · {book.postdocCatalog.openCount} open ·{" "}
+                    {book.postdocCatalog.axisCount} axes · {book.postdocCatalog.sotaAxisCount ?? 0} SOTA ·
+                    TOP {book.postdocCatalog.top500Count ?? 500} · {book.postdocCatalog.openCount} open ·{" "}
                     {book.postdocCatalog.constrainedCount} constrained · showing{" "}
                     {Math.min(postdocShow, filteredPostdoc.length)} of {filteredPostdoc.length} matched
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <p className="text-sm text-muted-foreground">{book.postdocCatalog.note}</p>
+
+                  {top500Rows.length ? (
+                    <div className="scroll-stable-region rounded-xl border border-amber-400/30 bg-amber-500/5 p-3">
+                      <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                        <p className="font-display text-sm">
+                          TOP 500 · State-of-the-art forensic improvements
+                        </p>
+                        <Badge className="bg-amber-500/20 text-amber-100">{top500Rows.length} SOTA</Badge>
+                      </div>
+                      <p className="mb-2 text-xs text-muted-foreground">
+                        Ranked from 2025–2026 DFIR research (Magnet Enterprise DFIR 2026, automated cloud
+                        forensics, AI+OSINT fusion, AML time-series/XAI, WeirdFlows graph search, FIU
+                        knowledge graphs). Fixture-clock only — no live intercepts.
+                      </p>
+                      {book.postdocCatalog.sotaSources?.length ? (
+                        <ul className="mb-3 flex flex-wrap gap-1.5 text-[10px] text-muted-foreground">
+                          {book.postdocCatalog.sotaSources.slice(0, 6).map((src) => (
+                            <li key={src.id}>
+                              <a
+                                href={src.url}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="underline decoration-amber-400/40 underline-offset-2 hover:text-foreground"
+                              >
+                                {src.id}
+                              </a>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : null}
+                      <div className="scroll-stable-feed grid max-h-96 gap-2 overflow-y-auto md:grid-cols-2">
+                        {top500Rows.slice(0, top500Show).map((item) => (
+                          <div
+                            key={`sota-${item.id}`}
+                            className="rounded-lg border border-amber-400/25 bg-background/40 px-3 py-2"
+                          >
+                            <div className="flex flex-wrap items-center gap-2">
+                              <Badge className="bg-amber-500/25 text-[10px] text-amber-50">
+                                #{item.sotaRank ?? item.index}
+                              </Badge>
+                              <Badge variant="outline" className="text-[10px]">
+                                {item.id}
+                              </Badge>
+                              <Badge className={cn("text-[10px]", priorityTone(item.priority))}>
+                                {item.priority}
+                              </Badge>
+                            </div>
+                            <p className="mt-1 text-sm font-medium leading-snug">{item.title}</p>
+                            <p className="mt-1 text-xs text-muted-foreground">{item.question}</p>
+                            {item.forensicQuery ? (
+                              <p className="mt-1 font-mono text-[10px] text-amber-100/80">
+                                {item.forensicQuery}
+                              </p>
+                            ) : null}
+                          </div>
+                        ))}
+                      </div>
+                      <div className="scroll-anchor-sentinel" aria-hidden />
+                      {top500Rows.length > top500Show ? (
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          className="mt-3"
+                          onClick={() => setTop500Show((n) => Math.min(n + 48, top500Rows.length))}
+                        >
+                          Show more TOP 500 ({Math.min(top500Show + 48, top500Rows.length)}/
+                          {top500Rows.length})
+                        </Button>
+                      ) : null}
+                    </div>
+                  ) : null}
+
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
                     <div className="flex-1">
                       <label className="mb-1 block text-xs text-muted-foreground" htmlFor="postdoc-q">
-                        Filter post-doc catalog
+                        Filter full post-doc forensic catalog (+5,000)
                       </label>
                       <Input
                         id="postdoc-q"
@@ -893,10 +1007,21 @@ export function AnomalyTracker({ initialData }: { initialData?: TrackerBook }) {
                           setPostdocQ(e.target.value);
                           setPostdocShow(50);
                         }}
-                        placeholder="Daubert, BMS, OFAC, falsifier…"
+                        placeholder="SOTA, Daubert, AML, cloud, falsifier…"
                       />
                     </div>
                     <div className="flex flex-wrap gap-2">
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant={postdocSotaOnly ? "default" : "outline"}
+                        onClick={() => {
+                          setPostdocSotaOnly((v) => !v);
+                          setPostdocShow(50);
+                        }}
+                      >
+                        TOP 500 only
+                      </Button>
                       <Button
                         type="button"
                         size="sm"
@@ -908,7 +1033,13 @@ export function AnomalyTracker({ initialData }: { initialData?: TrackerBook }) {
                       >
                         All axes
                       </Button>
-                      {book.postdocCatalog.axes.slice(0, 6).map((axis) => (
+                      {book.postdocCatalog.axes
+                        .filter((a) => a.sota)
+                        .slice(0, 4)
+                        .concat(
+                          book.postdocCatalog.axes.filter((a) => !a.sota).slice(0, 2),
+                        )
+                        .map((axis) => (
                         <Button
                           key={axis.id}
                           type="button"
@@ -919,7 +1050,7 @@ export function AnomalyTracker({ initialData }: { initialData?: TrackerBook }) {
                             setPostdocShow(50);
                           }}
                         >
-                          {axis.label.split(" ")[0]}
+                          {axis.label.replace(/^SOTA\s+/i, "").split(" ").slice(0, 2).join(" ")}
                         </Button>
                       ))}
                     </div>
@@ -931,6 +1062,11 @@ export function AnomalyTracker({ initialData }: { initialData?: TrackerBook }) {
                           <Badge variant="outline" className="text-[10px]">
                             {item.id}
                           </Badge>
+                          {"sotaRank" in item && item.sotaRank ? (
+                            <Badge className="bg-amber-500/20 text-[10px] text-amber-100">
+                              TOP {item.sotaRank}
+                            </Badge>
+                          ) : null}
                           <Badge className={cn("text-[10px]", priorityTone(item.priority))}>
                             {item.priority}
                           </Badge>
@@ -944,10 +1080,17 @@ export function AnomalyTracker({ initialData }: { initialData?: TrackerBook }) {
                           >
                             {item.status}
                           </Badge>
-                          <span className="text-[10px] text-muted-foreground">{item.rqAnchor}</span>
+                          <span className="text-[10px] text-muted-foreground">
+                            {"rqAnchor" in item ? item.rqAnchor : item.axisLabel}
+                          </span>
                         </div>
                         <p className="mt-1 text-sm font-medium">{item.title}</p>
                         <p className="mt-1 text-xs text-muted-foreground">{item.question}</p>
+                        {"forensicQuery" in item && item.forensicQuery ? (
+                          <p className="mt-1 font-mono text-[10px] text-muted-foreground">
+                            {item.forensicQuery}
+                          </p>
+                        ) : null}
                         <p className="mt-1 text-[11px]">
                           Method: {item.method} · Deliverable: {item.deliverable}
                         </p>
@@ -955,8 +1098,10 @@ export function AnomalyTracker({ initialData }: { initialData?: TrackerBook }) {
                         {item.artifact ? (
                           <p className="mt-1 truncate font-mono text-[10px] text-primary/85">{item.artifact}</p>
                         ) : null}
-                        <p className="mt-1 text-[11px] text-muted-foreground">{item.lyraBinding}</p>
-                        {item.wontDo ? (
+                        {"lyraBinding" in item && item.lyraBinding ? (
+                          <p className="mt-1 text-[11px] text-muted-foreground">{item.lyraBinding}</p>
+                        ) : null}
+                        {"wontDo" in item && item.wontDo ? (
                           <p className="mt-1 text-[11px] text-muted-foreground">Wont-do: {item.wontDo}</p>
                         ) : null}
                       </div>

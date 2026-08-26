@@ -1,109 +1,273 @@
 {
-  "title": "Post-doctoral improvement catalog (tracker §8.1)",
+  "title": "Post-doctoral forensic query catalog (tracker §8.1)",
   "classified": false,
   "governmentProgram": false,
-  "total": 500,
-  "note": "Five hundred unclassified post-doctoral improvements for /tracker. Extends research-agenda §8 without replacing the five core questions. Hardened against pipeline failures: every item binds taxonomy + evidence + falsifier + fixture-clock reproducibility. Orbital globe must populate entities+events with real lat/lon. No live intercepts, CJIS, or SIGINT collection.",
+  "total": 5500,
+  "top500": 500,
+  "note": "5,500 unclassified post-doctoral forensic queries for /tracker (+5,000). TOP 500 are state-of-the-art DFIR improvements grounded in 2025–2026 research (Magnet State of Enterprise DFIR 2026, cloud forensic acquisition, AI+OSINT fusion, financial knowledge-graph anomaly detection, explainable AML). Extends research-agenda §8 without replacing the five core questions. Never removes prior axes — only adds. No live intercepts, CJIS, or SIGINT collection.",
+  "sotaSources": [
+    {
+      "id": "magnet-dfir-2026",
+      "title": "2026 State of Enterprise DFIR Report (Magnet Forensics)",
+      "url": "https://www.magnetforensics.com/blog/state-of-enterprise-dfir-report-the-top-trends-shaping-digital-investigations-in-2026/",
+      "themes": ["AI-assisted DFIR", "SaaS collaboration", "mobile evidence", "multi-tool integration"]
+    },
+    {
+      "id": "darktrace-cloud-forensics",
+      "title": "Automated cloud forensics / ephemeral acquisition",
+      "url": "https://www.darktrace.com/blog/introducing-the-industrys-first-truly-automated-cloud-forensics-solution",
+      "themes": ["cloud workload capture", "attacker timeline reconstruction", "ephemeral evidence"]
+    },
+    {
+      "id": "ai-osint-forensics",
+      "title": "AI-driven OSINT for proactive cybercrime investigation",
+      "url": "https://doi.org/10.21203/rs.3.rs-6581767/v1",
+      "themes": ["AI+OSINT fusion", "proactive collection", "NLP pattern mining"]
+    },
+    {
+      "id": "ai-financial-forensics",
+      "title": "AI-powered financial forensics & AML anomaly detection",
+      "url": "https://doi.org/10.21275/sr25512195301",
+      "themes": ["multivariate time-series AML", "explainable anomaly scores", "structuring/layering"]
+    },
+    {
+      "id": "flowseries-weirdflows",
+      "title": "FlowSeries / WeirdFlows — transaction-flow anomaly detection",
+      "url": "https://arxiv.org/html/2503.15896",
+      "themes": ["temporal network search", "interpretable AFC pipelines", "sanctions-era patterns"]
+    },
+    {
+      "id": "fiu-knowledge-graph",
+      "title": "FIU AI suspicious-transaction monitoring & knowledge graphs",
+      "url": "https://innefu.com/ai-driven-suspicious-transaction-monitoring-in-financial-intelligence-units-fius/",
+      "themes": ["knowledge graphs", "dynamic risk scoring", "OSINT enrichment", "entity resolution"]
+    }
+  ],
   "axes": [
     {
       "id": "daubert-admissibility",
       "label": "Daubert / FRE 702 admissibility",
-      "prompt": "How should advisory AI scores be framed so they never outrun expert testimony?"
+      "prompt": "How should advisory AI scores be framed so they never outrun expert testimony?",
+      "sota": false
     },
     {
       "id": "legal-hold-spoliation",
       "label": "Legal hold & spoliation risk",
-      "prompt": "What hold chronologies close FRCP 37(e) gaps on company-held ESI?"
+      "prompt": "What hold chronologies close FRCP 37(e) gaps on company-held ESI?",
+      "sota": false
     },
     {
       "id": "visual-encoding-p1",
       "label": "3D / HUD visual encoding",
-      "prompt": "Which encodings make P1 priority legible without implying live surveillance?"
+      "prompt": "Which encodings make P1 priority legible without implying live surveillance?",
+      "sota": false
     },
     {
       "id": "chain-of-custody-hash",
       "label": "Chain-of-custody hashing",
-      "prompt": "What hash + bag protocols keep FRE 901 provenance intact on fixture exports?"
+      "prompt": "What hash + bag protocols keep FRE 901 provenance intact on fixture exports?",
+      "sota": false
     },
     {
       "id": "post-quantum-custody",
       "label": "Post-quantum custody research",
-      "prompt": "Which NIST PQC candidates are research notes only versus production hashes today?"
+      "prompt": "Which NIST PQC candidates are research notes only versus production hashes today?",
+      "sota": false
     },
     {
       "id": "mcp-self-healing",
       "label": "MCP / agent self-healing",
-      "prompt": "How should fixture pipelines recover when optional MCP keys are absent?"
+      "prompt": "How should fixture pipelines recover when optional MCP keys are absent?",
+      "sota": false
     },
     {
       "id": "cross-border-hold",
       "label": "Cross-border hold protocols",
-      "prompt": "What counsel-directed export paths replace intercept narratives for messaging?"
+      "prompt": "What counsel-directed export paths replace intercept narratives for messaging?",
+      "sota": false
     },
     {
       "id": "financial-typology",
       "label": "Financial typology rigor",
-      "prompt": "How do OFAC/MT202/PAC fixture labels stay typologies without SWIFT sessions?"
+      "prompt": "How do OFAC/MT202/PAC fixture labels stay typologies without SWIFT sessions?",
+      "sota": false
     },
     {
       "id": "ot-esi-integrity",
       "label": "OT / BMS ESI integrity",
-      "prompt": "What BMS/HMI/VPN export checks prove integrity under FRCP 34?"
+      "prompt": "What BMS/HMI/VPN export checks prove integrity under FRCP 34?",
+      "sota": false
     },
     {
       "id": "mobile-mdm-inventory",
       "label": "Mobile MDM inventory science",
-      "prompt": "How should IMEI/MAC fields be treated as asset tags, never triangulation feeds?"
+      "prompt": "How should IMEI/MAC fields be treated as asset tags, never triangulation feeds?",
+      "sota": false
     },
     {
       "id": "geofence-facility",
       "label": "Facility geolocation science",
-      "prompt": "How do lease/SOS/GPS fixtures reconcile without live device tracking?"
+      "prompt": "How do lease/SOS/GPS fixtures reconcile without live device tracking?",
+      "sota": false
     },
     {
       "id": "metadata-chronology",
       "label": "Metadata chronology",
-      "prompt": "Which timestamp lattices bind 00:10:22 / 00:14:15 / 00:20:30 into one provenance story?"
+      "prompt": "Which timestamp lattices bind 00:10:22 / 00:14:15 / 00:20:30 into one provenance story?",
+      "sota": false
     },
     {
       "id": "privilege-screening",
       "label": "Privilege screening methods",
-      "prompt": "What privilege-log steps precede production of PAC and board packets?"
+      "prompt": "What privilege-log steps precede production of PAC and board packets?",
+      "sota": false
     },
     {
       "id": "falsifiability",
       "label": "Falsifiability & null results",
-      "prompt": "What null/negative findings must a post-doc write before claiming an anomaly?"
+      "prompt": "What null/negative findings must a post-doc write before claiming an anomaly?",
+      "sota": false
     },
     {
       "id": "ethics-guardrails",
       "label": "Ethics & wont-do guardrails",
-      "prompt": "How is each constrained SIGINT/CJIS narrative documented without executing it?"
+      "prompt": "How is each constrained SIGINT/CJIS narrative documented without executing it?",
+      "sota": false
     },
     {
       "id": "reproducibility",
       "label": "Reproducibility & fixture clocks",
-      "prompt": "How do fixture-clock ticks stay reproducible across static Pages builds?"
+      "prompt": "How do fixture-clock ticks stay reproducible across static Pages builds?",
+      "sota": false
     },
     {
       "id": "taxonomy-binding",
       "label": "Taxonomy binding quality",
-      "prompt": "Does every improvement cite a Corporate Forensic Evidence Taxonomy category?"
+      "prompt": "Does every improvement cite a Corporate Forensic Evidence Taxonomy category?",
+      "sota": false
     },
     {
       "id": "entity-type-coverage",
       "label": "Entity-type coverage",
-      "prompt": "Are LLC through conglomerate forms equally covered in rehearsal packets?"
+      "prompt": "Are LLC through conglomerate forms equally covered in rehearsal packets?",
+      "sota": false
     },
     {
       "id": "telemetry-epistemology",
       "label": "Telemetry epistemology",
-      "prompt": "How do we label ACTIVE 24/7 fixture telemetry so operators never confuse it with live feeds?"
+      "prompt": "How do we label ACTIVE 24/7 fixture telemetry so operators never confuse it with live feeds?",
+      "sota": false
     },
     {
       "id": "counsel-liaison",
       "label": "Counsel liaison protocols",
-      "prompt": "What liaison checklists move from fixture P1 to outside counsel without autofiling SARs?"
+      "prompt": "What liaison checklists move from fixture P1 to outside counsel without autofiling SARs?",
+      "sota": false
+    },
+    {
+      "id": "sota-ai-dfir-assist",
+      "label": "SOTA AI-assisted DFIR triage",
+      "prompt": "How can offline/fixture AI triage enlarge evidence corpora without replacing FRE 702 expert framing (Magnet DFIR 2026: 68% AI adoption)?",
+      "sota": true,
+      "sourceId": "magnet-dfir-2026"
+    },
+    {
+      "id": "sota-saas-collab",
+      "label": "SOTA SaaS investigation collaboration",
+      "prompt": "What residency-safe collaboration patterns scale multi-party internal investigations without live mass surveillance?",
+      "sota": true,
+      "sourceId": "magnet-dfir-2026"
+    },
+    {
+      "id": "sota-mobile-consent",
+      "label": "SOTA mobile evidence (consent/MDM)",
+      "prompt": "How should consent-based / MDM-export mobile packets be rehearsed when extraction access is increasingly restricted?",
+      "sota": true,
+      "sourceId": "magnet-dfir-2026"
+    },
+    {
+      "id": "sota-tool-integration",
+      "label": "SOTA multi-tool DFIR integration",
+      "prompt": "With ~7.1 tools/case average, how do fixture pipelines correlate multi-tool outputs into one reproducible report?",
+      "sota": true,
+      "sourceId": "magnet-dfir-2026"
+    },
+    {
+      "id": "sota-cloud-ephemeral",
+      "label": "SOTA cloud ephemeral forensics",
+      "prompt": "What counsel-directed cloud snapshot / log-export checklists capture ephemeral workloads without unauthorized access?",
+      "sota": true,
+      "sourceId": "darktrace-cloud-forensics"
+    },
+    {
+      "id": "sota-attacker-timeline",
+      "label": "SOTA attacker timeline reconstruction",
+      "prompt": "How should fixture timelines reconstruct cloud attacker paths with hash-bound chronology and null-result slots?",
+      "sota": true,
+      "sourceId": "darktrace-cloud-forensics"
+    },
+    {
+      "id": "sota-ai-osint-fusion",
+      "label": "SOTA AI+OSINT fusion",
+      "prompt": "How do public-registry / OSINT enrichments fuse with internal ESI without scraping U.S. businesses at scale?",
+      "sota": true,
+      "sourceId": "ai-osint-forensics"
+    },
+    {
+      "id": "sota-aml-timeseries",
+      "label": "SOTA AML time-series anomaly queries",
+      "prompt": "Which multivariate frequency/volume/geo typology queries flag structuring/layering in fixtures without live bank rails?",
+      "sota": true,
+      "sourceId": "ai-financial-forensics"
+    },
+    {
+      "id": "sota-xai-aml",
+      "label": "SOTA explainable AML scores",
+      "prompt": "What XAI fields must accompany anomaly scores so counsel can falsify or accept them under FRE 702?",
+      "sota": true,
+      "sourceId": "ai-financial-forensics"
+    },
+    {
+      "id": "sota-graph-flows",
+      "label": "SOTA transaction-flow graph search",
+      "prompt": "How do WeirdFlows-style temporal network queries surface non-compliant agents with interpretable path evidence?",
+      "sota": true,
+      "sourceId": "flowseries-weirdflows"
+    },
+    {
+      "id": "sota-knowledge-graph",
+      "label": "SOTA FIU knowledge-graph fusion",
+      "prompt": "What entity-resolution + centrality queries bind corporate registry nodes to fixture PAC/OFAC typologies?",
+      "sota": true,
+      "sourceId": "fiu-knowledge-graph"
+    },
+    {
+      "id": "sota-dynamic-risk",
+      "label": "SOTA dynamic risk scoring",
+      "prompt": "How should dynamic threat scores decay, escalate, and publish null results inside the fixture-clock?",
+      "sota": true,
+      "sourceId": "fiu-knowledge-graph"
+    },
+    {
+      "id": "sota-offline-ai-custody",
+      "label": "SOTA offline AI chain-of-custody",
+      "prompt": "How do offline DFIR AI agents keep evidence residency and bag/tag hashes intact versus cloud LLM exfil risk?",
+      "sota": true,
+      "sourceId": "magnet-dfir-2026"
+    },
+    {
+      "id": "sota-identity-provider-logs",
+      "label": "SOTA IdP / SaaS audit-log forensics",
+      "prompt": "What Entra/Okta/SaaS audit export schemas belong in FRCP 34 productions for identity-centric incidents?",
+      "sota": true,
+      "sourceId": "darktrace-cloud-forensics"
+    },
+    {
+      "id": "sota-synthetic-identity",
+      "label": "SOTA synthetic-identity forensic queries",
+      "prompt": "Which fixture queries detect synthetic identity / device-fingerprint collisions without biometric live collection?",
+      "sota": true,
+      "sourceId": "fiu-knowledge-graph"
     }
   ],
   "methods": [
@@ -126,7 +290,17 @@
     "MDM asset-tag schema review",
     "facility pin reconciliation worksheet",
     "PAC packet completeness scorecard",
-    "fixture-clock drift measurement"
+    "fixture-clock drift measurement",
+    "SOTA offline-AI triage rehearsal (Magnet DFIR 2026)",
+    "SOTA multi-tool correlation worksheet (~7.1 tools/case)",
+    "SOTA cloud ephemeral snapshot counsel checklist",
+    "SOTA AI+OSINT public-registry fusion (no mass scrape)",
+    "SOTA WeirdFlows-style temporal path audit",
+    "SOTA knowledge-graph entity-resolution drill",
+    "SOTA XAI scorecard for FRE 702 review",
+    "SOTA IdP/SaaS audit-log export schema trial",
+    "SOTA dynamic risk decay + null-result publish",
+    "SOTA mobile consent/MDM packet completeness lab"
   ],
   "falsifiers": [
     "Score presented as courtroom opinion",
@@ -148,7 +322,15 @@
     "WeChat decrypt executed",
     "VoIP wiretap simulated as collection",
     "Classified banner added",
-    "Mass U.S. business scrape attempted"
+    "Mass U.S. business scrape attempted",
+    "Cloud LLM exfil of bagged ESI",
+    "Ephemeral cloud evidence claimed without export receipt",
+    "AI triage score without XAI fields",
+    "OSINT enrichment via bulk residential scrape",
+    "Live bank-rail transaction pull",
+    "Knowledge-graph edge without registry cite",
+    "Mobile extraction without consent/MDM path",
+    "Multi-tool report without correlation hash"
   ],
   "deliverables": [
     "one-page methods note",
@@ -170,6 +352,16 @@
     "PAC completeness scorecard",
     "fixture-clock drift chart",
     "FRE 702 expert outline",
-    "static bake verification diff"
+    "static bake verification diff",
+    "SOTA AI triage XAI scorecard",
+    "SOTA cloud ephemeral export receipt",
+    "SOTA multi-tool correlation matrix",
+    "SOTA OSINT registry cite log",
+    "SOTA temporal flow path diagram",
+    "SOTA knowledge-graph node dossier",
+    "SOTA IdP audit-log schema map",
+    "SOTA dynamic risk decay chart",
+    "SOTA mobile consent packet index",
+    "SOTA DFIR 2026 readiness memo"
   ]
 }
