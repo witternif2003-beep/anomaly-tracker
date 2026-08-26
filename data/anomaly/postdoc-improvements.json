@@ -2,9 +2,9 @@
   "title": "Post-doctoral forensic query catalog (tracker §8.1)",
   "classified": false,
   "governmentProgram": false,
-  "total": 185500,
+  "total": 275500,
   "top500": 500,
-  "note": "185,500 unclassified post-doctoral forensic queries for /tracker (+90,000). TRACKER-TAB + Live P1 telemetry specific. TOP 500 are state-of-the-art DFIR / SOC-telemetry / tracker-dashboard improvements (Magnet DFIR 2026, cloud forensics, AI+OSINT, AML/XAI, WeirdFlows, FIU graphs, ranked-signal UX, AI SOC P1 triage). Full catalog is deterministic virtual expand on /tracker — bake ships TOP 500 + seed (Pages-safe). Additive only. No live intercepts, CJIS, or SIGINT.",
+  "note": "275,500 unclassified post-doctoral forensic queries for /tracker (+90,000). TRACKER-TAB · Live P1 telemetry · Error scout bot self-healing. TOP 500 are SOTA DFIR / SOC-telemetry / scout self-heal improvements (Magnet DFIR 2026, cloud forensics, AI+OSINT, AML/XAI, WeirdFlows, FIU graphs, ranked-signal UX, AI SOC P1 triage, SRE self-healing detect→decide→act→verify). Virtual expand on /tracker — bake ships TOP 500 + seed. Additive only. No live intercepts, CJIS, or SIGINT.",
   "sotaSources": [
     {
       "id": "magnet-dfir-2026",
@@ -59,6 +59,18 @@
       "title": "SOC alert management — triage to verdict funnel",
       "url": "https://www.dropzone.ai/resource-guide/ai-soc-analysts-the-complete-guide-to-alert-management",
       "themes": ["categorize/prioritize", "investigation evidence pack", "Live P1 stream UX"]
+    },
+    {
+      "id": "scout-self-healing-sre",
+      "title": "Self-healing systems — detect→decide→act→verify (2026 SRE)",
+      "url": "https://sreschool.com/blog/self-healing/",
+      "themes": ["observe-decide-act-verify", "idempotent heals", "additive-only guardrails", "error scout"]
+    },
+    {
+      "id": "scout-autonomous-remediation",
+      "title": "Autonomous remediation / self-healing infrastructure 2026",
+      "url": "https://novaaiops.com/self-healing-infrastructure",
+      "themes": ["repair→rescan", "blast-radius limits", "verify after heal", "scout bot"]
     }
   ],
   "axes": [
@@ -349,6 +361,41 @@
       "prompt": "What HUD copy keeps ACTIVE 24/7 Live P1 telemetry labeled as fixture-clock rehearsal, never live FBI/NCIC?",
       "sota": true,
       "sourceId": "live-p1-telemetry-soc"
+    },
+    {
+      "id": "sota-scout-detect-decide-act-verify",
+      "label": "SOTA Error scout detect→decide→act→verify",
+      "prompt": "How should Error scout bot on /tracker close the observe→decide→act→verify loop with false-heal guards and additive-only heals?",
+      "sota": true,
+      "sourceId": "scout-self-healing-sre"
+    },
+    {
+      "id": "sota-scout-repair-rescan",
+      "label": "SOTA Error scout repair→rescan ×N",
+      "prompt": "How many repair→rescan passes should Error scout run after each heal before marking all-clear, without removing features?",
+      "sota": true,
+      "sourceId": "scout-autonomous-remediation"
+    },
+    {
+      "id": "sota-scout-blast-radius",
+      "label": "SOTA Error scout blast-radius / additive-only",
+      "prompt": "What blast-radius limits keep scout heals to reload-static / reset-selection / attach-marker — never feature deletion?",
+      "sota": true,
+      "sourceId": "scout-autonomous-remediation"
+    },
+    {
+      "id": "sota-scout-hidden-code",
+      "label": "SOTA Error scout hidden-code deep dive",
+      "prompt": "Which hidden-code integrity gates must scout revalidate every tick alongside Live P1 and pipeline roster checks?",
+      "sota": true,
+      "sourceId": "scout-self-healing-sre"
+    },
+    {
+      "id": "sota-scout-live-p1-coupling",
+      "label": "SOTA scout × Live P1 coupling",
+      "prompt": "How should Error scout and Live P1 telemetry share fixture-clock epistemology so heals never imply live mass surveillance?",
+      "sota": true,
+      "sourceId": "scout-self-healing-sre"
     }
   ],
   "methods": [

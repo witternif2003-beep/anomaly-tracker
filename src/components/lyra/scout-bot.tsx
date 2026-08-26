@@ -89,7 +89,7 @@ export function ScoutBotPanel({
         crimeCategories: 52,
         crimeCases: 60,
         mayPackets: 15,
-        postdoc: 185500,
+        postdoc: 275500,
       },
     [book?.scoutBot?.baselines],
   );
@@ -269,6 +269,8 @@ export function ScoutBotPanel({
           </div>
           <div className="flex flex-wrap gap-2">
             <Badge className="bg-sky-500/20 text-sky-100">ACTIVE 24/7</Badge>
+            <Badge className="bg-amber-500/20 text-amber-100">SOTA · SELF-HEAL</Badge>
+            <Badge className="bg-emerald-500/20 text-emerald-100">DETECT→VERIFY</Badge>
             {meta?.extremeScan ||
             meta?.mode === "postdoc-extreme-24x7" ||
             meta?.mode === "postdoc-x3-extreme-24x7" ? (
