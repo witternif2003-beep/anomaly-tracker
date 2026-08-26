@@ -6,6 +6,7 @@ import evidenceCorpus from "../data/anomaly/evidence-corpus.json";
 import mayForensicPacket from "../data/anomaly/may-forensic-packet.json";
 import blackOwnedScanBotDoc from "../data/anomaly/black-owned-scan-bot.json";
 import scoutBotDoc from "../data/anomaly/scout-bot.json";
+import { compileScoutCodeIntegrity } from "./scout-code-integrity";
 import businessCrimeTaxonomy from "../data/anomaly/business-crime-taxonomy.json";
 import { buildBlackOwnedScanBot } from "./black-owned-scan-pipeline";
 import inventoryLedger from "../data/anomaly/inventory-ledger.json";
@@ -666,6 +667,7 @@ export function compileAnomalyTracker(opts?: {
   const policy = policyStatus();
   const cjis = cjisStatus();
   const mcpServers = listMcpServers();
+  const codeIntegrity = compileScoutCodeIntegrity();
   const p1 = listP1Slots({ limit: 1, offset: 0 });
   const improvements = listImprovements({
     q: opts?.q,
@@ -859,6 +861,7 @@ export function compileAnomalyTracker(opts?: {
       entities.map((e) => [e.id, e.mayForensicPacket]),
     ),
     blackOwnedScanBot: buildBlackOwnedScanBot(entities),
+    scoutCodeIntegrity: codeIntegrity,
     scoutBot: {
       object: scoutBotDoc.object,
       title: scoutBotDoc.title,
@@ -869,7 +872,9 @@ export function compileAnomalyTracker(opts?: {
       additiveOnly: scoutBotDoc.additiveOnly,
       extremeScan: scoutBotDoc.extremeScan === true,
       postdocExtreme: scoutBotDoc.postdocExtreme === true,
-      gateTarget: scoutBotDoc.gateTarget ?? 45,
+      hiddenCodeScan: scoutBotDoc.hiddenCodeScan === true,
+      repairRescan: scoutBotDoc.repairRescan === true,
+      gateTarget: scoutBotDoc.gateTarget ?? 135,
       note: scoutBotDoc.note,
       healActions: scoutBotDoc.healActions,
       baselines: scoutBotDoc.baselines,
@@ -1106,9 +1111,12 @@ export function compileAnomalyTracker(opts?: {
             scoutBotDoc.selfHealing === true &&
             scoutBotDoc.additiveOnly === true &&
             Array.isArray(scoutBotDoc.healActions) &&
-            scoutBotDoc.healActions.length >= 4 &&
-            scoutBotDoc.extremeScan === true,
-          detail: `scout postdoc-extreme 24/7 · selfHealing · additive · ${scoutBotDoc.healActions.length} heal actions · extremeScan`,
+            scoutBotDoc.healActions.length >= 6 &&
+            scoutBotDoc.extremeScan === true &&
+            scoutBotDoc.hiddenCodeScan === true &&
+            (scoutBotDoc.tickMs ?? 9999) <= 200 &&
+            (scoutBotDoc.gateTarget ?? 0) >= 135,
+          detail: `scout postdoc-extreme 200ms · gates≥135 · hidden-code · repair-rescan · ${scoutBotDoc.healActions.length} heal actions`,
         },
         {
           id: "business-crime-taxonomy",
@@ -1175,6 +1183,11 @@ export function compileAnomalyTracker(opts?: {
           id: "pipe-aip-static-smoke",
           ok: true,
           detail: "aip-static-smoke fixtures + scanText pass path",
+        },
+        {
+          id: "scout-code-integrity",
+          ok: codeIntegrity.allOk === true && codeIntegrity.gateCount >= 12,
+          detail: `hidden-code ${codeIntegrity.okCount}/${codeIntegrity.gateCount} · score=${codeIntegrity.hardeningScore}`,
         },
         {
           id: "chamber-hud-zoom-single-path",

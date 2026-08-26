@@ -15,7 +15,8 @@ const SAMPLE =
   "Miranda v. Arizona held that 87% of suspects waive, see 384 U.S. 436. Studies show https://example.com/holdings.";
 
 function looksLikeJson(response: Response) {
-  const type = response.headers.get("content-type") ?? "";
+  const type = (response.headers.get("content-type") ?? "").trim();
+  if (!type) return true; // Pages / some proxies omit Content-Type
   return type.includes("json");
 }
 

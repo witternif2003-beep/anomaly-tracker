@@ -128,18 +128,29 @@ if not scout.get("additiveOnly"):
     errors.append("scoutBot.additiveOnly false")
 if not scout.get("extremeScan"):
     errors.append("scoutBot.extremeScan false")
+if not scout.get("hiddenCodeScan"):
+    errors.append("scoutBot.hiddenCodeScan false")
+if not scout.get("repairRescan"):
+    errors.append("scoutBot.repairRescan false")
 if scout.get("mode") != "postdoc-extreme-24x7":
     errors.append("scoutBot.mode != postdoc-extreme-24x7")
-if len(scout.get("healActions") or []) < 4:
-    errors.append("scoutBot.healActions incomplete (<4)")
-if (scout.get("tickMs") or 9999) > 900:
-    errors.append("scoutBot.tickMs not 3× pressure (<=900)")
+if len(scout.get("healActions") or []) < 6:
+    errors.append("scoutBot.healActions incomplete (<6)")
+if (scout.get("tickMs") or 9999) > 200:
+    errors.append("scoutBot.tickMs not ≤200 (3× harder)")
+if (scout.get("gateTarget") or 0) < 135:
+    errors.append("scoutBot.gateTarget < 135")
 if scout.get("liveSurveillance"):
     errors.append("scoutBot must not enable live surveillance")
 if not summary.get("scoutBotActive"):
     errors.append("summary.scoutBotActive false")
-if len(checks) < 18:
-    errors.append(f"pipelineHealth.checks underfilled ({len(checks)} < 18)")
+if len(checks) < 20:
+    errors.append(f"pipelineHealth.checks underfilled ({len(checks)} < 20)")
+code = d.get("scoutCodeIntegrity") or {}
+if not code.get("allOk"):
+    errors.append("scoutCodeIntegrity.allOk false")
+if (code.get("gateCount") or 0) < 12:
+    errors.append("scoutCodeIntegrity.gateCount < 12")
 
 if errors:
     print("PIPELINE FAIL tracker-3d-smoke")

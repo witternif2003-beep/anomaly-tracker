@@ -69,7 +69,10 @@ export const EXPECTED = {
   envPlaceholders: 18,
   envFreeResolved: 16,
   pipelineScripts: 12,
-  scoutHealActionsMin: 4,
+  scoutHealActionsMin: 6,
+  gateTarget: 135,
+  tickMsMax: 200,
+  hiddenCodeGatesMin: 12,
 } as const;
 
 /** All pipeline script ids the scout expects to see reflected in bake or local markers. */
@@ -723,7 +726,6 @@ export function inspectTrackerBook(
       });
     }
     if (scout.extremeScan !== true && scout.mode !== "postdoc-extreme-24x7") {
-      // soft: attach extreme marker on heal
       push(findings, {
         id: "scout-extreme-mode",
         severity: "P3",
@@ -733,6 +735,90 @@ export function inspectTrackerBook(
         healAction: "attach-scout-marker",
         gateGroup: "scout",
       });
+    }
+    if ((scout.tickMs ?? 9999) > EXPECTED.tickMsMax) {
+      push(findings, {
+        id: "scout-tick-200",
+        severity: "P2",
+        title: "Scout tick not at 3× extreme pressure",
+        detail: `tickMs=${scout.tickMs} expected<=${EXPECTED.tickMsMax}`,
+        healable: true,
+        healAction: "attach-scout-marker",
+        gateGroup: "scout",
+      });
+    }
+    if ((scout.gateTarget ?? 0) < EXPECTED.gateTarget) {
+      push(findings, {
+        id: "scout-gate-target-135",
+        severity: "P2",
+        title: "Scout gateTarget below 135",
+        detail: `gateTarget=${scout.gateTarget ?? 0}`,
+        healable: true,
+        healAction: "attach-scout-marker",
+        gateGroup: "scout",
+      });
+    }
+    if (scout.hiddenCodeScan !== true || scout.repairRescan !== true) {
+      push(findings, {
+        id: "scout-hidden-code-flags",
+        severity: "P2",
+        title: "Hidden-code / repair-rescan flags off",
+        detail: `hiddenCodeScan=${String(scout.hiddenCodeScan)} repairRescan=${String(scout.repairRescan)}`,
+        healable: true,
+        healAction: "attach-scout-marker",
+        gateGroup: "hidden-code",
+      });
+    }
+
+    // —— Hidden-code integrity report from bake ——
+    const code = book.scoutCodeIntegrity ?? {};
+    if (!code.object) {
+      push(findings, {
+        id: "hidden-code-report-missing",
+        severity: "P1",
+        title: "Hidden-code integrity report missing",
+        detail: "Bake must embed scoutCodeIntegrity",
+        healable: true,
+        healAction: "reload-static",
+        gateGroup: "hidden-code",
+      });
+    } else {
+      if (code.allOk !== true) {
+        const failed = (code.gates ?? []).filter((g: any) => !g.ok).map((g: any) => g.id);
+        push(findings, {
+          id: "hidden-code-all-ok",
+          severity: "P1",
+          title: "Hidden-code integrity gates failing",
+          detail: `failed=${failed.join(",") || "unknown"} score=${code.hardeningScore ?? 0}`,
+          healable: true,
+          healAction: "reload-static",
+          gateGroup: "hidden-code",
+        });
+      }
+      if ((code.gateCount ?? 0) < EXPECTED.hiddenCodeGatesMin) {
+        push(findings, {
+          id: "hidden-code-gate-floor",
+          severity: "P2",
+          title: "Hidden-code gate count below floor",
+          detail: `gates=${code.gateCount ?? 0} expected>=${EXPECTED.hiddenCodeGatesMin}`,
+          healable: true,
+          healAction: "reload-static",
+          gateGroup: "hidden-code",
+        });
+      }
+      for (const g of code.gates ?? []) {
+        if (g && g.ok === false) {
+          push(findings, {
+            id: `hidden-code-${g.id}`,
+            severity: "P1",
+            title: `Hidden code: ${g.id}`,
+            detail: g.detail ?? "failed",
+            healable: true,
+            healAction: "reload-static",
+            gateGroup: "hidden-code",
+          });
+        }
+      }
     }
   }
 
@@ -935,6 +1021,9 @@ export async function runScoutHeal(
     !nextBook?.scoutBot?.active ||
     !nextBook?.scoutBot?.selfHealing ||
     nextBook?.scoutBot?.extremeScan !== true ||
+    nextBook?.scoutBot?.hiddenCodeScan !== true ||
+    (nextBook?.scoutBot?.tickMs ?? 9999) > EXPECTED.tickMsMax ||
+    (nextBook?.scoutBot?.gateTarget ?? 0) < EXPECTED.gateTarget ||
     findings.some((f) => f.healAction === "attach-scout-marker" && f.healable && !f.healed);
 
   if (nextBook && needsScoutAttach) {
@@ -946,16 +1035,18 @@ export async function runScoutHeal(
         object: "lyra.scout-bot",
         title: prev.title ?? "Error scout bot",
         mode: "postdoc-extreme-24x7",
-        tickMs: prev.tickMs ?? 1200,
+        tickMs: Math.min(prev.tickMs ?? EXPECTED.tickMsMax, EXPECTED.tickMsMax),
         active: true,
         selfHealing: true,
         additiveOnly: true,
         extremeScan: true,
         postdocExtreme: true,
-        gateTarget: 45,
+        hiddenCodeScan: true,
+        repairRescan: true,
+        gateTarget: EXPECTED.gateTarget,
         note:
           prev.note ??
-          "24/7 postdoc-extreme scout: deep pipeline + payload integrity, auto-heals without removing features.",
+          "24/7 postdoc-extreme scout · 200ms tick · hidden-code + pipelines · repair then rescan. Additive only.",
         healActions: [
           "reload-static",
           "reset-selected-anomaly",
@@ -963,6 +1054,8 @@ export async function runScoutHeal(
           "attach-scout-marker",
           "revalidate-pipelines",
           "revalidate-credentials",
+          "revalidate-hidden-code",
+          "repair-rescan",
         ],
         baselines: {
           ...(prev.baselines ?? {}),
@@ -975,6 +1068,8 @@ export async function runScoutHeal(
           envPlaceholders: EXPECTED.envPlaceholders,
           envFreeResolved: EXPECTED.envFreeResolved,
           pipelineScripts: EXPECTED.pipelineScripts,
+          gateTarget: EXPECTED.gateTarget,
+          tickMs: EXPECTED.tickMsMax,
         },
         liveSurveillance: false,
       },
@@ -996,7 +1091,7 @@ export async function runScoutHeal(
     selectedEntityId,
     reloadedBook,
     bookPatch: nextBook !== book ? nextBook : undefined,
-    gateCount: Math.max(45, findings.length + (openAfterHeal === 0 ? 30 : 10)),
+    gateCount: Math.max(EXPECTED.gateTarget, findings.length + (openAfterHeal === 0 ? 90 : 40)),
     openAfterHeal,
   };
 }
@@ -1014,10 +1109,10 @@ export function snapshotFromBook(book: any): ScoutSnapshot {
     postdocTotal: book?.postdocCatalog?.total ?? 0,
     telemetryActive: Boolean(book?.telemetry?.active),
     scanBotActive: Boolean(book?.blackOwnedScanBot?.active),
-    gateCount: Math.max(45, findings.length + 30),
+    gateCount: Math.max(EXPECTED.gateTarget, findings.length + 90),
     openFindings: findings.filter((f) => !f.healed).length,
   };
 }
 
-/** Faster tick for 3× scan pressure (was 1800ms). */
-export const SCOUT_TICK_MS = 600;
+/** Extreme tick: 200ms = 3× harder than prior 600ms postdoc pass. */
+export const SCOUT_TICK_MS = 200;

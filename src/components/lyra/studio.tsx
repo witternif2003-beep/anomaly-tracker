@@ -82,8 +82,8 @@ export function Studio() {
           skipQuestions: opts?.skipQuestions ?? false,
         }),
       });
-      const type = response.headers.get("content-type") ?? "";
-      if (response.ok && type.includes("json")) {
+      const type = (response.headers.get("content-type") ?? "").trim();
+      if (response.ok && (!type || type.includes("json"))) {
         const data = (await response.json()) as OptimizeResult & { error?: string };
         const wait = Math.max(0, 900 - (Date.now() - started));
         if (wait) await new Promise((r) => window.setTimeout(r, wait));
