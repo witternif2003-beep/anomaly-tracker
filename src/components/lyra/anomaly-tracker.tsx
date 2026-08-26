@@ -12,7 +12,9 @@ import { fetchJsonWithStaticFallback } from "@/lib/static-data";
 import { LiveTelemetryFeed, type TelemetryPayload } from "@/components/lyra/live-telemetry-feed";
 import {
   BlackOwnedScanBot,
+  BusinessCrimeCatalogPanel,
   type BlackOwnedScanBotPayload,
+  type BusinessCrimeCatalog,
 } from "@/components/lyra/black-owned-scan-bot";
 import {
   ForensicEvidencePopup,
@@ -140,6 +142,7 @@ interface TrackerBook {
   };
   mayForensicPackets?: Record<string, MayForensicPacket>;
   blackOwnedScanBot?: BlackOwnedScanBotPayload;
+  businessCrimeCatalog?: BusinessCrimeCatalog;
   byFbiCategory?: Record<string, number>;
   improvementAnnex?: {
     title: string;
@@ -516,6 +519,10 @@ export function AnomalyTracker({ initialData }: { initialData?: TrackerBook }) {
             ) : null}
 
             {book.blackOwnedScanBot ? <BlackOwnedScanBot bot={book.blackOwnedScanBot} /> : null}
+
+            {book.businessCrimeCatalog ? (
+              <BusinessCrimeCatalogPanel catalog={book.businessCrimeCatalog} />
+            ) : null}
 
             {book.evidenceMap ? (
               <Card>

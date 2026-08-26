@@ -1,0 +1,882 @@
+{
+  "title": "Business crime search taxonomy (SEC/DOJ/FBI typology fixtures)",
+  "period": "2026 enforcement narrative",
+  "classified": false,
+  "simulated": true,
+  "liveFeeds": false,
+  "note": "Hard-coded business-crime categories and high-profile case typologies for company scan documentation. Not a live DOJ/SEC/FBI feed and not mass surveillance of U.S. businesses. Used by the Black-owned scan bot and tracker to search/document violation typologies against scanned companies (fixture rehearsal).",
+  "trends": [
+    {
+      "id": "ic3-2025",
+      "label": "FBI IC3 cybercrime complaints",
+      "detail": "Over 1 million cybercrime complaints (2025 reporting window in narrative) with reported losses exceeding $20.8 billion.",
+      "source": "FBI IC3 typology"
+    },
+    {
+      "id": "investment-fraud-loss",
+      "label": "Investment fraud losses",
+      "detail": "Costliest category in narrative \u2014 over $8.5 billion in losses.",
+      "source": "IC3 typology"
+    },
+    {
+      "id": "bec-loss",
+      "label": "Business Email Compromise (BEC)",
+      "detail": "Second costliest \u2014 over $3 billion in losses.",
+      "source": "IC3 typology"
+    },
+    {
+      "id": "global-illicit",
+      "label": "Global financial crime estimate",
+      "detail": "Total illicit financial activity estimated at $4.4 trillion in narrative.",
+      "source": "aggregate typology"
+    }
+  ],
+  "categories": [
+    {
+      "id": "accounting-fraud",
+      "label": "Accounting Fraud / Financial Statement Fraud",
+      "definition": "Misrepresenting a company's financial health.",
+      "priority": "P1",
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+    },
+    {
+      "id": "securities-fraud",
+      "label": "Securities Fraud",
+      "definition": "Deceiving investors about the value of securities.",
+      "priority": "P1",
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+    },
+    {
+      "id": "wire-fraud",
+      "label": "Wire Fraud",
+      "definition": "Using electronic communications to defraud.",
+      "priority": "P1",
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+    },
+    {
+      "id": "money-laundering",
+      "label": "Money Laundering",
+      "definition": "Concealing the origins of illegally obtained money.",
+      "priority": "P1",
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+    },
+    {
+      "id": "investment-fraud",
+      "label": "Investment Fraud",
+      "definition": "Scams involving fake or fraudulent investments.",
+      "priority": "P1",
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+    },
+    {
+      "id": "ponzi-scheme",
+      "label": "Ponzi Schemes",
+      "definition": "Paying returns to existing investors with new investors' money.",
+      "priority": "P1",
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+    },
+    {
+      "id": "bec",
+      "label": "Business Email Compromise (BEC)",
+      "definition": "Compromising business emails to steal funds.",
+      "priority": "P1",
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+    },
+    {
+      "id": "corporate-fraud",
+      "label": "Corporate Fraud",
+      "definition": "A broad category covering various deceptive practices.",
+      "priority": "P1",
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+    },
+    {
+      "id": "insider-trading",
+      "label": "Insider Trading",
+      "definition": "Trading a public company's stock based on non-public information.",
+      "priority": "P1",
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+    },
+    {
+      "id": "market-manipulation",
+      "label": "Market Manipulation",
+      "definition": "Artificially inflating or deflating the price of a security.",
+      "priority": "P1",
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+    },
+    {
+      "id": "antitrust",
+      "label": "Antitrust Violations (Price-Fixing, Bid-Rigging)",
+      "definition": "Colluding to fix prices or rig bids.",
+      "priority": "P1",
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+    },
+    {
+      "id": "fcpa",
+      "label": "Foreign Corrupt Practices Act (FCPA) Violations",
+      "definition": "Bribing foreign officials.",
+      "priority": "P1",
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+    },
+    {
+      "id": "healthcare-fraud",
+      "label": "Healthcare Fraud",
+      "definition": "Fraud against healthcare programs (Medicare, Medicaid).",
+      "priority": "P1",
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+    },
+    {
+      "id": "bank-fraud",
+      "label": "Bank Fraud",
+      "definition": "Fraud against financial institutions.",
+      "priority": "P1",
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+    },
+    {
+      "id": "tax-fraud",
+      "label": "Tax Fraud",
+      "definition": "Willfully evading tax obligations.",
+      "priority": "P2",
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+    },
+    {
+      "id": "trade-secret-theft",
+      "label": "Trade Secret Theft",
+      "definition": "Stealing proprietary business information.",
+      "priority": "P1",
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+    },
+    {
+      "id": "cybercrime",
+      "label": "Cybercrime",
+      "definition": "Crimes committed via the internet.",
+      "priority": "P1",
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+    },
+    {
+      "id": "government-fraud",
+      "label": "Government Fraud (PPP, Section 8)",
+      "definition": "Fraud against government programs.",
+      "priority": "P1",
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+    },
+    {
+      "id": "crypto-fraud",
+      "label": "Crypto Fraud / Cryptocurrency Scams",
+      "definition": "Fraud involving digital assets.",
+      "priority": "P1",
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+    },
+    {
+      "id": "offering-fraud",
+      "label": "Offering Fraud",
+      "definition": "Fraud in the sale of securities.",
+      "priority": "P1",
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+    },
+    {
+      "id": "false-books",
+      "label": "False Books and Records",
+      "definition": "Falsifying corporate documents.",
+      "priority": "P1",
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+    },
+    {
+      "id": "misappropriation",
+      "label": "Misappropriation of Funds",
+      "definition": "Theft or misuse of funds.",
+      "priority": "P1",
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+    },
+    {
+      "id": "embezzlement",
+      "label": "Embezzlement",
+      "definition": "Theft of assets by a person in a position of trust.",
+      "priority": "P1",
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+    },
+    {
+      "id": "kickbacks-bribery",
+      "label": "Kickbacks / Bribery",
+      "definition": "Illegally providing money or favors for business.",
+      "priority": "P1",
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+    },
+    {
+      "id": "disclosure-fraud",
+      "label": "Disclosure Fraud",
+      "definition": "Failing to disclose material information.",
+      "priority": "P1",
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+    },
+    {
+      "id": "economic-espionage",
+      "label": "Economic Espionage",
+      "definition": "Theft of trade secrets for a foreign government.",
+      "priority": "P1",
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+    },
+    {
+      "id": "consumer-fraud",
+      "label": "Consumer Fraud",
+      "definition": "Deceptive practices against consumers.",
+      "priority": "P2",
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+    },
+    {
+      "id": "insurance-fraud",
+      "label": "Insurance Fraud",
+      "definition": "Fraud against insurance companies.",
+      "priority": "P2",
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+    },
+    {
+      "id": "mortgage-fraud",
+      "label": "Mortgage Fraud",
+      "definition": "Fraud in the mortgage lending process.",
+      "priority": "P2",
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+    },
+    {
+      "id": "procurement-fraud",
+      "label": "Procurement Fraud",
+      "definition": "Fraud in government or corporate procurement.",
+      "priority": "P1",
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+    },
+    {
+      "id": "rico",
+      "label": "Racketeering (RICO)",
+      "definition": "Engaging in a pattern of criminal activity.",
+      "priority": "P1",
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+    },
+    {
+      "id": "identity-theft",
+      "label": "Identity Theft",
+      "definition": "Stealing personal information for fraud.",
+      "priority": "P2",
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+    },
+    {
+      "id": "phishing",
+      "label": "Phishing",
+      "definition": "Fraudulently obtaining sensitive information.",
+      "priority": "P2",
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+    },
+    {
+      "id": "extortion",
+      "label": "Extortion",
+      "definition": "Threatening to reveal information unless demands are met.",
+      "priority": "P2",
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+    },
+    {
+      "id": "romance-scams",
+      "label": "Confidence and Romance Scams",
+      "definition": "Scams exploiting personal relationships.",
+      "priority": "P3",
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+    },
+    {
+      "id": "document-fraud",
+      "label": "Document Fraud",
+      "definition": "Creating or using fake documents.",
+      "priority": "P2",
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+    },
+    {
+      "id": "ai-facilitated-fraud",
+      "label": "AI-Facilitated Fraud",
+      "definition": "Using AI to commit fraud.",
+      "priority": "P1",
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+    },
+    {
+      "id": "data-theft",
+      "label": "Data Theft / Data Misuse",
+      "definition": "Unauthorized access to and use of data.",
+      "priority": "P1",
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+    },
+    {
+      "id": "breach-confidentiality",
+      "label": "Breach of Confidentiality",
+      "definition": "Unauthorized disclosure of secrets.",
+      "priority": "P2",
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+    },
+    {
+      "id": "trade-secret-betrayal",
+      "label": "Trade Secret Betrayal",
+      "definition": "Disclosure of trade secrets.",
+      "priority": "P1",
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+    },
+    {
+      "id": "corruption",
+      "label": "Corruption",
+      "definition": "Abuse of power for private gain.",
+      "priority": "P1",
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+    },
+    {
+      "id": "manipulation",
+      "label": "Manipulation",
+      "definition": "Unethical or illegal manipulation of processes.",
+      "priority": "P2",
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+    },
+    {
+      "id": "fraud-general",
+      "label": "Fraud",
+      "definition": "Intentional deception to gain an unfair advantage.",
+      "priority": "P1",
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+    },
+    {
+      "id": "unfair-commercial",
+      "label": "Unfair Commercial Practices",
+      "definition": "Deceptive or unfair business methods.",
+      "priority": "P2",
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+    },
+    {
+      "id": "labor-standards",
+      "label": "Labor Standards Violation",
+      "definition": "Violations of labor laws.",
+      "priority": "P2",
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+    },
+    {
+      "id": "commodities-fraud",
+      "label": "Commodities Fraud",
+      "definition": "Fraud in the commodities market.",
+      "priority": "P1",
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+    },
+    {
+      "id": "futures-fraud",
+      "label": "Futures Fraud",
+      "definition": "Fraud in the futures market.",
+      "priority": "P1",
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+    },
+    {
+      "id": "options-fraud",
+      "label": "Options Fraud",
+      "definition": "Fraud in the options market.",
+      "priority": "P1",
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+    },
+    {
+      "id": "benchmark-manipulation",
+      "label": "Benchmark Manipulation",
+      "definition": "Manipulating financial benchmarks.",
+      "priority": "P1",
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+    },
+    {
+      "id": "sanctions-evasion",
+      "label": "Sanctions Evasion",
+      "definition": "Illegally evading economic sanctions.",
+      "priority": "P1",
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+    },
+    {
+      "id": "financial-fraud",
+      "label": "Financial Fraud",
+      "definition": "Broad financial deception including SPAC-related fraud.",
+      "priority": "P1",
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+    },
+    {
+      "id": "ppp-fraud",
+      "label": "PPP Fraud",
+      "definition": "Fraud against Paycheck Protection Program and related relief.",
+      "priority": "P1",
+      "businessLawHook": "Corporate counsel / internal investigation typology \u2014 document under legal hold if company-held indicators exist"
+    }
+  ],
+  "cases": [
+    {
+      "id": "case-caastle-300m",
+      "title": "CaaStle founder sentenced for $300M fraud scheme",
+      "categoryId": "securities-fraud",
+      "financialImpact": "$300 Million",
+      "source": "DOJ/SEC typology",
+      "collectionStatus": "fixture"
+    },
+    {
+      "id": "case-adm-accounting",
+      "title": "ADM and former executives charged with accounting fraud",
+      "categoryId": "accounting-fraud",
+      "financialImpact": "$40M Penalty",
+      "source": "SEC/DOJ typology",
+      "collectionStatus": "fixture"
+    },
+    {
+      "id": "case-kddi-revenue",
+      "title": "KDDI subsidiaries faked revenue by 246B yen",
+      "categoryId": "accounting-fraud",
+      "financialImpact": "~$1.5 Billion",
+      "source": "Foreign enforcement typology",
+      "collectionStatus": "fixture"
+    },
+    {
+      "id": "case-near-roundtrip",
+      "title": "Near Intelligence execs charged with round-trip accounting fraud",
+      "categoryId": "accounting-fraud",
+      "financialImpact": "$37 Million",
+      "source": "SEC typology",
+      "collectionStatus": "fixture"
+    },
+    {
+      "id": "case-spac-lottery",
+      "title": "Ex-SPAC CEO pleads guilty to defrauding Lottery.com investors",
+      "categoryId": "securities-fraud",
+      "financialImpact": "$9M (Scheme)",
+      "source": "DOJ typology",
+      "collectionStatus": "fixture"
+    },
+    {
+      "id": "case-ws-kickbacks",
+      "title": "Former Williams-Sonoma exec pleads guilty to fraud & money laundering",
+      "categoryId": "kickbacks-bribery",
+      "financialImpact": "$16 Million",
+      "source": "DOJ typology",
+      "collectionStatus": "fixture"
+    },
+    {
+      "id": "case-atlanta-section8",
+      "title": "Atlanta Housing exec admits to Section 8 fraud",
+      "categoryId": "government-fraud",
+      "financialImpact": "N/A",
+      "source": "DOJ typology",
+      "collectionStatus": "fixture"
+    },
+    {
+      "id": "case-bofa-medicare",
+      "title": "Ex-BofA banker pleads guilty in $8B Medicare fraud scheme",
+      "categoryId": "healthcare-fraud",
+      "financialImpact": "$8 Billion",
+      "source": "DOJ typology",
+      "collectionStatus": "fixture"
+    },
+    {
+      "id": "case-ga-ponzi-380",
+      "title": "Ga. financial firm CEO pleads guilty to $380M Ponzi scheme",
+      "categoryId": "ponzi-scheme",
+      "financialImpact": "$380 Million",
+      "source": "DOJ typology",
+      "collectionStatus": "fixture"
+    },
+    {
+      "id": "case-film-ponzi-100",
+      "title": "Film producer charged in $100M alleged Ponzi scheme",
+      "categoryId": "ponzi-scheme",
+      "financialImpact": "$100 Million",
+      "source": "DOJ typology",
+      "collectionStatus": "fixture"
+    },
+    {
+      "id": "case-greek-450",
+      "title": "Greek financier allegedly swiped $450M from Mexican billionaire",
+      "categoryId": "fraud-general",
+      "financialImpact": "$450 Million",
+      "source": "DOJ typology",
+      "collectionStatus": "fixture"
+    },
+    {
+      "id": "case-malaysia-telecom",
+      "title": "Three Malaysian state telecoms officials charged for multimillion-dollar fraud",
+      "categoryId": "wire-fraud",
+      "financialImpact": "$20 Million",
+      "source": "DOJ typology",
+      "collectionStatus": "fixture"
+    },
+    {
+      "id": "case-first-brands",
+      "title": "First Brands executives charged with multibillion-dollar fraud",
+      "categoryId": "corporate-fraud",
+      "financialImpact": "Multibillion-dollar",
+      "source": "DOJ typology",
+      "collectionStatus": "fixture"
+    },
+    {
+      "id": "case-spac-accounting-ahead",
+      "title": "SEC charges tech company execs with accounting fraud ahead of SPAC acquisition",
+      "categoryId": "accounting-fraud",
+      "financialImpact": "N/A",
+      "source": "SEC typology",
+      "collectionStatus": "fixture"
+    },
+    {
+      "id": "case-venture-founder",
+      "title": "Founder pleads guilty to defrauding venture investors",
+      "categoryId": "investment-fraud",
+      "financialImpact": "Hundreds of Millions",
+      "source": "DOJ typology",
+      "collectionStatus": "fixture"
+    },
+    {
+      "id": "case-false-books",
+      "title": "CEO and consultant plead guilty to creating false books and records",
+      "categoryId": "false-books",
+      "financialImpact": "N/A",
+      "source": "DOJ typology",
+      "collectionStatus": "fixture"
+    },
+    {
+      "id": "case-mn-offering",
+      "title": "SEC charges founder of Minnesota company in alleged fraud scheme",
+      "categoryId": "offering-fraud",
+      "financialImpact": "N/A",
+      "source": "SEC typology",
+      "collectionStatus": "fixture"
+    },
+    {
+      "id": "case-conceal-control",
+      "title": "SEC settles action against founder for concealing control of company",
+      "categoryId": "disclosure-fraud",
+      "financialImpact": "N/A",
+      "source": "SEC typology",
+      "collectionStatus": "fixture"
+    },
+    {
+      "id": "case-spac-merger-fraud",
+      "title": "SEC charges public company and former executives with financial fraud in connection with SPAC merger",
+      "categoryId": "financial-fraud",
+      "financialImpact": "N/A",
+      "source": "SEC typology",
+      "collectionStatus": "fixture"
+    },
+    {
+      "id": "case-false-disclosure",
+      "title": "SEC settles action against former executive and consultant for disclosure of false information",
+      "categoryId": "disclosure-fraud",
+      "financialImpact": "N/A",
+      "source": "SEC typology",
+      "collectionStatus": "fixture"
+    },
+    {
+      "id": "case-hockey-tax",
+      "title": "Minor league hockey exec charged with tax fraud in NC",
+      "categoryId": "tax-fraud",
+      "financialImpact": "N/A",
+      "source": "DOJ typology",
+      "collectionStatus": "fixture"
+    },
+    {
+      "id": "case-google-ip",
+      "title": "Google worker in IP theft trial impersonated exec",
+      "categoryId": "trade-secret-theft",
+      "financialImpact": "N/A",
+      "source": "DOJ typology",
+      "collectionStatus": "fixture"
+    },
+    {
+      "id": "case-il-55m-ppp",
+      "title": "Ill. biz owner gets 6 years for $55M bank scams, PPP fraud",
+      "categoryId": "ppp-fraud",
+      "financialImpact": "$55 Million",
+      "source": "DOJ typology",
+      "collectionStatus": "fixture"
+    },
+    {
+      "id": "case-hc-10m",
+      "title": "SEC says healthcare exec misspent $10.6M in investor funds",
+      "categoryId": "misappropriation",
+      "financialImpact": "$10.6 Million",
+      "source": "SEC typology",
+      "collectionStatus": "fixture"
+    },
+    {
+      "id": "case-88m-stock",
+      "title": "Bid over $88M stock sale breach order",
+      "categoryId": "securities-fraud",
+      "financialImpact": "$88 Million",
+      "source": "SEC typology",
+      "collectionStatus": "fixture"
+    },
+    {
+      "id": "case-crypto-1_2m",
+      "title": "Feds eye default forfeiture in $1.2M crypto scam claims",
+      "categoryId": "crypto-fraud",
+      "financialImpact": "$1.2 Million",
+      "source": "DOJ typology",
+      "collectionStatus": "fixture"
+    },
+    {
+      "id": "case-ny-crypto-trial",
+      "title": "NY crypto recovery fraud case heads to trial",
+      "categoryId": "crypto-fraud",
+      "financialImpact": "N/A",
+      "source": "DOJ typology",
+      "collectionStatus": "fixture"
+    },
+    {
+      "id": "case-bitclub-722",
+      "title": "DOJ drops charges in $722M BitClub crypto Ponzi case",
+      "categoryId": "crypto-fraud",
+      "financialImpact": "$722 Million",
+      "source": "DOJ typology",
+      "collectionStatus": "fixture"
+    },
+    {
+      "id": "case-trader-3_7",
+      "title": "Fake high-tech trader who raised $3.7M, fled, gets 51 months",
+      "categoryId": "investment-fraud",
+      "financialImpact": "$3.7 Million",
+      "source": "DOJ typology",
+      "collectionStatus": "fixture"
+    },
+    {
+      "id": "case-novartis-antitrust",
+      "title": "Novartis, Sandoz face new generic-drug price-fixing suit",
+      "categoryId": "antitrust",
+      "financialImpact": "N/A",
+      "source": "DOJ/civil typology",
+      "collectionStatus": "fixture"
+    },
+    {
+      "id": "case-oil-fcpa",
+      "title": "Convicted oil trader appeals FCPA and money-laundering convictions",
+      "categoryId": "fcpa",
+      "financialImpact": "N/A",
+      "source": "DOJ typology",
+      "collectionStatus": "fixture"
+    },
+    {
+      "id": "case-50cent-liquor",
+      "title": "Ex-exec at 50 Cent's liquor brand pleads guilty to fraud",
+      "categoryId": "fraud-general",
+      "financialImpact": "N/A",
+      "source": "DOJ typology",
+      "collectionStatus": "fixture"
+    },
+    {
+      "id": "case-caastle-sentenced",
+      "title": "Founder Of Fashion Tech Company CaaStle Sentenced To Five Years In Prison For $300 Million Fraud Scheme",
+      "categoryId": "securities-fraud",
+      "financialImpact": "$300 Million",
+      "source": "DOJ typology",
+      "collectionStatus": "fixture"
+    },
+    {
+      "id": "case-ws-plea",
+      "title": "Former Williams-Sonoma executive pleads guilty to fraud and money laundering conspiracies that caused over $16 million in losses",
+      "categoryId": "money-laundering",
+      "financialImpact": "$16 Million",
+      "source": "DOJ typology",
+      "collectionStatus": "fixture"
+    },
+    {
+      "id": "case-malaysia-us-charges",
+      "title": "US charges three Malaysian state telecoms officials for multimillion-dollar fraud",
+      "categoryId": "wire-fraud",
+      "financialImpact": "$20 Million",
+      "source": "DOJ typology",
+      "collectionStatus": "fixture"
+    },
+    {
+      "id": "case-ceo-books-plea",
+      "title": "CEO And Consultant Plead Guilty To Creating False Books And Records",
+      "categoryId": "false-books",
+      "financialImpact": "N/A",
+      "source": "DOJ typology",
+      "collectionStatus": "fixture"
+    },
+    {
+      "id": "case-mn-ceo-charged",
+      "title": "SEC Charges Founder and CEO of Minnesota Company in Alleged Fraud Scheme",
+      "categoryId": "offering-fraud",
+      "financialImpact": "N/A",
+      "source": "SEC typology",
+      "collectionStatus": "fixture"
+    },
+    {
+      "id": "case-related-party",
+      "title": "SEC settles action against founder for concealing control of company and undisclosed related party transactions",
+      "categoryId": "disclosure-fraud",
+      "financialImpact": "N/A",
+      "source": "SEC typology",
+      "collectionStatus": "fixture"
+    },
+    {
+      "id": "case-spac-alleged",
+      "title": "SEC charges public company and former executives with alleged financial fraud in connection with SPAC merger",
+      "categoryId": "financial-fraud",
+      "financialImpact": "N/A",
+      "source": "SEC typology",
+      "collectionStatus": "fixture"
+    },
+    {
+      "id": "case-false-info-settle",
+      "title": "SEC settles action against former executive and consultant for disclosure of false information",
+      "categoryId": "disclosure-fraud",
+      "financialImpact": "N/A",
+      "source": "SEC typology",
+      "collectionStatus": "fixture"
+    },
+    {
+      "id": "case-hockey-charged",
+      "title": "Minor League Hockey Exec Charged With Tax Fraud In NC",
+      "categoryId": "tax-fraud",
+      "financialImpact": "N/A",
+      "source": "DOJ typology",
+      "collectionStatus": "fixture"
+    },
+    {
+      "id": "case-google-trial",
+      "title": "Google Worker In IP Theft Trial Impersonated Exec",
+      "categoryId": "trade-secret-theft",
+      "financialImpact": "N/A",
+      "source": "DOJ typology",
+      "collectionStatus": "fixture"
+    },
+    {
+      "id": "case-il-sentenced",
+      "title": "Ill. Biz Owner Gets 6 Years For $55M Bank Scams, PPP Fraud",
+      "categoryId": "bank-fraud",
+      "financialImpact": "$55 Million",
+      "source": "DOJ typology",
+      "collectionStatus": "fixture"
+    },
+    {
+      "id": "case-hc-misspent",
+      "title": "SEC Says Healthcare Exec Misspent $10.6M In Investor Funds",
+      "categoryId": "misappropriation",
+      "financialImpact": "$10.6 Million",
+      "source": "SEC typology",
+      "collectionStatus": "fixture"
+    },
+    {
+      "id": "case-88m-breach",
+      "title": "Bid Over $88M Stock Sale Breach Order",
+      "categoryId": "securities-fraud",
+      "financialImpact": "$88 Million",
+      "source": "SEC typology",
+      "collectionStatus": "fixture"
+    },
+    {
+      "id": "case-crypto-forfeit",
+      "title": "Feds Eye Default Forfeiture In $1.2M Crypto Scam Claims",
+      "categoryId": "crypto-fraud",
+      "financialImpact": "$1.2 Million",
+      "source": "DOJ typology",
+      "collectionStatus": "fixture"
+    },
+    {
+      "id": "case-ny-crypto-deal",
+      "title": "NY Crypto Recovery Fraud Case Heads To Trial As Deal Falters",
+      "categoryId": "crypto-fraud",
+      "financialImpact": "N/A",
+      "source": "DOJ typology",
+      "collectionStatus": "fixture"
+    },
+    {
+      "id": "case-bitclub-drops",
+      "title": "DOJ Drops Charges In $722M 'BitClub' Crypto Ponzi Case",
+      "categoryId": "crypto-fraud",
+      "financialImpact": "$722 Million",
+      "source": "DOJ typology",
+      "collectionStatus": "fixture"
+    },
+    {
+      "id": "case-trader-51mo",
+      "title": "Fake High-Tech Trader Who Raised $3.7M, Fled, Gets 51 Mos",
+      "categoryId": "investment-fraud",
+      "financialImpact": "$3.7 Million",
+      "source": "DOJ typology",
+      "collectionStatus": "fixture"
+    },
+    {
+      "id": "case-novartis-suit",
+      "title": "Novartis, Sandoz Face New Generic-Drug Price-Fixing Suit",
+      "categoryId": "antitrust",
+      "financialImpact": "N/A",
+      "source": "DOJ/civil typology",
+      "collectionStatus": "fixture"
+    },
+    {
+      "id": "case-oil-bond",
+      "title": "Convicted Oil Trader To Remain Free On Bond During Appeal",
+      "categoryId": "fcpa",
+      "financialImpact": "N/A",
+      "source": "DOJ typology",
+      "collectionStatus": "fixture"
+    },
+    {
+      "id": "case-50cent-letter",
+      "title": "Sealed Letter Halts Sentencing Of 50 Cent's Ex-Associate",
+      "categoryId": "fraud-general",
+      "financialImpact": "N/A",
+      "source": "DOJ typology",
+      "collectionStatus": "fixture"
+    },
+    {
+      "id": "case-spac-tech-ahead",
+      "title": "SEC charges tech company execs with accounting fraud ahead of SPAC acquisition (repeat headline)",
+      "categoryId": "accounting-fraud",
+      "financialImpact": "N/A",
+      "source": "SEC typology",
+      "collectionStatus": "fixture"
+    },
+    {
+      "id": "case-venture-plea",
+      "title": "Founder pleads guilty to defrauding venture investors (repeat headline)",
+      "categoryId": "investment-fraud",
+      "financialImpact": "Hundreds of Millions",
+      "source": "DOJ typology",
+      "collectionStatus": "fixture"
+    },
+    {
+      "id": "case-books-plea2",
+      "title": "CEO and consultant plead guilty to creating false books and records (repeat headline)",
+      "categoryId": "false-books",
+      "financialImpact": "N/A",
+      "source": "DOJ typology",
+      "collectionStatus": "fixture"
+    },
+    {
+      "id": "case-mn-alleged2",
+      "title": "SEC charges founder of Minnesota company in alleged fraud scheme (repeat headline)",
+      "categoryId": "offering-fraud",
+      "financialImpact": "N/A",
+      "source": "SEC typology",
+      "collectionStatus": "fixture"
+    },
+    {
+      "id": "case-conceal2",
+      "title": "SEC settles action against founder for concealing control of company (repeat headline)",
+      "categoryId": "disclosure-fraud",
+      "financialImpact": "N/A",
+      "source": "SEC typology",
+      "collectionStatus": "fixture"
+    },
+    {
+      "id": "case-spac-merger2",
+      "title": "SEC charges public company and former executives with financial fraud in connection with SPAC merger (repeat headline)",
+      "categoryId": "financial-fraud",
+      "financialImpact": "N/A",
+      "source": "SEC typology",
+      "collectionStatus": "fixture"
+    },
+    {
+      "id": "case-adm-sec",
+      "title": "SEC charges Archer-Daniels-Midland Company and two former senior executives with accounting and disclosure fraud",
+      "categoryId": "accounting-fraud",
+      "financialImpact": "N/A",
+      "source": "SEC typology",
+      "collectionStatus": "fixture"
+    },
+    {
+      "id": "case-bank-ppp-combo",
+      "title": "Ill. biz owner bank scams and PPP fraud combined charging narrative",
+      "categoryId": "bank-fraud",
+      "financialImpact": "$55 Million",
+      "source": "DOJ typology",
+      "collectionStatus": "fixture"
+    }
+  ]
+}

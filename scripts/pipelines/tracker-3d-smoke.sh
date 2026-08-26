@@ -83,6 +83,21 @@ if len(bot.get("stream") or []) < 10:
     errors.append("blackOwnedScanBot.stream too short for 24/7 log")
 if bot.get("liveSurveillance") or bot.get("liveCertQueries"):
     errors.append("blackOwnedScanBot must not enable live surveillance/CERT")
+if (bot.get("crimeCategoryCount") or 0) != 52:
+    errors.append(f"crimeCategoryCount expected 52, got {bot.get('crimeCategoryCount')}")
+if (bot.get("crimeCaseCount") or 0) != 60:
+    errors.append(f"crimeCaseCount expected 60, got {bot.get('crimeCaseCount')}")
+crime_ticks = [s for s in (bot.get("stream") or []) if s.get("status") in ("crime-search", "documented")]
+if len(crime_ticks) < 52:
+    errors.append("blackOwnedScanBot stream missing crime search/documentation ticks")
+
+catalog = d.get("businessCrimeCatalog") or {}
+if (catalog.get("categoryCount") or 0) != 52:
+    errors.append("businessCrimeCatalog.categoryCount != 52")
+if (catalog.get("caseCount") or 0) != 60:
+    errors.append("businessCrimeCatalog.caseCount != 60")
+if catalog.get("liveFeeds"):
+    errors.append("businessCrimeCatalog.liveFeeds must be false")
 
 if errors:
     print("PIPELINE FAIL tracker-3d-smoke")
@@ -96,5 +111,6 @@ print(
     f"telemetryTicks={telemetry.get('totalTicks')} health={len(checks)}",
     f"mayPackets={len(packets)} mayCats={may.get('categoryCount')}",
     f"boBot={bot.get('verifiedCount')}+{bot.get('candidateCount')} stream={len(bot.get('stream') or [])}",
+    f"crime={catalog.get('categoryCount')}cats/{catalog.get('caseCount')}cases",
 )
 PY

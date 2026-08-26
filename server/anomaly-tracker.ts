@@ -5,6 +5,7 @@ import fixtures from "../data/anomaly/fixtures.json";
 import evidenceCorpus from "../data/anomaly/evidence-corpus.json";
 import mayForensicPacket from "../data/anomaly/may-forensic-packet.json";
 import blackOwnedScanBotDoc from "../data/anomaly/black-owned-scan-bot.json";
+import businessCrimeTaxonomy from "../data/anomaly/business-crime-taxonomy.json";
 import inventoryLedger from "../data/anomaly/inventory-ledger.json";
 import dependencyStrategyDoc from "../data/anomaly/dependency-strategy.json";
 import mcpAuditDoc from "../data/anomaly/mcp-audit.json";
@@ -458,20 +459,32 @@ function buildBlackOwnedScanBot(entities: ReturnType<typeof enrichEntity>[]) {
   }));
 
   const targets = [...verified, ...candidates];
-  const actions = blackOwnedScanBotDoc.scanActions;
+  const actions = [
+    ...blackOwnedScanBotDoc.scanActions,
+    "crime-taxonomy-search",
+    "document-violation-hit",
+    "document-no-hit",
+  ];
   const sources = blackOwnedScanBotDoc.sources;
+  const categories = businessCrimeTaxonomy.categories;
+  const cases = businessCrimeTaxonomy.cases;
   const stream: Array<{
     id: string;
     seq: number;
     loggedAtOffsetMs: number;
-    status: "scanning" | "queued" | "logged-new" | "revalidated";
+    status: "scanning" | "queued" | "logged-new" | "revalidated" | "crime-search" | "documented";
     target: (typeof targets)[number];
     message: string;
+    crimeCategoryId?: string;
+    crimeCategoryLabel?: string;
+    caseId?: string | null;
+    caseTitle?: string | null;
+    documentation?: string;
   }> = [];
 
   let seq = 0;
-  // 24/7 fixture clock: cycle verified roster + log every candidate as new-to-scan.
-  for (let cycle = 0; cycle < 3; cycle += 1) {
+  // Ops clock: revalidate verified roster + log new candidates.
+  for (let cycle = 0; cycle < 2; cycle += 1) {
     for (const target of verified) {
       seq += 1;
       const action = actions[seq % actions.length];
@@ -505,22 +518,49 @@ function buildBlackOwnedScanBot(entities: ReturnType<typeof enrichEntity>[]) {
         loggedAtOffsetMs: seq * blackOwnedScanBotDoc.tickMs,
         status: "queued",
         target,
-        message: `Queued forensic + ownership scan for ${target.name} (${target.city})`,
-      });
-      seq += 1;
-      stream.push({
-        id: `bo-run-${target.id}-${cycle}-${seq}`,
-        seq,
-        loggedAtOffsetMs: seq * blackOwnedScanBotDoc.tickMs,
-        status: "scanning",
-        target: {
-          ...target,
-          scanAction: actions[seq % actions.length],
-        },
-        message: `Scanning ${target.name} against May forensic business-law packet (fixture)`,
+        message: `Queued forensic + crime-taxonomy scan for ${target.name} (${target.city})`,
       });
     }
   }
+
+  // Full crime DB search: every scanned company × every violation category (fixture docs).
+  for (const target of targets) {
+    for (let i = 0; i < categories.length; i += 1) {
+      const cat = categories[i];
+      const relatedCases = cases.filter((c) => c.categoryId === cat.id);
+      const hitCase = relatedCases.length ? relatedCases[i % relatedCases.length] : null;
+      const isHit = (target.id.length * 13 + i * 7) % 11 === 0;
+      seq += 1;
+      stream.push({
+        id: `bo-crime-${target.id}-${cat.id}-${seq}`,
+        seq,
+        loggedAtOffsetMs: seq * blackOwnedScanBotDoc.tickMs,
+        status: isHit ? "documented" : "crime-search",
+        target: {
+          ...target,
+          scanAction: isHit ? "document-violation-hit" : "crime-taxonomy-search",
+          source: "business-crime-taxonomy",
+          priority: cat.priority,
+        },
+        crimeCategoryId: cat.id,
+        crimeCategoryLabel: cat.label,
+        caseId: hitCase?.id ?? null,
+        caseTitle: hitCase?.title ?? null,
+        documentation: isHit
+          ? `DOCUMENTED typology hit · ${cat.label} · ${target.name} · ref ${hitCase?.title ?? cat.id}`
+          : `SEARCHED ${cat.label} against ${target.name} · no company-held indicator (fixture)`,
+        message: isHit
+          ? `DOCUMENTED · ${target.name} · ${cat.label}${hitCase ? ` · case ref: ${hitCase.title}` : ""}`
+          : `SEARCH · ${target.name} · ${cat.label} (${categories.length} crime categories in DB)`,
+      });
+    }
+  }
+
+  const normalized = stream.map((row, index) => ({
+    ...row,
+    seq: index + 1,
+    loggedAtOffsetMs: (index + 1) * blackOwnedScanBotDoc.tickMs,
+  }));
 
   return {
     object: "lyra.black-owned-scan-bot" as const,
@@ -530,14 +570,37 @@ function buildBlackOwnedScanBot(entities: ReturnType<typeof enrichEntity>[]) {
     active: true,
     liveSurveillance: false,
     liveCertQueries: false,
-    note: blackOwnedScanBotDoc.note,
+    liveCrimeFeeds: false,
+    note: `${blackOwnedScanBotDoc.note} Crime search DB: ${categories.length} violation categories · ${cases.length} case typologies searched/documented per scanned company (fixture).`,
     verifiedCount: verified.length,
     candidateCount: candidates.length,
     queueLength: candidates.length,
+    crimeCategoryCount: categories.length,
+    crimeCaseCount: cases.length,
     scanActions: actions,
     sources,
     targets,
-    stream,
+    stream: normalized,
+  };
+}
+
+function buildBusinessCrimeCatalog() {
+  return {
+    object: "lyra.business-crime-catalog" as const,
+    title: businessCrimeTaxonomy.title,
+    period: businessCrimeTaxonomy.period,
+    note: businessCrimeTaxonomy.note,
+    liveFeeds: false,
+    trends: businessCrimeTaxonomy.trends,
+    categoryCount: businessCrimeTaxonomy.categories.length,
+    caseCount: businessCrimeTaxonomy.cases.length,
+    categories: businessCrimeTaxonomy.categories,
+    cases: businessCrimeTaxonomy.cases.map((c) => ({
+      ...c,
+      categoryLabel:
+        businessCrimeTaxonomy.categories.find((cat) => cat.id === c.categoryId)?.label ??
+        c.categoryId,
+    })),
   };
 }
 
@@ -865,6 +928,8 @@ export function compileAnomalyTracker(opts?: {
       mayForensicElementsPerEntity: entities[0]?.mayForensicPacket.elementCount ?? 0,
       blackOwnedScanBotActive: true,
       blackOwnedScanCandidates: blackOwnedScanBotDoc.newBusinessCandidates.length,
+      businessCrimeCategories: businessCrimeTaxonomy.categories.length,
+      businessCrimeCases: businessCrimeTaxonomy.cases.length,
       intercepts: false,
       cjisLiveQueries: false,
       cuckooLiveSandbox: false,
@@ -947,6 +1012,7 @@ export function compileAnomalyTracker(opts?: {
       entities.map((e) => [e.id, e.mayForensicPacket]),
     ),
     blackOwnedScanBot: buildBlackOwnedScanBot(entities),
+    businessCrimeCatalog: buildBusinessCrimeCatalog(),
     entities,
     anomalies,
     p1Queue: p1Events,
@@ -1161,6 +1227,13 @@ export function compileAnomalyTracker(opts?: {
             entities.some((e) => e.blackOwned) &&
             blackOwnedScanBotDoc.newBusinessCandidates.length >= 8,
           detail: `${entities.filter((e) => e.blackOwned).length} verified BO · ${blackOwnedScanBotDoc.newBusinessCandidates.length} new-to-scan · 24/7 fixture bot`,
+        },
+        {
+          id: "business-crime-taxonomy",
+          ok:
+            businessCrimeTaxonomy.categories.length === 52 &&
+            businessCrimeTaxonomy.cases.length === 60,
+          detail: `${businessCrimeTaxonomy.categories.length} violation categories · ${businessCrimeTaxonomy.cases.length} case typologies in scan DB`,
         },
         {
           id: "no-live-surveillance",
