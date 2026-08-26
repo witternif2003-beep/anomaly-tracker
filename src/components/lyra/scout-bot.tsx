@@ -94,10 +94,22 @@ export function ScoutBotPanel({
     setCycle((c) => c + 1);
     setLastSnapshot(snapshotFromBook(currentBook));
 
-    const open = inspectTrackerBook(currentBook, {
-      selectedAnomalyId: selA,
-      selectedEntityId: selE,
-    });
+    // Empty book: force reload-static heal path (boot / failed hydrate).
+    const open = currentBook
+      ? inspectTrackerBook(currentBook, {
+          selectedAnomalyId: selA,
+          selectedEntityId: selE,
+        })
+      : [
+          {
+            id: "book-missing",
+            severity: "P1" as const,
+            title: "Tracker book missing",
+            detail: "Client lost anomaly payload — refill from static bake.",
+            healable: true,
+            healAction: "reload-static",
+          },
+        ];
     if (!open.length) {
       setFindings([]);
       setStatus("healthy");

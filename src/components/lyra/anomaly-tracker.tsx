@@ -390,6 +390,15 @@ export function AnomalyTracker({ initialData }: { initialData?: TrackerBook }) {
     void load();
   }, []);
 
+  // Self-heal: if load failed, keep retrying without user input.
+  useEffect(() => {
+    if (!error || book) return;
+    const id = window.setInterval(() => {
+      void load();
+    }, 4000);
+    return () => window.clearInterval(id);
+  }, [error, book]);
+
   useEffect(() => {
     const id = window.setInterval(() => setTick((t) => t + 1), 1200);
     return () => window.clearInterval(id);
@@ -485,13 +494,32 @@ export function AnomalyTracker({ initialData }: { initialData?: TrackerBook }) {
               <CardTitle>Could not compile</CardTitle>
               <CardDescription>{error}</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-3">
+              <p className="text-xs text-muted-foreground">
+                Scout bot is retrying the static bake automatically (additive self-heal).
+              </p>
               <Button type="button" onClick={() => void load()}>
                 Try again
               </Button>
             </CardContent>
           </Card>
         ) : null}
+
+        {/* Scout stays mounted even when book is empty so it can reload /static/anomaly.json 24/7. */}
+        <ScoutBotPanel
+          book={book}
+          selectedAnomalyId={selected}
+          onHealedBook={(next) => {
+            setBook(next as TrackerBook);
+            setError(null);
+            setBusy(false);
+          }}
+          onHealSelection={(next) => {
+            if (next.selectedAnomalyId !== undefined) {
+              setSelected(next.selectedAnomalyId);
+            }
+          }}
+        />
 
         {book ? (
           <>
@@ -532,17 +560,6 @@ export function AnomalyTracker({ initialData }: { initialData?: TrackerBook }) {
             ) : null}
 
             {book.blackOwnedScanBot ? <BlackOwnedScanBot bot={book.blackOwnedScanBot} /> : null}
-
-            <ScoutBotPanel
-              book={book}
-              selectedAnomalyId={selected}
-              onHealedBook={(next) => setBook(next as TrackerBook)}
-              onHealSelection={(next) => {
-                if (next.selectedAnomalyId !== undefined) {
-                  setSelected(next.selectedAnomalyId);
-                }
-              }}
-            />
 
             {book.businessCrimeCatalog ? (
               <BusinessCrimeCatalogPanel catalog={book.businessCrimeCatalog} />
