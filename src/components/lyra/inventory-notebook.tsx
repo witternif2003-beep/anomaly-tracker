@@ -94,6 +94,20 @@ interface NotebookView {
     note: string;
     live: string;
   }>;
+  dispositioned?: Array<{
+    id: string;
+    title: string;
+    status: string;
+    note: string;
+    addedTo: string;
+    shipped: boolean;
+    live: string;
+  }>;
+  dispositionSummary?: {
+    added: number;
+    removedFromExpansion: string[];
+    note: string;
+  };
 }
 
 export function InventoryNotebook({ initialData }: { initialData?: NotebookView }) {
@@ -235,7 +249,10 @@ export function InventoryNotebook({ initialData }: { initialData?: NotebookView 
               aria-label="Filter inventory"
             />
 
-            <Section title="Expansion plan" description="Honest next steps. Refusals stay refusals.">
+            <Section
+              title="Expansion plan"
+              description="Open next steps only. Dispositioned refusals/completes were added to policy and removed from this list."
+            >
               <div className="grid gap-3 md:grid-cols-2">
                 {filtered.expansion.map((item) => (
                   <Card key={item.id} size="sm">
@@ -256,6 +273,12 @@ export function InventoryNotebook({ initialData }: { initialData?: NotebookView 
               </div>
               {needle && !filtered.expansion.length ? (
                 <p className="text-sm text-muted-foreground">No expansion rows match.</p>
+              ) : null}
+              {book.dispositionSummary ? (
+                <p className="mt-3 text-xs text-muted-foreground">
+                  {book.dispositionSummary.added} items added to policy and removed from list:{" "}
+                  {book.dispositionSummary.removedFromExpansion.join(", ")}.
+                </p>
               ) : null}
             </Section>
 

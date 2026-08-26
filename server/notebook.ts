@@ -11,7 +11,7 @@ import { cjisStatus, policyStatus } from "./policy";
 import { compileCorporateTaxonomy } from "./corporate-taxonomy";
 import { anomalyTrackerStatus, compileAnomalyTracker } from "./anomaly-tracker";
 
-const EXPANSION = [
+const OPEN_EXPANSION = [
   {
     id: "optional-keys",
     title: "Optional research keys",
@@ -43,36 +43,6 @@ const EXPANSION = [
     note: "Source may be cloned under vendor/p1/cuckoo. The live sandbox is never started from this app.",
   },
   {
-    id: "cjis-ncic",
-    title: "CJIS / NCIC live queries",
-    status: "wont-do" as const,
-    note: "This is not a CJIS-certified interface. Live NCIC/III queries are refused (HTTP 403).",
-  },
-  {
-    id: "blacks",
-    title: "Black's Law Dictionary",
-    status: "wont-do" as const,
-    note: "Copyrighted. Public-domain glossary + FOLIO is the installed workaround.",
-  },
-  {
-    id: "cloudflare-live",
-    title: "Live Cloudflare wrangler deploy",
-    status: "wont-do" as const,
-    note: "scripts/wrangler-safe.sh refuses deploy without --dry-run.",
-  },
-  {
-    id: "unpublished-names",
-    title: "Unpublished requested package names",
-    status: "closest-installed" as const,
-    note: "Keep closest public matches. Do not invent private scoped packages that are not on the registry.",
-  },
-  {
-    id: "p1-catalog",
-    title: "P1 catalog growth",
-    status: "done" as const,
-    note: "1,280 core + 10,000 Tier-1 slots are already generated. Do not mint a second 10k of fake law-enforcement products.",
-  },
-  {
     id: "sigint-intercepts",
     title: "SIGINT / VoIP intercept / WeChat decrypt",
     status: "wont-do" as const,
@@ -80,6 +50,51 @@ const EXPANSION = [
   },
 ];
 
+/** Dispositioned rows — added into shipped policy/ledger, removed from active expansion list. */
+const DISPOSITIONED = [
+  {
+    id: "cjis-ncic",
+    title: "CJIS / NCIC live queries",
+    status: "wont-do" as const,
+    note: "This is not a CJIS-certified interface. Live NCIC/III queries are refused (HTTP 403).",
+    addedTo: "policy.cjisNcicFederal + CJIS_* / NCIC_* placeholders",
+    shipped: true,
+  },
+  {
+    id: "blacks",
+    title: "Black's Law Dictionary",
+    status: "wont-do" as const,
+    note: "Copyrighted. Public-domain glossary + FOLIO is the installed workaround.",
+    addedTo: "policy.blacksLawDictionary + data/legal/glossary.json + FOLIO",
+    shipped: true,
+  },
+  {
+    id: "cloudflare-live",
+    title: "Live Cloudflare wrangler deploy",
+    status: "wont-do" as const,
+    note: "scripts/wrangler-safe.sh refuses deploy without --dry-run.",
+    addedTo: "policy.cloudflareDeployment + scripts/wrangler-safe.sh",
+    shipped: true,
+  },
+  {
+    id: "unpublished-names",
+    title: "Unpublished requested package names",
+    status: "closest-installed" as const,
+    note: "Keep closest public matches. Do not invent private scoped packages that are not on the registry.",
+    addedTo: "policy.unpublishedPackageNames + dependencyStrategy closest installs",
+    shipped: true,
+  },
+  {
+    id: "p1-catalog",
+    title: "P1 catalog growth",
+    status: "done" as const,
+    note: "1,280 core + 10,000 Tier-1 slots are already generated. Do not mint a second 10k of fake law-enforcement products.",
+    addedTo: "policy.p1CatalogGrowth + server/p1-catalog.ts (11,280 slots)",
+    shipped: true,
+  },
+];
+
+const EXPANSION = OPEN_EXPANSION;
 export function installNotebook() {
   const install = oneShotStatus();
   const inventory = inventoryStatus();
@@ -216,6 +231,15 @@ export function installNotebook() {
       }
       return { ...item, live: item.status };
     }),
+    dispositioned: DISPOSITIONED.map((item) => ({
+      ...item,
+      live: "added-to-policy-removed-from-list",
+    })),
+    dispositionSummary: {
+      added: DISPOSITIONED.length,
+      removedFromExpansion: DISPOSITIONED.map((d) => d.id),
+      note: "Dispositioned items were added into shipped policy/ledger and cleared from the active expansion list.",
+    },
   };
 }
 

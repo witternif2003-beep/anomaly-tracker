@@ -43,6 +43,19 @@ export function policyStatus() {
       liveQueries: false,
       note: "This studio is not a CJIS-certified interface. Credentials apply as empty placeholders only. No NCIC/III queries are sent.",
     },
+    unpublishedPackageNames: {
+      status: "closest-installed",
+      note: "Keep closest public matches. Do not invent private scoped packages that are not on the registry.",
+      shipped: true,
+    },
+    p1CatalogGrowth: {
+      status: "done",
+      coreSlots: 1280,
+      tier1Slots: 10000,
+      totalSlots: 11280,
+      note: "1,280 core + 10,000 Tier-1 slots are already generated. Do not mint a second 10k of fake law-enforcement products.",
+      shipped: true,
+    },
     ghostHandDetailedMode: {
       status: "activated",
       protocol: "GHOST-HAND",
