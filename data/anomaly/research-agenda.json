@@ -1,0 +1,48 @@
+{
+  "title": "Post-doctoral research agenda (research note §8)",
+  "classified": false,
+  "governmentProgram": false,
+  "note": "Unclassified product research questions for Lyra studio / counsel rehearsal. No classified collection programs, no WeChat/VoIP intercept workstreams, and no live CJIS queries.",
+  "questions": [
+    {
+      "id": "rq-1",
+      "title": "Admissibility of AI-generated evidence",
+      "question": "Can LLM-derived anomaly scores meet the Daubert standard?",
+      "lyraBinding": "Post-doc mode + FOLIO doctrine search + expert-report fixtures; scores stay advisory typologies, not courtroom opinions.",
+      "status": "open",
+      "wontDo": null
+    },
+    {
+      "id": "rq-2",
+      "title": "Cross-border messaging under legal hold",
+      "question": "How to legally ingest WeChat and VoIP data for U.S.-based investigations?",
+      "lyraBinding": "Company-administered exports and counsel-directed legal holds only. Intercept/decrypt paths remain wont-do.",
+      "status": "constrained",
+      "wontDo": "sigint-intercepts"
+    },
+    {
+      "id": "rq-3",
+      "title": "3D visualization of threat networks",
+      "question": "What are the most effective visual encodings for P1 event prioritization?",
+      "lyraBinding": "CSS perspective scene on /tracker with fixture P1/P2/P3 height encoding; A/B encoding experiments stay local.",
+      "status": "open",
+      "wontDo": null
+    },
+    {
+      "id": "rq-4",
+      "title": "Autonomous agent chains",
+      "question": "How to design self-healing MCP pipelines that recover from data source failures?",
+      "lyraBinding": "scripts/scan-pipeline.sh fixture rehearsal + MCP audit allowlist; no live scrape failover loops.",
+      "status": "open",
+      "wontDo": null
+    },
+    {
+      "id": "rq-5",
+      "title": "Quantum-resistant evidence hashing",
+      "question": "What post-quantum algorithms should replace SHA-256 for chain-of-custody?",
+      "lyraBinding": "hash-wasm / ssri receipts today; agenda tracks NIST PQC candidates as research notes only.",
+      "status": "open",
+      "wontDo": null
+    }
+  ]
+}

@@ -7,6 +7,8 @@ import dependencyStrategyDoc from "../data/anomaly/dependency-strategy.json";
 import mcpAuditDoc from "../data/anomaly/mcp-audit.json";
 import credentialsFramework from "../data/anomaly/credentials-framework.json";
 import automationDoc from "../data/anomaly/automation.json";
+import improvementSeeds from "../data/anomaly/improvement-seeds.json";
+import researchAgendaDoc from "../data/anomaly/research-agenda.json";
 import taxonomy from "../data/legal/corporate-taxonomy.json";
 import { listP1Slots } from "./p1-catalog";
 import { inventoryStatus } from "./inventory";
@@ -119,12 +121,46 @@ export type AnomalyImprovement = {
   inventoryHint: string | null;
   lockfileHint: string | null;
   mcpHint: string | null;
+  seedId?: number;
+  requestedAsset?: string;
+  closestAsset?: string;
+  installStatus?: string;
+  wontDo?: string | null;
 };
 
 function buildImprovement(index: number): AnomalyImprovement {
+  const entityType = fixtures.entityTypes[index % fixtures.entityTypes.length];
+  const seed = improvementSeeds.seeds[index];
+  if (seed && index < improvementSeeds.seedCount) {
+    const category =
+      taxonomy.categories.find((c) => c.id === seed.categoryId) ?? taxonomy.categories[0];
+    const priority: "P1" | "P2" | "P3" =
+      seed.status === "wont-do" ? "P3" : seed.install ? "P1" : index % 2 === 0 ? "P2" : "P3";
+    const slot = index + 1;
+    return {
+      id: `imp-${String(slot).padStart(5, "0")}`,
+      index: slot,
+      priority,
+      categoryId: category.id,
+      categoryLabel: category.label,
+      entityTypeId: entityType.id,
+      entityTypeLabel: entityType.label,
+      title: `${seed.title} (${entityType.label})`,
+      recommendation: `${seed.impact}. Requested ${seed.requested} → closest ${seed.closest}. Status=${seed.status}. ${category.corporateUse}`,
+      doctrine: category.doctrine,
+      inventoryHint: seed.assetId,
+      lockfileHint: category.lockfilePackages[0] ?? null,
+      mcpHint: category.mcp[0] ?? null,
+      seedId: seed.id,
+      requestedAsset: seed.requested,
+      closestAsset: seed.closest,
+      installStatus: seed.status,
+      wontDo: "wontDo" in seed && typeof seed.wontDo === "string" ? seed.wontDo : null,
+    };
+  }
+
   const categories = taxonomy.categories;
   const category = categories[index % categories.length];
-  const entityType = fixtures.entityTypes[index % fixtures.entityTypes.length];
   const verb = IMPROVEMENT_VERBS[index % IMPROVEMENT_VERBS.length];
   const object = IMPROVEMENT_OBJECTS[Math.floor(index / IMPROVEMENT_VERBS.length) % IMPROVEMENT_OBJECTS.length];
   const priority: "P1" | "P2" | "P3" =
@@ -311,6 +347,8 @@ export function compileAnomalyTracker(opts?: {
       anomalies: anomalies.length,
       p1Events: p1Events.length,
       improvements: IMPROVEMENT_COUNT,
+      improvementSeeds: improvementSeeds.seedCount,
+      researchQuestions: researchAgendaDoc.questions.length,
       taxonomyCategories: taxonomy.categories.length,
       p1InventorySlots: p1.totalSlots,
       closestAssets: inventory.assets.length,
@@ -354,6 +392,26 @@ export function compileAnomalyTracker(opts?: {
     anomalies,
     p1Queue: p1Events,
     improvements,
+    improvementAnnex: {
+      object: "lyra.improvement-annex" as const,
+      title: improvementSeeds.title,
+      note: improvementSeeds.note,
+      seedCount: improvementSeeds.seedCount,
+      generatedTotal: IMPROVEMENT_COUNT,
+      seeds: improvementSeeds.seeds,
+      installableClosest: improvementSeeds.seeds.filter((s) => s.install && s.status === "closest").length,
+      wontDoCount: improvementSeeds.seeds.filter((s) => s.status === "wont-do").length,
+    },
+    researchAgenda: {
+      object: "lyra.research-agenda" as const,
+      title: researchAgendaDoc.title,
+      classified: false,
+      governmentProgram: false,
+      note: researchAgendaDoc.note,
+      questions: researchAgendaDoc.questions,
+      questionCount: researchAgendaDoc.questions.length,
+      constrainedCount: researchAgendaDoc.questions.filter((q) => q.status === "constrained").length,
+    },
     inventoryLedger: {
       object: "lyra.anomaly-inventory-ledger" as const,
       title: inventoryLedger.title,

@@ -38,6 +38,24 @@ interface Improvement {
   categoryLabel: string;
   entityTypeLabel: string;
   recommendation: string;
+  seedId?: number;
+  requestedAsset?: string;
+  closestAsset?: string;
+  installStatus?: string;
+  wontDo?: string | null;
+}
+
+interface ImprovementSeed {
+  id: number;
+  title: string;
+  requested: string;
+  closest: string;
+  assetId: string | null;
+  categoryId: string;
+  impact: string;
+  status: string;
+  install: boolean;
+  wontDo?: string;
 }
 
 interface TrackerBook {
@@ -53,11 +71,35 @@ interface TrackerBook {
     anomalies: number;
     p1Events: number;
     improvements: number;
+    improvementSeeds?: number;
     taxonomyCategories: number;
     p1InventorySlots: number;
     mcpServers: number;
     intercepts: boolean;
     cjisLiveQueries: boolean;
+  };
+  improvementAnnex?: {
+    title: string;
+    note: string;
+    seedCount: number;
+    generatedTotal: number;
+    installableClosest: number;
+    wontDoCount: number;
+    seeds: ImprovementSeed[];
+  };
+  researchAgenda?: {
+    title: string;
+    note: string;
+    questionCount: number;
+    constrainedCount: number;
+    questions: Array<{
+      id: string;
+      title: string;
+      question: string;
+      lyraBinding: string;
+      status: string;
+      wontDo: string | null;
+    }>;
   };
   priorityCounts: { P1: number; P2: number; P3: number };
   architecture: {
@@ -461,12 +503,115 @@ export function AnomalyTracker() {
 
             <Card>
               <CardHeader>
+                <CardTitle className="text-base">8. Post-doctoral research agenda</CardTitle>
+                <CardDescription>
+                  {book.researchAgenda
+                    ? `${book.researchAgenda.questionCount} research questions · ${book.researchAgenda.constrainedCount} constrained by wont-do`
+                    : "Unclassified product research notes"}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {book.researchAgenda ? (
+                  <>
+                    <p className="text-sm text-muted-foreground">{book.researchAgenda.note}</p>
+                    {book.researchAgenda.questions.map((q) => (
+                      <div key={q.id} className="rounded-lg border border-border/50 px-3 py-2">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Badge variant="outline" className="text-[10px]">
+                            {q.id}
+                          </Badge>
+                          <Badge
+                            className={cn(
+                              "text-[10px]",
+                              q.status === "constrained"
+                                ? "bg-muted text-muted-foreground"
+                                : "bg-secondary text-secondary-foreground",
+                            )}
+                          >
+                            {q.status}
+                          </Badge>
+                        </div>
+                        <p className="mt-1 text-sm font-medium">{q.title}</p>
+                        <p className="mt-1 text-xs text-muted-foreground">{q.question}</p>
+                        <p className="mt-1 text-xs">{q.lyraBinding}</p>
+                        {q.wontDo ? (
+                          <p className="mt-1 text-[11px] text-muted-foreground">Wont-do: {q.wontDo}</p>
+                        ) : null}
+                      </div>
+                    ))}
+                  </>
+                ) : (
+                  <p className="text-sm text-muted-foreground">Research agenda unavailable.</p>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">7. Improvement annex</CardTitle>
+                <CardDescription>
+                  {book.improvementAnnex
+                    ? `${book.improvementAnnex.seedCount} hard-coded seeds · ${book.improvementAnnex.generatedTotal.toLocaleString()} generated · ${book.improvementAnnex.installableClosest} installable closest · ${book.improvementAnnex.wontDoCount} wont-do`
+                    : "Taxonomy-mapped recommendations"}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {book.improvementAnnex ? (
+                  <>
+                    <p className="text-sm text-muted-foreground">{book.improvementAnnex.note}</p>
+                    <div className="grid gap-2 md:grid-cols-2">
+                      {book.improvementAnnex.seeds.map((seed) => (
+                        <div key={seed.id} className="rounded-lg border border-border/50 px-3 py-2">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <Badge variant="outline" className="text-[10px]">
+                              #{seed.id}
+                            </Badge>
+                            <Badge
+                              className={cn(
+                                "text-[10px]",
+                                seed.status === "wont-do"
+                                  ? "bg-muted text-muted-foreground"
+                                  : seed.install
+                                    ? "bg-primary/80 text-primary-foreground"
+                                    : "bg-secondary text-secondary-foreground",
+                              )}
+                            >
+                              {seed.status}
+                              {seed.install ? " · install" : ""}
+                            </Badge>
+                            <span className="text-xs text-muted-foreground">{seed.categoryId}</span>
+                          </div>
+                          <p className="mt-1 text-sm font-medium">{seed.title}</p>
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            Requested <span className="text-foreground">{seed.requested}</span>
+                            {" → "}
+                            {seed.closest}
+                          </p>
+                          <p className="mt-1 line-clamp-2 text-[11px] text-muted-foreground">{seed.impact}</p>
+                          {seed.wontDo ? (
+                            <p className="mt-1 text-[11px] text-muted-foreground">Wont-do: {seed.wontDo}</p>
+                          ) : null}
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                ) : (
+                  <p className="text-sm text-muted-foreground">Improvement annex unavailable.</p>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
                 <CardTitle className="text-base">
                   Improvements ({book.improvements.generated.toLocaleString()} generated)
                 </CardTitle>
                 <CardDescription>
                   Mapped to the Corporate Forensic Evidence Taxonomy · showing {book.improvements.data.length} of{" "}
                   {book.improvements.total.toLocaleString()} matched
+                  {book.summary.improvementSeeds
+                    ? ` · first ${book.summary.improvementSeeds} seeded from annex`
+                    : ""}
                 </CardDescription>
               </CardHeader>
               <CardContent className="grid gap-2 md:grid-cols-2">
@@ -477,10 +622,18 @@ export function AnomalyTracker() {
                         {imp.id}
                       </Badge>
                       <Badge className={cn("text-[10px]", priorityTone(imp.priority))}>{imp.priority}</Badge>
+                      {imp.installStatus ? (
+                        <Badge variant="outline" className="text-[10px]">
+                          {imp.installStatus}
+                        </Badge>
+                      ) : null}
                       <span className="text-xs text-muted-foreground">{imp.categoryLabel}</span>
                     </div>
                     <p className="mt-1 text-sm font-medium">{imp.title}</p>
                     <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{imp.recommendation}</p>
+                    {imp.closestAsset ? (
+                      <p className="mt-1 text-[11px] text-muted-foreground">Closest: {imp.closestAsset}</p>
+                    ) : null}
                   </div>
                 ))}
               </CardContent>

@@ -15,7 +15,7 @@ It does not call ChatGPT, Claude, or Gemini. The optimizer runs locally in this 
 - **Request types** — auto-detect, or lock Creative, Technical, Educational, or Complex.
 - **Platform formatting** — markdown sections for ChatGPT, XML-style tags for Claude, numbered comparative structure for Gemini.
 - **Corporate forensic taxonomy** — business-law evidence map (records, ESI, financials, compliance) bound to this repo's files, `package-lock.json`, `.cursor/mcp.json`, and empty credential placeholders. Intercepts/SIGINT/NCIC are won't-do. Open `/corporate`.
-- **Business anomaly 3D tracker** — unclassified fixture tracker for U.S. entity types with P1 queues, taxonomy-mapped improvements (10,080+), and a CSS 3D scene. Not mass surveillance. Open `/tracker`.
+- **Business anomaly 3D tracker** — unclassified fixture tracker for U.S. entity types with P1 queues, taxonomy-mapped improvements (65 annex seeds → 10,080 generated), §8 research agenda, and a CSS 3D scene. Closest public installs only; intercepts/SWIFT sessions/CJIS stay wont-do. Open `/tracker`.
 
 ## Run locally
 

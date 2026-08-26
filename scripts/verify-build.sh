@@ -189,7 +189,7 @@ if curl -fsS -o /dev/null --max-time 3 "${base}/"; then
   corp="$(curl -fsS --max-time 15 "${base}/api/corporate")"
   echo "${corp}" | python3 -c "import json,sys; d=json.load(sys.stdin); assert d.get('classified') is False and d.get('governmentProgram') is False; assert d['summary']['categories']>=10; assert any(w['id']=='sigint-intercepts' for w in d['wontDo']); assert all(e.get('liveAction') is False for e in d['enforcement']); print('VERIFY OK: corporate taxonomy', d['summary']['categories'], 'categories', d['summary']['bindingsPresent'], 'bindings')"
   anom="$(curl -fsS --max-time 15 "${base}/api/anomaly")"
-  echo "${anom}" | python3 -c "import json,sys; d=json.load(sys.stdin); assert d.get('classified') is False and d.get('governmentProgram') is False; assert d.get('simulated') is True and d.get('liveSurveillance') is False; assert d['summary']['improvements']>=10000; assert d['summary']['entityTypes']>=15; assert d['summary']['p1Events']>=1; assert len(d['architecture'].get('systemOverview',[]))>=7; assert len(d['architecture'].get('dataFlow',[]))==6; assert all(s.get('live') is False for s in d['architecture']['dataFlow']); assert d.get('inventoryLedger',{}).get('additionalSlots',0)>=10000; assert d['inventoryLedger']['liveInventory']['cuckooLiveSandbox'] is False; assert any(w['id']=='sigint-intercepts' for w in d['wontDo']); assert any(w['id']=='mass-us-business-surveillance' for w in d['wontDo']); print('VERIFY OK: anomaly tracker', d['summary']['entities'], 'entities', d['summary']['improvements'], 'improvements', d['inventoryLedger']['liveInventory']['assets'], 'assets')"
+  echo "${anom}" | python3 -c "import json,sys; d=json.load(sys.stdin); assert d.get('classified') is False and d.get('governmentProgram') is False; assert d.get('simulated') is True and d.get('liveSurveillance') is False; assert d['summary']['improvements']>=10000; assert d['summary'].get('improvementSeeds',0)>=65; assert d.get('improvementAnnex',{}).get('seedCount',0)>=65; assert d['improvementAnnex']['generatedTotal']>=10000; assert d['improvementAnnex']['installableClosest']>=1; assert d['improvementAnnex']['wontDoCount']>=1; assert d.get('researchAgenda',{}).get('questionCount',0)>=5; assert any(w['id']=='swift-session' for w in d['wontDo']); assert d['summary']['entityTypes']>=15; assert d['summary']['p1Events']>=1; assert len(d['architecture'].get('systemOverview',[]))>=7; assert len(d['architecture'].get('dataFlow',[]))==6; assert all(s.get('live') is False for s in d['architecture']['dataFlow']); assert d.get('inventoryLedger',{}).get('additionalSlots',0)>=10000; assert d['inventoryLedger']['liveInventory']['cuckooLiveSandbox'] is False; assert any(w['id']=='sigint-intercepts' for w in d['wontDo']); assert any(w['id']=='mass-us-business-surveillance' for w in d['wontDo']); print('VERIFY OK: anomaly tracker', d['summary']['entities'], 'entities', d['summary']['improvements'], 'improvements', d['improvementAnnex']['seedCount'], 'seeds', d['researchAgenda']['questionCount'], 'agenda', d['inventoryLedger']['liveInventory']['assets'], 'assets')"
 else
   echo "VERIFY WARN: ${base} is not up; skipped live API check"
 fi
@@ -226,6 +226,13 @@ anom = json.load(urllib.request.urlopen(base + "/v1/anomaly", timeout=12))
 assert anom["classified"] is False and anom["governmentProgram"] is False
 assert anom["simulated"] is True and anom["liveSurveillance"] is False
 assert anom["summary"]["improvements"] >= 10000
+assert anom["summary"].get("improvementSeeds", 0) >= 65
+assert anom.get("improvementAnnex", {}).get("seedCount", 0) >= 65
+assert anom["improvementAnnex"]["generatedTotal"] >= 10000
+assert anom["improvementAnnex"]["installableClosest"] >= 1
+assert anom["improvementAnnex"]["wontDoCount"] >= 1
+assert any(s.get("id") == 1 for s in anom["improvementAnnex"]["seeds"])
+assert any(s.get("status") == "wont-do" for s in anom["improvementAnnex"]["seeds"])
 assert anom["summary"]["entityTypes"] >= 15
 assert anom["summary"]["p1Events"] >= 1
 assert len(anom["architecture"].get("systemOverview", [])) >= 7
@@ -236,6 +243,9 @@ assert len(anom["inventoryLedger"]["sections"]) >= 6
 assert anom["inventoryLedger"]["liveInventory"]["cuckooLiveSandbox"] is False
 assert any(w["id"] == "mass-us-business-surveillance" for w in anom["wontDo"])
 assert any(w["id"] == "sar-cisa-autofile" for w in anom["wontDo"])
+assert any(w["id"] == "swift-session" for w in anom["wontDo"])
+assert anom.get("researchAgenda", {}).get("questionCount", 0) >= 5
+assert any(q.get("id") == "rq-2" and q.get("wontDo") == "sigint-intercepts" for q in anom["researchAgenda"]["questions"])
 assert anom.get("dependencyStrategy", {}).get("productName") == "lyra"
 assert anom["dependencyStrategy"].get("rejectedLockfileName") == "business-anomaly-tracker"
 assert len(anom["dependencyStrategy"].get("unpublishedScopes", [])) >= 6
@@ -250,6 +260,10 @@ assert anom["automation"].get("slackWebhooks") is False
 assert any(s.get("id") == "scan-pipeline" for s in anom["automation"].get("scripts", []))
 imps = json.load(urllib.request.urlopen(base + "/v1/anomaly/improvements?limit=3&categoryId=financial-records", timeout=12))
 assert imps["generated"] >= 10000 and len(imps["data"]) >= 1
+seeded = json.load(urllib.request.urlopen(base + "/v1/anomaly/improvements?limit=5&offset=0", timeout=12))
+assert seeded["data"][0].get("seedId") == 1
+assert seeded["data"][0].get("requestedAsset")
+assert any(row.get("installStatus") in ("closest", "wont-do") for row in seeded["data"])
 assert nb["summary"]["cuckooLiveSandbox"] is False
 assert nb["oneShot"]["stepCount"] >= 20
 inv = json.load(urllib.request.urlopen(base + "/v1/inventory", timeout=8))
