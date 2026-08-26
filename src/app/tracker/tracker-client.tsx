@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { Suspense, type ComponentProps } from "react";
+import { Suspense } from "react";
 import { AnomalyTracker } from "@/components/lyra/anomaly-tracker";
 import { GlassPanel } from "@/components/lyra/glass-panel";
 
@@ -14,9 +14,7 @@ const BusinessGlobe = dynamic(() => import("@/components/3d/BusinessGlobe"), {
   ),
 });
 
-type TrackerInitial = ComponentProps<typeof AnomalyTracker>["initialData"];
-
-export function TrackerClient({ initialData }: { initialData?: TrackerInitial }) {
+export function TrackerClient() {
   return (
     <div className="flex flex-1 flex-col gap-5">
       <div className="mx-auto w-full max-w-5xl px-4 pt-3 sm:px-6">
@@ -28,11 +26,11 @@ export function TrackerClient({ initialData }: { initialData?: TrackerInitial })
               </div>
             }
           >
-            <BusinessGlobe initialData={initialData} />
+            <BusinessGlobe />
           </Suspense>
         </GlassPanel>
       </div>
-      <AnomalyTracker initialData={initialData} />
+      <AnomalyTracker />
     </div>
   );
 }

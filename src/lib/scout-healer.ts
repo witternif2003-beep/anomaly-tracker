@@ -86,6 +86,17 @@ export function inspectTrackerBook(book: any, opts?: {
       healAction: "reload-static",
     });
   }
+  // Mobile Pages crash guard: payload must remain fetchable (never SSR-inlined).
+  if (typeof window !== "undefined" && !book.scoutBot?.active) {
+    findings.push({
+      id: "scout-missing-on-client",
+      severity: "P2",
+      title: "Scout marker missing after client hydrate",
+      detail: "Attach scoutBot and re-validate static bake",
+      healable: true,
+      healAction: "attach-scout-marker",
+    });
+  }
   if (events.length < EXPECTED.minEvents) {
     findings.push({
       id: "scene-events",

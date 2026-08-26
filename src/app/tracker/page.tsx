@@ -1,6 +1,3 @@
-import { readFileSync } from "node:fs";
-import path from "node:path";
-import type { ComponentProps } from "react";
 import { TrackerClient } from "./tracker-client";
 
 export const metadata = {
@@ -9,16 +6,17 @@ export const metadata = {
     "Unclassified 3D business anomaly tracker with 24/7 fixture telemetry and 500 post-doctoral improvements. Fixture data only — no intercepts or live NCIC.",
 };
 
+/**
+ * Do NOT SSR-inline public/static/anomaly.json.
+ * The bake is multi‑MB (scene + May packets + BO auto-queue stream). Embedding it in
+ * HTML crashes mobile browsers ("This page couldn't load"). Client fetches static JSON.
+ */
 export default function TrackerPage() {
-  const initialData = JSON.parse(
-    readFileSync(path.join(process.cwd(), "public/static/anomaly.json"), "utf8"),
-  ) as ComponentProps<typeof TrackerClient>["initialData"];
-
   return (
     <div className="relative flex min-h-full flex-1 flex-col">
-      <TrackerClient initialData={initialData} />
+      <TrackerClient />
       <footer className="border-t border-border/40 px-4 py-4 text-center text-xs text-muted-foreground">
-        Fixture rehearsal only. Data is baked at build time for GitHub Pages.
+        Fixture rehearsal only. Data loads from /static/anomaly.json at runtime for GitHub Pages.
       </footer>
     </div>
   );

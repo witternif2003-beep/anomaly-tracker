@@ -42,6 +42,9 @@ test -f out/corporate/index.html -o -d out/corporate
 # Asset prefix sanity on corporate page
 grep -q '/anomaly-tracker/_next' out/corporate/index.html
 
+echo "==> tracker HTML budget (mobile load guard)"
+bash scripts/pipelines/tracker-html-budget.sh
+
 echo "==> ensure GitHub repo exists"
 if ! gh repo view "${GITHUB_USERNAME}/${REPO_NAME}" >/dev/null 2>&1; then
   gh repo create "$REPO_NAME" --public --description "Lyra anomaly tracker (static GitHub Pages)"

@@ -92,8 +92,10 @@ if (bot.get("crimeCategoryCount") or 0) != 52:
 if (bot.get("crimeCaseCount") or 0) != 60:
     errors.append(f"crimeCaseCount expected 60, got {bot.get('crimeCaseCount')}")
 crime_ticks = [s for s in (bot.get("stream") or []) if s.get("status") in ("crime-search", "documented")]
-if len(crime_ticks) < 52:
-    errors.append("blackOwnedScanBot stream missing crime search/documentation ticks")
+if len(crime_ticks) < 1 and (bot.get("crimeLedgerCount") or 0) < 52:
+    errors.append("blackOwnedScanBot missing crime search coverage")
+if (bot.get("crimeLedgerCount") or bot.get("metrics", {}).get("crimeTicks") or len(crime_ticks)) < 52:
+    errors.append("blackOwnedScanBot crime ledger/ticks < 52")
 auto_ticks = [s for s in (bot.get("stream") or []) if s.get("status") == "auto-queued"]
 if len(auto_ticks) < 12:
     errors.append("blackOwnedScanBot missing auto-queued ticks")

@@ -349,40 +349,44 @@ export function AnomalyTracker({ initialData }: { initialData?: TrackerBook }) {
   async function load() {
     setBusy(true);
     setError(null);
-    try {
-      const params = new URLSearchParams();
-      if (q.trim()) params.set("q", q.trim());
-      if (priority) params.set("priority", priority);
-      params.set("improvementLimit", "36");
-      const { data } = await fetchJsonWithStaticFallback<TrackerBook & { error?: string }>(
-        `/api/anomaly?${params.toString()}`,
-        "/static/anomaly.json",
-        { preferStatic: true },
-      );
-      if (data.error) {
-        if (!initialData) {
-          setBook(null);
-          setError(data.error);
+    let lastError: string | null = null;
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      try {
+        const params = new URLSearchParams();
+        if (q.trim()) params.set("q", q.trim());
+        if (priority) params.set("priority", priority);
+        params.set("improvementLimit", "36");
+        const { data } = await fetchJsonWithStaticFallback<TrackerBook & { error?: string }>(
+          `/api/anomaly?${params.toString()}`,
+          "/static/anomaly.json",
+          { preferStatic: true },
+        );
+        if (data.error) {
+          lastError = data.error;
+          continue;
         }
+        if (!data.scene?.nodes?.length) {
+          lastError = "Tracker payload missing scene nodes — retrying static bake.";
+          continue;
+        }
+        setBook(data);
+        if (!selected && data.p1Queue?.[0]) setSelected(data.p1Queue[0].id);
+        setError(null);
+        setBusy(false);
         return;
+      } catch {
+        lastError = "Could not reach the anomaly tracker.";
       }
-      setBook(data);
-      if (!selected && data.p1Queue[0]) setSelected(data.p1Queue[0].id);
-    } catch {
-      if (!initialData) {
-        setBook(null);
-        setError("Could not reach the anomaly tracker.");
-      }
-    } finally {
-      setBusy(false);
     }
+    if (!initialData) {
+      setBook(null);
+      setError(lastError ?? "Could not reach the anomaly tracker.");
+    }
+    setBusy(false);
   }
 
   useEffect(() => {
-    if (initialData) {
-      setBusy(false);
-      return;
-    }
+    // Always hydrate from static bake on Pages — never rely on SSR-inlined multi‑MB payload.
     void load();
   }, []);
 

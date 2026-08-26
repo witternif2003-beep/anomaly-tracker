@@ -111,10 +111,17 @@ if bot.get("crimeCategoryCount") != 52 or bot.get("crimeCaseCount") != 60:
         f"scan bot expected 52/60, got {bot.get('crimeCategoryCount')}/{bot.get('crimeCaseCount')}"
     )
 crime = [s for s in (bot.get("stream") or []) if s.get("crimeCategoryId")]
-searched = {s.get("crimeCategoryId") for s in crime}
+ledger = bot.get("crimeLedger") or []
+searched = {s.get("crimeCategoryId") or s.get("categoryId") for s in (crime + ledger)}
 if len(searched) != 52:
-    errors.append(f"scan stream covers {len(searched)} categories, expected 52")
-prio_ok = all((s.get("priority") or s.get("target", {}).get("priority")) in {"P1", "P2", "P3"} for s in crime)
+    errors.append(f"scan stream/ledger covers {len(searched)} categories, expected 52")
+if (bot.get("crimeLedgerCount") or len(ledger)) < 52:
+    errors.append("crimeLedgerCount too low")
+prio_source = crime if crime else ledger
+prio_ok = all(
+    (s.get("priority") or s.get("target", {}).get("priority")) in {"P1", "P2", "P3"}
+    for s in prio_source
+)
 if not prio_ok:
     errors.append("crime scan ticks missing P1/P2/P3 priority labels")
 if bot.get("liveCrimeFeeds"):

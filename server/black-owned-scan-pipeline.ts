@@ -72,7 +72,24 @@ export type ScanTick = {
   seq: number;
   loggedAtOffsetMs: number;
   status: ScanQueueStatus;
-  target: ScanTarget;
+  targetId: string;
+  /** Slim stub only — full rows live on targets/queue (keeps Pages JSON mobile-safe). */
+  target: Pick<
+    ScanTarget,
+    | "id"
+    | "name"
+    | "city"
+    | "sector"
+    | "entityType"
+    | "kind"
+    | "priority"
+    | "scanAction"
+    | "source"
+    | "blackOwned"
+    | "ownershipVerification"
+    | "signal"
+    | "queueStatus"
+  >;
   message: string;
   priority?: ScanPriority;
   crimeCategoryId?: string;
@@ -83,6 +100,24 @@ export type ScanTick = {
   stage?: string;
   autoQueued?: boolean;
 };
+
+function slimTarget(target: ScanTarget): ScanTick["target"] {
+  return {
+    id: target.id,
+    name: target.name,
+    city: target.city,
+    sector: target.sector,
+    entityType: target.entityType,
+    kind: target.kind,
+    priority: target.priority,
+    scanAction: target.scanAction,
+    source: target.source,
+    blackOwned: target.blackOwned,
+    ownershipVerification: target.ownershipVerification,
+    signal: target.signal,
+    queueStatus: target.queueStatus,
+  };
+}
 
 function normalizeName(name: string) {
   return name
@@ -163,6 +198,7 @@ function evaluateHardening(ctx: {
   pool: ScanTarget[];
   queue: ScanTarget[];
   stream: ScanTick[];
+  crimeTicks: number;
   crimeCategoryCount: number;
   crimeCaseCount: number;
   integrityHash: string;
@@ -175,7 +211,6 @@ function evaluateHardening(ctx: {
   const prioritiesOk = all.every((t) => t.priority === "P1" || t.priority === "P2" || t.priority === "P3");
   const streamIds = ctx.stream.map((s) => s.id);
   const seqOk = ctx.stream.every((s, i) => s.seq === i + 1);
-  const crimeTicks = ctx.stream.filter((s) => s.status === "crime-search" || s.status === "documented");
   const seedSorted = sortQueue(ctx.seeds);
   const p1First =
     seedSorted.length < 2 ||
@@ -212,7 +247,7 @@ function evaluateHardening(ctx: {
     "p1-first-ordering": p1First,
     "crime-categories-52": ctx.crimeCategoryCount === 52,
     "crime-cases-60": ctx.crimeCaseCount === 60,
-    "crime-ticks-min": crimeTicks.length >= 52,
+    "crime-ticks-min": ctx.crimeTicks >= 52,
     "stream-monotonic-seq": seqOk,
     "stream-unique-ids": new Set(streamIds).size === streamIds.length,
     "auto-queue-ticks": ctx.stream.some((s) => s.status === "auto-queued"),
@@ -337,10 +372,24 @@ export function buildBlackOwnedScanBot(entities: VerifiedEntity[]) {
   const stream: ScanTick[] = [];
   let seq = 0;
 
-  const push = (row: Omit<ScanTick, "seq" | "loggedAtOffsetMs">) => {
+  const push = (row: Omit<ScanTick, "seq" | "loggedAtOffsetMs" | "targetId" | "target"> & {
+    target: ScanTarget;
+  }) => {
     seq += 1;
     stream.push({
-      ...row,
+      id: row.id,
+      status: row.status,
+      message: row.message,
+      priority: row.priority,
+      crimeCategoryId: row.crimeCategoryId,
+      crimeCategoryLabel: row.crimeCategoryLabel,
+      caseId: row.caseId,
+      caseTitle: row.caseTitle,
+      documentation: row.documentation,
+      stage: row.stage,
+      autoQueued: row.autoQueued,
+      targetId: row.target.id,
+      target: slimTarget(row.target),
       seq,
       loggedAtOffsetMs: seq * blackOwnedScanBotDoc.tickMs,
     });
@@ -429,6 +478,15 @@ export function buildBlackOwnedScanBot(entities: VerifiedEntity[]) {
   }
 
   const scanTargets = [...verified, ...seeds];
+  // Compact crime ledger: full coverage without multi‑MB duplicated target blobs.
+  const crimeLedger: Array<{
+    targetId: string;
+    categoryId: string;
+    priority: ScanPriority;
+    hit: boolean;
+    caseId: string | null;
+  }> = [];
+
   for (const target of scanTargets) {
     for (let i = 0; i < categories.length; i += 1) {
       const cat = categories[i];
@@ -436,29 +494,49 @@ export function buildBlackOwnedScanBot(entities: VerifiedEntity[]) {
       const hitCase = relatedCases.length ? relatedCases[i % relatedCases.length] : null;
       const isHit = (target.id.length * 13 + i * 7) % 11 === 0;
       const catPriority = asPriority(cat.priority);
-      push({
-        id: `bo-crime-${target.id}-${cat.id}-${seq + 1}`,
-        status: isHit ? "documented" : "crime-search",
-        target: {
-          ...target,
-          scanAction: isHit ? "document-violation-hit" : "crime-taxonomy-search",
-          source: "business-crime-taxonomy",
-          priority: catPriority,
-        },
-        crimeCategoryId: cat.id,
-        crimeCategoryLabel: cat.label,
-        caseId: hitCase?.id ?? null,
-        caseTitle: hitCase?.title ?? null,
-        documentation: isHit
-          ? `${catPriority} DOCUMENTED typology hit · ${cat.label} · ${target.name} · ref ${hitCase?.title ?? cat.id}`
-          : `${catPriority} SEARCHED ${cat.label} against ${target.name} · no company-held indicator (fixture)`,
-        message: isHit
-          ? `${catPriority} DOCUMENTED · ${target.name} · ${cat.label}${hitCase ? ` · case ref: ${hitCase.title}` : ""}${hitCase?.financialImpact && hitCase.financialImpact !== "N/A" ? ` · impact ${hitCase.financialImpact}` : ""}`
-          : `${catPriority} SEARCH · ${target.name} · ${cat.label} (${categories.length} crime categories in DB)`,
+      crimeLedger.push({
+        targetId: target.id,
+        categoryId: cat.id,
         priority: catPriority,
-        stage: isHit ? "document" : "crime-taxonomy-search",
+        hit: isHit,
+        caseId: hitCase?.id ?? null,
       });
     }
+  }
+
+  // Expand a mobile-safe preview into the live 24/7 stream (all targets still fully ledgered).
+  const previewCrime = crimeLedger.filter((row, index) => row.hit || index % 17 === 0).slice(0, 180);
+  const targetById = new Map(scanTargets.map((t) => [t.id, t]));
+  const catById = new Map(categories.map((c) => [c.id, c]));
+  const caseById = new Map(cases.map((c) => [c.id, c]));
+
+  for (const row of previewCrime) {
+    const target = targetById.get(row.targetId);
+    const cat = catById.get(row.categoryId);
+    if (!target || !cat) continue;
+    const hitCase = row.caseId ? caseById.get(row.caseId) : null;
+    push({
+      id: `bo-crime-${row.targetId}-${row.categoryId}-${seq + 1}`,
+      status: row.hit ? "documented" : "crime-search",
+      target: {
+        ...target,
+        scanAction: row.hit ? "document-violation-hit" : "crime-taxonomy-search",
+        source: "business-crime-taxonomy",
+        priority: row.priority,
+      },
+      crimeCategoryId: cat.id,
+      crimeCategoryLabel: cat.label,
+      caseId: hitCase?.id ?? null,
+      caseTitle: hitCase?.title ?? null,
+      documentation: row.hit
+        ? `${row.priority} DOCUMENTED · ${cat.label} · ${target.name}`
+        : `${row.priority} SEARCH · ${cat.label} · ${target.name}`,
+      message: row.hit
+        ? `${row.priority} DOCUMENTED · ${target.name} · ${cat.label}`
+        : `${row.priority} SEARCH · ${target.name} · ${cat.label}`,
+      priority: row.priority,
+      stage: row.hit ? "document" : "crime-taxonomy-search",
+    });
   }
 
   const normalized = stream.map((row, index) => ({
@@ -473,9 +551,9 @@ export function buildBlackOwnedScanBot(entities: VerifiedEntity[]) {
     seedQueued: seeds.length,
     discoveryPool: pool.length,
     autoQueued: normalized.filter((s) => s.autoQueued).length,
-    crimeTicks: normalized.filter((s) => s.status === "crime-search" || s.status === "documented")
-      .length,
-    documented: normalized.filter((s) => s.status === "documented").length,
+    crimeTicks: crimeLedger.length,
+    crimePreviewTicks: previewCrime.length,
+    documented: crimeLedger.filter((s) => s.hit).length,
     channels: blackOwnedScanBotDoc.discoveryChannels.length,
     stages: blackOwnedScanBotDoc.pipelineStages.length,
     streamLength: normalized.length,
@@ -500,6 +578,7 @@ export function buildBlackOwnedScanBot(entities: VerifiedEntity[]) {
     pool,
     queue,
     stream: normalized,
+    crimeTicks: crimeLedger.length,
     crimeCategoryCount: categories.length,
     crimeCaseCount: cases.length,
     integrityHash,
@@ -520,7 +599,7 @@ export function buildBlackOwnedScanBot(entities: VerifiedEntity[]) {
     liveCertQueries: false,
     liveCrimeFeeds: false,
     classified: false,
-    note: `${blackOwnedScanBotDoc.note} Auto-queue on discover enabled. Crime DB: ${categories.length} categories · ${cases.length} cases. Hardening score ${hardening.hardeningScore}/100 across ${hardening.gateCount} gates.`,
+    note: `${blackOwnedScanBotDoc.note} Auto-queue on discover enabled. Crime DB: ${categories.length} categories · ${cases.length} cases · ledger ${crimeLedger.length} searches (compact). Hardening score ${hardening.hardeningScore}/100 across ${hardening.gateCount} gates.`,
     verifiedCount: verified.length,
     candidateCount: seeds.length,
     discoveryPoolCount: pool.length,
@@ -528,6 +607,7 @@ export function buildBlackOwnedScanBot(entities: VerifiedEntity[]) {
     queueCapacity: seeds.length + pool.length,
     crimeCategoryCount: categories.length,
     crimeCaseCount: cases.length,
+    crimeLedgerCount: crimeLedger.length,
     scanActions: actions,
     sources,
     discoveryChannels: blackOwnedScanBotDoc.discoveryChannels,
@@ -541,6 +621,7 @@ export function buildBlackOwnedScanBot(entities: VerifiedEntity[]) {
     targets: [...verified, ...queue],
     discoveryPool: pool,
     queue,
+    crimeLedger,
     stream: normalized,
   };
 }
