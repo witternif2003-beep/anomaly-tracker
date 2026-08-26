@@ -99,6 +99,20 @@ if (catalog.get("caseCount") or 0) != 60:
 if catalog.get("liveFeeds"):
     errors.append("businessCrimeCatalog.liveFeeds must be false")
 
+scout = d.get("scoutBot") or {}
+if not scout.get("active"):
+    errors.append("scoutBot.active false")
+if not scout.get("selfHealing"):
+    errors.append("scoutBot.selfHealing false")
+if not scout.get("additiveOnly"):
+    errors.append("scoutBot.additiveOnly false")
+if len(scout.get("healActions") or []) < 3:
+    errors.append("scoutBot.healActions incomplete")
+if scout.get("liveSurveillance"):
+    errors.append("scoutBot must not enable live surveillance")
+if not summary.get("scoutBotActive"):
+    errors.append("summary.scoutBotActive false")
+
 if errors:
     print("PIPELINE FAIL tracker-3d-smoke")
     for e in errors:
@@ -112,5 +126,6 @@ print(
     f"mayPackets={len(packets)} mayCats={may.get('categoryCount')}",
     f"boBot={bot.get('verifiedCount')}+{bot.get('candidateCount')} stream={len(bot.get('stream') or [])}",
     f"crime={catalog.get('categoryCount')}cats/{catalog.get('caseCount')}cases",
+    f"scout={scout.get('mode')} healed-actions={len(scout.get('healActions') or [])}",
 )
 PY

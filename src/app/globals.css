@@ -1054,6 +1054,7 @@
 
 .chamber-hud-bottom {
   bottom: 0;
+  z-index: 8;
   background: linear-gradient(transparent, oklch(0.08 0.03 220 / 85%));
 }
 

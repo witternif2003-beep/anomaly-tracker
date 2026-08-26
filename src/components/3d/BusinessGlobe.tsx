@@ -19,6 +19,7 @@ import {
   ForensicMenuTrigger,
   type MayForensicPacket,
 } from "@/components/lyra/forensic-evidence-popup";
+import { SCOUT_HEAL_EVENT } from "@/components/lyra/scout-bot";
 import { withBasePath } from "@/lib/static-data";
 
 type SceneNode = {
@@ -498,6 +499,29 @@ export default function BusinessGlobe({ initialData }: { initialData?: GlobePayl
       cancelled = true;
     };
   }, [initialData]);
+
+  useEffect(() => {
+    function onScoutHeal(event: Event) {
+      const detail = (event as CustomEvent).detail as {
+        book?: GlobePayload;
+        selectedEntityId?: string | null;
+      };
+      if (!detail?.book?.scene?.nodes?.length) return;
+      setPayload(detail.book);
+      setError(null);
+      if (detail.selectedEntityId) {
+        setSelectedEntityId(detail.selectedEntityId);
+      } else {
+        const nextNodes = detail.book.scene.nodes;
+        const owned = nextNodes.find((n) => n.blackOwned)?.id;
+        setSelectedEntityId((prev) =>
+          prev && nextNodes.some((n) => n.id === prev) ? prev : (owned ?? nextNodes[0]?.id ?? null),
+        );
+      }
+    }
+    window.addEventListener(SCOUT_HEAL_EVENT, onScoutHeal);
+    return () => window.removeEventListener(SCOUT_HEAL_EVENT, onScoutHeal);
+  }, []);
 
   const nodes = useMemo(() => payload?.scene?.nodes ?? [], [payload]);
   const events = useMemo(() => payload?.scene?.events ?? [], [payload]);

@@ -1,0 +1,25 @@
+{
+  "object": "lyra.scout-bot",
+  "title": "Error scout bot",
+  "mode": "fixture-clock-24x7",
+  "tickMs": 1800,
+  "active": true,
+  "selfHealing": true,
+  "additiveOnly": true,
+  "note": "24/7 fixture scout watches tracker integrity and auto-heals payload/state faults. Never removes features — only restores from static bake or resets orphaned selection. Not live mass surveillance.",
+  "healActions": [
+    "reload-static",
+    "reset-selected-anomaly",
+    "reset-selected-entity",
+    "attach-scout-marker"
+  ],
+  "baselines": {
+    "minNodes": 15,
+    "minEvents": 51,
+    "crimeCategories": 52,
+    "crimeCases": 60,
+    "mayPackets": 15,
+    "postdoc": 500
+  },
+  "liveSurveillance": false
+}

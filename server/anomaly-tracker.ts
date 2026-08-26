@@ -5,6 +5,7 @@ import fixtures from "../data/anomaly/fixtures.json";
 import evidenceCorpus from "../data/anomaly/evidence-corpus.json";
 import mayForensicPacket from "../data/anomaly/may-forensic-packet.json";
 import blackOwnedScanBotDoc from "../data/anomaly/black-owned-scan-bot.json";
+import scoutBotDoc from "../data/anomaly/scout-bot.json";
 import businessCrimeTaxonomy from "../data/anomaly/business-crime-taxonomy.json";
 import inventoryLedger from "../data/anomaly/inventory-ledger.json";
 import dependencyStrategyDoc from "../data/anomaly/dependency-strategy.json";
@@ -930,6 +931,8 @@ export function compileAnomalyTracker(opts?: {
       mayForensicElementsPerEntity: entities[0]?.mayForensicPacket.elementCount ?? 0,
       blackOwnedScanBotActive: true,
       blackOwnedScanCandidates: blackOwnedScanBotDoc.newBusinessCandidates.length,
+      scoutBotActive: true,
+      scoutBotSelfHealing: true,
       businessCrimeCategories: businessCrimeTaxonomy.categories.length,
       businessCrimeCases: businessCrimeTaxonomy.cases.length,
       intercepts: false,
@@ -1014,6 +1017,19 @@ export function compileAnomalyTracker(opts?: {
       entities.map((e) => [e.id, e.mayForensicPacket]),
     ),
     blackOwnedScanBot: buildBlackOwnedScanBot(entities),
+    scoutBot: {
+      object: scoutBotDoc.object,
+      title: scoutBotDoc.title,
+      mode: scoutBotDoc.mode,
+      tickMs: scoutBotDoc.tickMs,
+      active: scoutBotDoc.active,
+      selfHealing: scoutBotDoc.selfHealing,
+      additiveOnly: scoutBotDoc.additiveOnly,
+      note: scoutBotDoc.note,
+      healActions: scoutBotDoc.healActions,
+      baselines: scoutBotDoc.baselines,
+      liveSurveillance: false,
+    },
     businessCrimeCatalog: buildBusinessCrimeCatalog(),
     entities,
     anomalies,
@@ -1229,6 +1245,16 @@ export function compileAnomalyTracker(opts?: {
             entities.some((e) => e.blackOwned) &&
             blackOwnedScanBotDoc.newBusinessCandidates.length >= 8,
           detail: `${entities.filter((e) => e.blackOwned).length} verified BO · ${blackOwnedScanBotDoc.newBusinessCandidates.length} new-to-scan · 24/7 fixture bot`,
+        },
+        {
+          id: "error-scout-bot",
+          ok:
+            scoutBotDoc.active === true &&
+            scoutBotDoc.selfHealing === true &&
+            scoutBotDoc.additiveOnly === true &&
+            Array.isArray(scoutBotDoc.healActions) &&
+            scoutBotDoc.healActions.length >= 3,
+          detail: `scout 24/7 active · selfHealing=${String(scoutBotDoc.selfHealing)} · additiveOnly · ${scoutBotDoc.healActions.length} heal actions`,
         },
         {
           id: "business-crime-taxonomy",

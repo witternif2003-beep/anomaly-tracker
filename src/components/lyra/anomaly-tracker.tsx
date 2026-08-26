@@ -21,6 +21,7 @@ import {
   ForensicMenuTrigger,
   type MayForensicPacket,
 } from "@/components/lyra/forensic-evidence-popup";
+import { ScoutBotPanel, type ScoutBotPayload } from "@/components/lyra/scout-bot";
 
 interface SceneNode {
   id: string;
@@ -142,6 +143,7 @@ interface TrackerBook {
   };
   mayForensicPackets?: Record<string, MayForensicPacket>;
   blackOwnedScanBot?: BlackOwnedScanBotPayload;
+  scoutBot?: ScoutBotPayload;
   businessCrimeCatalog?: BusinessCrimeCatalog;
   byFbiCategory?: Record<string, number>;
   improvementAnnex?: {
@@ -389,6 +391,13 @@ export function AnomalyTracker({ initialData }: { initialData?: TrackerBook }) {
     return () => window.clearInterval(id);
   }, []);
 
+  useEffect(() => {
+    if (!book || !selected) return;
+    if (!book.anomalies.some((a) => a.id === selected)) {
+      setSelected(book.p1Queue[0]?.id ?? book.anomalies[0]?.id ?? null);
+    }
+  }, [book, selected]);
+
   const filteredAnomalies = useMemo(() => {
     if (!book) return [];
     const needle = q.trim().toLowerCase();
@@ -519,6 +528,17 @@ export function AnomalyTracker({ initialData }: { initialData?: TrackerBook }) {
             ) : null}
 
             {book.blackOwnedScanBot ? <BlackOwnedScanBot bot={book.blackOwnedScanBot} /> : null}
+
+            <ScoutBotPanel
+              book={book}
+              selectedAnomalyId={selected}
+              onHealedBook={(next) => setBook(next as TrackerBook)}
+              onHealSelection={(next) => {
+                if (next.selectedAnomalyId !== undefined) {
+                  setSelected(next.selectedAnomalyId);
+                }
+              }}
+            />
 
             {book.businessCrimeCatalog ? (
               <BusinessCrimeCatalogPanel catalog={book.businessCrimeCatalog} />
