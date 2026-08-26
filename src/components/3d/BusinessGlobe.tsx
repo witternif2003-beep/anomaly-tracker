@@ -674,14 +674,7 @@ export default function BusinessGlobe({ initialData }: { initialData?: GlobePayl
         </div>
       </div>
 
-      <HudFrame
-        label={
-          useWebgl
-            ? "Orbital globe · drag to inspect"
-            : "Post-doc live · glass chamber · zoom scroll"
-        }
-        className="globe-stage"
-      >
+      <HudFrame className="globe-stage">
         <div className="relative z-[2] w-full">
           {useWebgl ? (
             <GlobeErrorBoundary fallback={chamber}>
