@@ -4,6 +4,12 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { legalSearch, legalSearchStatus } from "./legal-search";
 import { envPlaceholderStatus, loadEnvFiles } from "./load-env";
+import {
+  fetchFbiCdeAgencies,
+  fetchViaJina,
+  freeApiResolutionStatus,
+  searchFreeDocs,
+} from "./free-api-resolve";
 import { cjisStatus, policyStatus, refuseCjisQuery } from "./policy";
 import {
   chunkText,
@@ -196,6 +202,41 @@ app.get("/v1/legal/sources", (_req, res) => {
 
 app.get("/v1/env", (_req, res) => {
   res.json(envPlaceholderStatus());
+});
+
+app.get("/v1/env/free", (_req, res) => {
+  res.json(freeApiResolutionStatus());
+});
+
+app.get("/v1/free/firecrawl", async (req, res) => {
+  const target = String(req.query.url ?? "").trim();
+  if (!target) {
+    res.status(400).json({ ok: false, error: "url query required", tool: "jina-reader" });
+    return;
+  }
+  const result = await fetchViaJina(target);
+  res.status(result.ok ? 200 : 502).json({ object: "free.firecrawl", replaces: "FIRECRAWL_API_KEY", ...result });
+});
+
+app.get("/v1/free/context7", async (req, res) => {
+  const q = String(req.query.q ?? req.query.query ?? "").trim();
+  if (!q) {
+    res.status(400).json({ ok: false, error: "q query required", tool: "npms+jsdelivr" });
+    return;
+  }
+  const result = await searchFreeDocs(q, Number(req.query.limit ?? 5));
+  res.json({ object: "free.context7", replaces: "CONTEXT7_API_KEY", ...result });
+});
+
+app.get("/v1/free/fbi-cde", async (req, res) => {
+  const state = String(req.query.state ?? "CA").trim().toUpperCase().slice(0, 2);
+  const result = await fetchFbiCdeAgencies(state);
+  res.status(result.ok ? 200 : 502).json({
+    object: "free.fbi-cde",
+    replaces: ["CJIS_ORI", "CJIS_AGENCY_ID", "NCIC_ORI", "FBI_UCR_AGENCY_ID"],
+    liveCjis: false,
+    ...result,
+  });
 });
 
 app.get("/v1/policy", (_req, res) => {

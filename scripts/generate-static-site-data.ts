@@ -7,6 +7,9 @@ import path from "node:path";
 import { compileAnomalyTracker } from "../server/anomaly-tracker";
 import { compileCorporateTaxonomy } from "../server/corporate-taxonomy";
 import { installNotebook } from "../server/notebook";
+import { loadEnvFiles } from "../server/load-env";
+
+loadEnvFiles();
 
 const outDir = path.join(process.cwd(), "public/static");
 mkdirSync(outDir, { recursive: true });

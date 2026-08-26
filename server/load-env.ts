@@ -1,6 +1,11 @@
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import {
+  applyFreeApiDefaults,
+  freeResolutionMeta,
+  isFreeResolutionValue,
+} from "./free-api-resolve";
 
 /** Requested placeholders. Values stay empty in git; inject secrets at runtime. */
 export const ENV_PLACEHOLDERS = [
@@ -154,18 +159,28 @@ export function loadEnvFiles(root = path.join(path.dirname(fileURLToPath(import.
   applyFile(path.join(root, ".env"));
   applyFile(path.join(root, ".env.local"));
   applyAliases();
+  applyFreeApiDefaults(root);
 }
 
 export function envPlaceholderStatus() {
+  applyFreeApiDefaults();
   return {
     object: "env.placeholders" as const,
     secretsInGit: false,
-    note: "Placeholders only. Inject real values via Cloud Agent secrets or a gitignored .env.local.",
-    variables: ENV_PLACEHOLDERS.map((item) => ({
-      name: item.name,
-      configured: Boolean(process.env[item.name]?.trim()),
-      requiredFor: item.requiredFor,
-      closest: item.closest,
-    })),
+    note: "Every placeholder resolves via a free public tool when no paid secret is injected. .env.example stays empty; free: sentinels are not secrets.",
+    variables: ENV_PLACEHOLDERS.map((item) => {
+      const value = process.env[item.name]?.trim() ?? "";
+      const free = freeResolutionMeta(item.name);
+      const freeResolved = isFreeResolutionValue(value);
+      return {
+        name: item.name,
+        configured: Boolean(value),
+        freeResolved,
+        requiredFor: item.requiredFor,
+        closest: free ? `${item.closest} → free: ${free.tool}` : item.closest,
+        freeTool: free?.tool,
+        freeEndpoint: free?.endpoint,
+      };
+    }),
   };
 }

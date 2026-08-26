@@ -309,6 +309,7 @@ interface TrackerBook {
     note: string;
     placeholderCount?: number;
     configuredCount?: number;
+    freeResolvedCount?: number;
     secretsSkippedByOperator?: boolean;
     vault?: { status: string; shipped: string; note: string; exampleFile?: string };
     groups?: Array<{
@@ -320,7 +321,7 @@ interface TrackerBook {
     cjis?: { liveQueries: boolean; certifiedInterface: boolean };
     wontDo?: Array<{ id: string; title: string; reason: string }>;
     commands?: string[];
-    variables: Array<{ name: string; configured: boolean }>;
+    variables: Array<{ name: string; configured: boolean; freeResolved?: boolean; freeTool?: string }>;
   };
 }
 
@@ -1265,9 +1266,9 @@ export function AnomalyTracker({ initialData }: { initialData?: TrackerBook }) {
             <Card>
               <CardHeader>
                 <CardTitle className="text-base">5. Credentials & security</CardTitle>
-                <CardDescription>
+                    <CardDescription>
                   {book.credentials
-                    ? `${book.credentials.configuredCount ?? 0}/${book.credentials.placeholderCount ?? book.credentials.variables.length} configured · vault=${book.credentials.vault?.status ?? "wont-deploy"} · cjisLive=${String(book.credentials.cjis?.liveQueries ?? false)}`
+                    ? `${book.credentials.configuredCount ?? 0}/${book.credentials.placeholderCount ?? book.credentials.variables.length} configured (${book.credentials.freeResolvedCount ?? 0} free) · vault=${book.credentials.vault?.status ?? "wont-deploy"} · cjisLive=${String(book.credentials.cjis?.liveQueries ?? false)}`
                     : "Placeholders only"}
                 </CardDescription>
               </CardHeader>
@@ -1300,7 +1301,7 @@ export function AnomalyTracker({ initialData }: { initialData?: TrackerBook }) {
                       {book.credentials.variables.map((v) => (
                         <Badge key={v.name} variant={v.configured ? "secondary" : "outline"}>
                           {v.name}
-                          {v.configured ? "=set" : "=empty"}
+                          {v.configured ? (v.freeResolved ? "=free" : "=set") : "=empty"}
                         </Badge>
                       ))}
                     </div>

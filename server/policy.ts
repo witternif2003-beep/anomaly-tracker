@@ -3,6 +3,8 @@
  * GitHub CI/MCP are absent on purpose. CJIS/NCIC is applicable as placeholders only.
  */
 
+import { applyFreeApiDefaults, isFreeResolutionValue } from "./free-api-resolve";
+
 export function policyStatus() {
   return {
     object: "lyra.policy" as const,
@@ -39,9 +41,10 @@ export function policyStatus() {
       command: "bash scripts/wrangler-safe.sh deploy --dry-run --config workers/wrangler.toml",
     },
     cjisNcicFederal: {
-      status: "applicable-placeholders",
+      status: "free-typology-refused-live",
       liveQueries: false,
-      note: "This studio is not a CJIS-certified interface. Credentials apply as empty placeholders only. No NCIC/III queries are sent.",
+      freeTool: "FBI Crime Data Explorer DEMO_KEY",
+      note: "This studio is not a CJIS-certified interface. Free FBI CDE typology is wired; no NCIC/III queries are sent.",
     },
     unpublishedPackageNames: {
       status: "closest-installed",
@@ -110,27 +113,34 @@ export function policyStatus() {
     credentialsFramework: {
       status: "activated",
       envExample: ".env.example",
+      freeResolutions: "data/anomaly/free-api-resolutions.json",
       vaultExample: "vault.hcl.example",
       vaultDeployed: false,
       cjisLiveQueries: false,
       secretsInGit: false,
-      note: "Placeholders + policy only. HashiCorp Vault is not started. Operator may skip optional secrets.",
+      note: "Every research placeholder resolves via free public tools. HashiCorp Vault is not started. Live CJIS/NCIC stay refused.",
     },
   };
 }
 
 export function cjisStatus() {
+  applyFreeApiDefaults();
   const names = ["CJIS_ORI", "CJIS_AGENCY_ID", "NCIC_ORI", "NCIC_MNEMONIC", "FBI_UCR_AGENCY_ID"] as const;
   return {
     object: "compliance.cjis" as const,
     applicable: true,
     liveQueries: false,
     certifiedInterface: false,
-    note: "CJIS/NCIC credentials are applicable as placeholders. Live criminal-justice queries are refused from this app.",
-    variables: names.map((name) => ({
-      name,
-      configured: Boolean(process.env[name]?.trim()),
-    })),
+    freeTypology: "FBI Crime Data Explorer (DEMO_KEY) — not NCIC",
+    note: "CJIS/NCIC credentials resolve via free FBI CDE typology sentinels. Live criminal-justice queries are refused from this app.",
+    variables: names.map((name) => {
+      const value = process.env[name]?.trim() ?? "";
+      return {
+        name,
+        configured: Boolean(value),
+        freeResolved: isFreeResolutionValue(value),
+      };
+    }),
   };
 }
 

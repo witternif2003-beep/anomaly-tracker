@@ -64,4 +64,20 @@ for needle in ("OPENLAWS_API_KEY", "WESTLAW_USERNAME", "WESTLAW_PASSWORD", "LEXI
         raise SystemExit(f"ENV FAIL: legal client missing {needle}")
 
 print("PIPELINE OK env-placeholders", len(required), "empty names wired")
+
+free = Path("data/anomaly/free-api-resolutions.json")
+if not free.exists():
+    raise SystemExit("ENV FAIL: missing data/anomaly/free-api-resolutions.json")
+doc = json.loads(free.read_text())
+resolutions = doc.get("resolutions") or {}
+# Cloudflare stays operator-secret; every other placeholder must have a free resolution.
+need_free = [n for n in required if n not in ("CLOUDFLARE_API_TOKEN", "CLOUDFLARE_ACCOUNT_ID")]
+missing_free = [n for n in need_free if n not in resolutions]
+if missing_free:
+    raise SystemExit(f"ENV FAIL: free-api-resolutions missing {missing_free}")
+resolve_mod = Path("server/free-api-resolve.ts").read_text()
+for needle in ("applyFreeApiDefaults", "searchCourtListenerFree", "searchGooglePatents", "fetchViaJina", "fetchFbiCdeAgencies"):
+    if needle not in resolve_mod:
+        raise SystemExit(f"ENV FAIL: free-api-resolve missing {needle}")
+print("PIPELINE OK free-api-resolutions", len(need_free), "mapped")
 PY

@@ -60,8 +60,10 @@ interface NotebookView {
     variables: Array<{
       name: string;
       configured: boolean;
+      freeResolved?: boolean;
       requiredFor: string;
       closest: string;
+      freeTool?: string;
     }>;
   };
   p1: {
@@ -348,7 +350,7 @@ export function InventoryNotebook({ initialData }: { initialData?: NotebookView 
 
             <Section
               title="Environment placeholders"
-              description={`${book.summary.envConfigured}/${book.summary.envPlaceholders} currently set. Values are never printed.`}
+              description={`${book.summary.envConfigured}/${book.summary.envPlaceholders} currently set (free tools fill empties). Values are never printed.`}
             >
               <RowTable
                 empty="No variables match."
@@ -357,7 +359,7 @@ export function InventoryNotebook({ initialData }: { initialData?: NotebookView 
                   title: v.name,
                   meta: v.requiredFor,
                   ok: v.configured,
-                  detail: v.closest,
+                  detail: v.freeResolved && v.freeTool ? `free: ${v.freeTool}` : v.closest,
                 }))}
               />
             </Section>

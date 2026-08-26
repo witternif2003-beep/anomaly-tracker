@@ -1,0 +1,125 @@
+{
+  "title": "Free API resolutions for every credentials placeholder",
+  "classified": false,
+  "governmentProgram": false,
+  "note": "Paid/contract portals are substituted with free public tools. Live CJIS/NCIC remain refused; FBI CDE is the free typology substitute. Sentinel values use the free: prefix and are not secrets.",
+  "resolutions": {
+    "DATABASE_URI": {
+      "sentinel": "sqlite:./data/lyra-local.sqlite",
+      "tool": "Local SQLite file URI",
+      "endpoint": "file:./data/lyra-local.sqlite",
+      "replaces": "Postgres MCP Pro paid/hosted DATABASE_URI",
+      "cost": "free"
+    },
+    "FIRECRAWL_API_KEY": {
+      "sentinel": "free:jina-reader",
+      "tool": "Jina Reader",
+      "endpoint": "https://r.jina.ai/{url}",
+      "replaces": "Firecrawl MCP paid key",
+      "cost": "free"
+    },
+    "CONTEXT7_API_KEY": {
+      "sentinel": "free:npms+jsdelivr",
+      "tool": "npms.io search + jsDelivr package docs",
+      "endpoint": "https://api.npms.io/v2/search",
+      "replaces": "Context7 / Upstash paid key",
+      "cost": "free"
+    },
+    "OPENLAWS_API_KEY": {
+      "sentinel": "free:courtlistener+govinfo",
+      "tool": "CourtListener REST v4 + GovInfo",
+      "endpoint": "https://www.courtlistener.com/api/rest/v4/search/",
+      "replaces": "OpenLaws API key",
+      "cost": "free"
+    },
+    "WESTLAW_USERNAME": {
+      "sentinel": "free:courtlistener",
+      "tool": "CourtListener opinions + public-domain glossary",
+      "endpoint": "https://www.courtlistener.com/api/rest/v4/search/",
+      "replaces": "Thomson Reuters Westlaw username",
+      "cost": "free"
+    },
+    "WESTLAW_PASSWORD": {
+      "sentinel": "free:glossary+fre",
+      "tool": "Public-domain glossary + FRE excerpts",
+      "endpoint": "data/legal/glossary.json",
+      "replaces": "Thomson Reuters Westlaw password",
+      "cost": "free"
+    },
+    "LEXISNEXIS_API_KEY": {
+      "sentinel": "free:courtlistener+congress",
+      "tool": "CourtListener + Congress.gov",
+      "endpoint": "https://www.courtlistener.com/api/rest/v4/search/",
+      "replaces": "LexisNexis portal key",
+      "cost": "free"
+    },
+    "PACER_USERNAME": {
+      "sentinel": "free:courtlistener-recap",
+      "tool": "CourtListener RECAP (PACER dockets mirror)",
+      "endpoint": "https://www.courtlistener.com/api/rest/v4/search/?type=r",
+      "replaces": "PACER CM/ECF username",
+      "cost": "free"
+    },
+    "PACER_PASSWORD": {
+      "sentinel": "free:courtlistener-recap",
+      "tool": "CourtListener RECAP (no live PACER session)",
+      "endpoint": "https://www.courtlistener.com/api/rest/v4/search/?type=r",
+      "replaces": "PACER CM/ECF password",
+      "cost": "free"
+    },
+    "FINRA_API_KEY": {
+      "sentinel": "free:finra-public+edgar",
+      "tool": "FINRA public weeklySummary + SEC EDGAR EFTS",
+      "endpoint": "https://api.finra.org/data/group/otcMarket/name/weeklySummary",
+      "replaces": "FINRA TRACE registered key",
+      "cost": "free"
+    },
+    "USPTO_API_KEY": {
+      "sentinel": "free:google-patents",
+      "tool": "Google Patents public search XHR",
+      "endpoint": "https://patents.google.com/xhr/query",
+      "replaces": "USPTO developer portal key / PatentsView",
+      "cost": "free"
+    },
+    "CJIS_ORI": {
+      "sentinel": "free:refused-live+fbi-cde",
+      "tool": "FBI Crime Data Explorer typology only; live CJIS refused",
+      "endpoint": "https://api.usa.gov/crime/fbi/cde/",
+      "replaces": "CJIS-certified ORI",
+      "cost": "free",
+      "liveQueries": false
+    },
+    "CJIS_AGENCY_ID": {
+      "sentinel": "free:refused-live+fbi-cde",
+      "tool": "FBI CDE public agency roster; live CJIS refused",
+      "endpoint": "https://api.usa.gov/crime/fbi/cde/agency/byStateAbbr/{ST}?API_KEY=DEMO_KEY",
+      "replaces": "CJIS agency id",
+      "cost": "free",
+      "liveQueries": false
+    },
+    "NCIC_ORI": {
+      "sentinel": "free:refused-live+fbi-cde",
+      "tool": "FBI CDE ORI typology; live NCIC refused",
+      "endpoint": "https://api.usa.gov/crime/fbi/cde/",
+      "replaces": "NCIC ORI",
+      "cost": "free",
+      "liveQueries": false
+    },
+    "NCIC_MNEMONIC": {
+      "sentinel": "free:refused-live",
+      "tool": "Fixture mnemonic placeholder; live NCIC refused",
+      "endpoint": "POST /v1/cjis/search → 403",
+      "replaces": "NCIC mnemonic",
+      "cost": "free",
+      "liveQueries": false
+    },
+    "FBI_UCR_AGENCY_ID": {
+      "sentinel": "CA0140000",
+      "tool": "Public FBI CDE agency ORI (Inyo County Sheriff demo)",
+      "endpoint": "https://api.usa.gov/crime/fbi/cde/agency/byStateAbbr/CA?API_KEY=DEMO_KEY",
+      "replaces": "Federal UCR / NIBRS agency id placeholder",
+      "cost": "free",
+      "note": "Public CDE identifier only — not NCIC live access"
+    }
+  }
+}

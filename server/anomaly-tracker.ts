@@ -950,10 +950,13 @@ export function compileAnomalyTracker(opts?: {
       variables: env.variables.map((v) => ({
         name: v.name,
         configured: v.configured,
+        freeResolved: v.freeResolved,
         requiredFor: v.requiredFor,
         closest: v.closest,
+        freeTool: v.freeTool,
       })),
       configuredCount: env.variables.filter((v) => v.configured).length,
+      freeResolvedCount: env.variables.filter((v) => v.freeResolved).length,
       placeholderCount: env.variables.length,
       cjis: {
         liveQueries: cjis.liveQueries,

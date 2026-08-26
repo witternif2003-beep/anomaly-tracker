@@ -183,31 +183,27 @@ Named pipelines: `cloudflare-ci.sh` (Wrangler **dry-run only**), `cloudflare-p1-
 
 ## Environment variables (placeholders)
 
-No values are stored in git. Copy `.env.example` to `.env.local` or inject Cloud Agent secrets. `GET /v1/env` reports which names are configured without printing values.
+No paid secrets are required for the research placeholders. `.env.example` stays empty in git. At runtime `applyFreeApiDefaults()` fills every empty name with a free public-tool sentinel (`data/anomaly/free-api-resolutions.json`). `GET /v1/env` and `GET /v1/env/free` report configured vs free-resolved without printing secret values. Live CJIS/NCIC stay refused (`POST /v1/cjis/search` → 403); FBI CDE is the free typology tool.
 
-| Variable | Used by | Closest package / alias | Status in git |
-| --- | --- | --- | --- |
-| `CLOUDFLARE_API_TOKEN` | Cloudflare MCP, Wrangler | `@cloudflare/mcp-server-cloudflare` | empty |
-| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare MCP, Wrangler | same | empty |
-| `DATABASE_URI` | Postgres MCP Pro | `DATABASE_URL` (`mcp-postgres` / libpq) | empty |
-| `FIRECRAWL_API_KEY` | Firecrawl MCP | `FIRECRAWL_OAUTH_TOKEN` for OAuth | empty |
-| `CONTEXT7_API_KEY` | Context7 MCP | `@upstash/context7-mcp` | empty |
-| `OPENLAWS_API_KEY` | OpenLaws legal search | REST client (`pip openlaws` is unpublished) | empty |
-| `WESTLAW_USERNAME` | Westlaw | `WESTLAW_CLIENT_ID` / `WESTLAW_API_KEY` | empty |
-| `WESTLAW_PASSWORD` | Westlaw | `WESTLAW_CLIENT_SECRET` | empty |
-| `LEXISNEXIS_API_KEY` | LexisNexis | REST stub; `LEXISNEXIS_CLIENT_ID` | empty |
-| `CJIS_ORI` | CJIS applicability | Placeholder only; not a certified interface | empty |
-| `CJIS_AGENCY_ID` | CJIS applicability | `FBI_UCR_AGENCY_ID` | empty |
-| `NCIC_ORI` | NCIC applicability | Same ORI family; live queries refused | empty |
-| `NCIC_MNEMONIC` | NCIC applicability | Placeholder only | empty |
-| `FBI_UCR_AGENCY_ID` | Federal UCR / NIBRS id | Public Crime Data Explorer, not NCIC | empty |
-| `PACER_USERNAME` | PACER REST stub | `pacer-tools` failed to build; `pacer-client` is unrelated | empty |
-| `PACER_PASSWORD` | PACER REST stub | session never opened from this studio | empty |
-| `FINRA_API_KEY` | FINRA TRACE | REST `api.finra.org` | empty |
-| `USPTO_API_KEY` | USPTO patents | `developer.uspto.gov` REST | empty |
+| Variable | Free tool | Endpoint / note |
+| --- | --- | --- |
+| `CLOUDFLARE_API_TOKEN` | Operator secret (already set locally) | Cloudflare MCP / wrangler dry-run |
+| `CLOUDFLARE_ACCOUNT_ID` | Operator secret (already set locally) | same |
+| `DATABASE_URI` | Local SQLite | `sqlite:./data/lyra-local.sqlite` |
+| `FIRECRAWL_API_KEY` | Jina Reader | `GET /v1/free/firecrawl?url=` |
+| `CONTEXT7_API_KEY` | npms.io + jsDelivr | `GET /v1/free/context7?q=` |
+| `OPENLAWS_API_KEY` | CourtListener + GovInfo | free legal search path |
+| `WESTLAW_USERNAME` / `WESTLAW_PASSWORD` | CourtListener + glossary/FRE | no Westlaw contract scrape |
+| `LEXISNEXIS_API_KEY` | CourtListener + Congress.gov | free legal search path |
+| `PACER_USERNAME` / `PACER_PASSWORD` | CourtListener RECAP | no CM/ECF session |
+| `FINRA_API_KEY` | FINRA public weeklySummary + EDGAR | free market path |
+| `USPTO_API_KEY` | Google Patents XHR | free patent search |
+| `CJIS_*` / `NCIC_*` | FBI CDE typology only | `GET /v1/free/fbi-cde` — live queries refused |
+| `FBI_UCR_AGENCY_ID` | Public CDE ORI `CA0140000` | not NCIC live access |
 
 ```bash
 npm run env:check
+curl -fsS http://127.0.0.1:4040/v1/env/free
 ```
 
 ## Complete one-shot install

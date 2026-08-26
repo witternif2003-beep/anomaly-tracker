@@ -1,4 +1,5 @@
 import type { LegalHit } from "../legal/types";
+import { hasPaidCredential, searchCourtListenerFree, searchGooglePatents } from "../free-api-resolve";
 
 async function fetchText(
   url: string,
@@ -30,7 +31,14 @@ export async function searchEdgar(query: string, limit: number): Promise<{ hits:
   const { ok, status, body } = await fetchText(url.toString());
   if (!ok) return { hits: [], warning: `SEC EDGAR HTTP ${status || "unreachable"}` };
   try {
-    const parsed = JSON.parse(body) as { hits?: { hits?: Array<{ _id?: string; _source?: { entity?: string; file_type?: string; file_date?: string; display_names?: string[] } }> } };
+    const parsed = JSON.parse(body) as {
+      hits?: {
+        hits?: Array<{
+          _id?: string;
+          _source?: { entity?: string; file_type?: string; file_date?: string; display_names?: string[] };
+        }>;
+      };
+    };
     const rows = parsed.hits?.hits ?? [];
     const hits = rows.slice(0, limit).map((row, i) => ({
       source: "edgar" as const,
@@ -63,43 +71,89 @@ export async function searchOfac(query: string, limit: number): Promise<{ hits: 
 export async function searchFinra(query: string, limit: number): Promise<{ hits: LegalHit[]; warning?: string }> {
   const key = process.env.FINRA_API_KEY?.trim();
   const url = new URL("https://api.finra.org/data/group/otcMarket/name/weeklySummary");
-  url.searchParams.set("limit", String(Math.min(limit, 20)));
-  url.searchParams.set("q", query);
-  const headers: Record<string, string> = {};
-  if (key) headers.Authorization = `Bearer ${key}`;
+  url.searchParams.set("limit", String(Math.min(Math.max(limit, 5), 20)));
+  const headers: Record<string, string> = { Accept: "application/json" };
+  if (hasPaidCredential(key)) headers.Authorization = `Bearer ${key}`;
   const { ok, status, body } = await fetchText(url.toString(), 8000, headers);
   if (!ok) {
+    const edgar = await searchEdgar(query, limit);
     return {
-      hits: [],
-      warning: key ? `FINRA TRACE HTTP ${status}` : `FINRA TRACE HTTP ${status} (optional FINRA_API_KEY; public dataset may require registration)`,
+      hits: edgar.hits.map((h) => ({
+        ...h,
+        source: "finra" as const,
+        snippet: `${h.snippet} (FINRA free path via EDGAR)`,
+      })),
+      warning: edgar.hits.length
+        ? `FINRA public dataset HTTP ${status}; served SEC EDGAR free fallback`
+        : `FINRA TRACE HTTP ${status || "unreachable"} and EDGAR fallback empty`,
     };
   }
   try {
     const parsed = JSON.parse(body) as unknown;
     const rows = Array.isArray(parsed) ? parsed : [];
-    const hits = rows.slice(0, limit).map((row, i) => {
-      const rec = row as Record<string, string>;
+    const needle = query.toLowerCase();
+    const filtered = rows.filter((row) => JSON.stringify(row).toLowerCase().includes(needle));
+    const useRows = (filtered.length ? filtered : rows).slice(0, limit);
+    const hits = useRows.map((row, i) => {
+      const rec = row as Record<string, string | number | null>;
       return {
         source: "finra" as const,
         id: `finra-${i}`,
-        title: rec.issueSymbol || rec.symbolIdentifier || "FINRA row",
+        title: String(
+          rec.issueSymbolIdentifier || rec.symbolIdentifier || rec.issueSymbol || rec.tierIdentifier || "FINRA weekly summary",
+        ),
         snippet: JSON.stringify(rec).slice(0, 220),
       };
     });
-    return { hits };
+    if (hits.length) {
+      return {
+        hits,
+        warning: filtered.length
+          ? undefined
+          : "FINRA public weeklySummary (no symbol match; returned latest aggregate rows)",
+      };
+    }
   } catch {
-    return { hits: [], warning: "FINRA response was not JSON" };
+    // fall through to EDGAR
   }
+  const edgar = await searchEdgar(query, limit);
+  return {
+    hits: edgar.hits.map((h) => ({
+      ...h,
+      source: "finra" as const,
+      snippet: `${h.snippet} (FINRA free path via EDGAR)`,
+    })),
+    warning: edgar.hits.length
+      ? "FINRA JSON parse/empty; served SEC EDGAR free fallback"
+      : "FINRA and EDGAR free paths returned no rows",
+  };
 }
 
 export async function searchUspto(query: string, limit: number): Promise<{ hits: LegalHit[]; warning?: string }> {
+  const key = process.env.USPTO_API_KEY?.trim();
+  if (!hasPaidCredential(key)) {
+    return searchGooglePatents(query, limit);
+  }
   const url = new URL("https://developer.uspto.gov/ibd-api/v1/patent/application");
   url.searchParams.set("searchText", query);
   url.searchParams.set("rows", String(Math.min(limit, 20)));
   const { ok, status, body } = await fetchText(url.toString());
-  if (!ok) return { hits: [], warning: `USPTO HTTP ${status || "unreachable"}` };
+  if (!ok) {
+    const free = await searchGooglePatents(query, limit);
+    return {
+      hits: free.hits,
+      warning: free.warning ?? `USPTO portal HTTP ${status}; used Google Patents free path`,
+    };
+  }
   try {
-    const parsed = JSON.parse(body) as { results?: Array<{ inventionTitle?: string; patentNumber?: string; publicationDate?: string; abstractText?: string[] }> };
+    const parsed = JSON.parse(body) as {
+      results?: Array<{
+        inventionTitle?: string;
+        patentNumber?: string;
+        publicationDate?: string;
+        abstractText?: string[];
+      }>;
+    };
     const hits = (parsed.results ?? []).slice(0, limit).map((row, i) => ({
       source: "uspto" as const,
       id: String(row.patentNumber ?? `uspto-${i}`),
@@ -109,21 +163,23 @@ export async function searchUspto(query: string, limit: number): Promise<{ hits:
     }));
     return { hits };
   } catch {
-    return { hits: [], warning: "USPTO response was not JSON" };
+    return searchGooglePatents(query, limit);
   }
 }
 
-export async function searchPacer(query: string, _limit: number): Promise<{ hits: LegalHit[]; warning?: string }> {
+export async function searchPacer(query: string, limit: number): Promise<{ hits: LegalHit[]; warning?: string }> {
   const user = process.env.PACER_USERNAME?.trim();
   const pass = process.env.PACER_PASSWORD?.trim();
-  if (!user && !pass) {
+  if (hasPaidCredential(user) || hasPaidCredential(pass)) {
     return {
       hits: [],
-      warning: `PACER wired, awaiting PACER_USERNAME / PACER_PASSWORD (query ${JSON.stringify(query)} not sent). PyPI pacer-client is unrelated; closest is pacer-tools.`,
+      warning:
+        "PACER credentials are present but this studio does not open a live PACER session (CM/ECF login is agency-specific).",
     };
   }
+  const free = await searchCourtListenerFree(query, limit, "pacer", "r");
   return {
-    hits: [],
-    warning: "PACER credentials are present but this studio does not open a live PACER session (CM/ECF login is agency-specific).",
+    hits: free.hits,
+    warning: free.warning ?? "PACER resolved via free CourtListener RECAP (no CM/ECF session)",
   };
 }

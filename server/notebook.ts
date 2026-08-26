@@ -13,24 +13,6 @@ import { anomalyTrackerStatus, compileAnomalyTracker } from "./anomaly-tracker";
 
 const OPEN_EXPANSION = [
   {
-    id: "optional-keys",
-    title: "Optional research keys",
-    status: "optional" as const,
-    note: "CourtListener, Congress.gov, GovInfo, OpenLaws, FINRA, and USPTO work better with keys. The studio still runs without them.",
-  },
-  {
-    id: "westlaw-lexis",
-    title: "Westlaw / LexisNexis contracts",
-    status: "blocked-contract" as const,
-    note: "No public SDK. REST stubs stay until a licensed client id exists. Do not scrape subscriber databases.",
-  },
-  {
-    id: "pacer-session",
-    title: "PACER session",
-    status: "blocked-credentials" as const,
-    note: "Placeholders only. pacer-client on PyPI is not PACER. No CM/ECF session is opened here.",
-  },
-  {
     id: "docker-daemon",
     title: "Docker daemon for ES / Neo4j / OSINT images",
     status: "fallback-installed" as const,
@@ -53,11 +35,35 @@ const OPEN_EXPANSION = [
 /** Dispositioned rows — added into shipped policy/ledger, removed from active expansion list. */
 const DISPOSITIONED = [
   {
+    id: "optional-keys",
+    title: "Optional research keys",
+    status: "done" as const,
+    note: "Every empty placeholder now resolves via free public tools (CourtListener, Jina, Google Patents, FBI CDE, FINRA public, SQLite).",
+    addedTo: "data/anomaly/free-api-resolutions.json + server/free-api-resolve.ts",
+    shipped: true,
+  },
+  {
+    id: "westlaw-lexis",
+    title: "Westlaw / LexisNexis contracts",
+    status: "closest-installed" as const,
+    note: "No public SDK. Free CourtListener + glossary/FRE + Congress.gov substitutes are live. Do not scrape subscriber databases.",
+    addedTo: "server/legal/clients.ts free paths",
+    shipped: true,
+  },
+  {
+    id: "pacer-session",
+    title: "PACER session",
+    status: "closest-installed" as const,
+    note: "Resolved via free CourtListener RECAP. No CM/ECF session is opened here.",
+    addedTo: "server/inventory/public-apis.ts searchPacer free path",
+    shipped: true,
+  },
+  {
     id: "cjis-ncic",
     title: "CJIS / NCIC live queries",
     status: "wont-do" as const,
-    note: "This is not a CJIS-certified interface. Live NCIC/III queries are refused (HTTP 403).",
-    addedTo: "policy.cjisNcicFederal + CJIS_* / NCIC_* placeholders",
+    note: "This is not a CJIS-certified interface. Live NCIC/III queries are refused (HTTP 403). Free FBI CDE typology is wired.",
+    addedTo: "policy.cjisNcicFederal + /v1/free/fbi-cde",
     shipped: true,
   },
   {
