@@ -10,6 +10,11 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { fetchJsonWithStaticFallback } from "@/lib/static-data";
 import { LiveTelemetryFeed, type TelemetryPayload } from "@/components/lyra/live-telemetry-feed";
+import {
+  ForensicEvidencePopup,
+  ForensicMenuTrigger,
+  type MayForensicPacket,
+} from "@/components/lyra/forensic-evidence-popup";
 
 interface SceneNode {
   id: string;
@@ -26,6 +31,7 @@ interface Anomaly {
   priority: string;
   title: string;
   entityName: string;
+  entityId?: string;
   categoryId?: string;
   categoryLabel: string;
   action: string;
@@ -118,7 +124,17 @@ interface TrackerBook {
     elementCount: number;
     fixtureCount: number;
     constrainedCount: number;
+    mayPacket?: {
+      period: string;
+      title: string;
+      note: string;
+      categoryCount: number;
+      templateElementCount: number;
+      entitiesCovered: number;
+      everyEntityHasFullPacket: boolean;
+    };
   };
+  mayForensicPackets?: Record<string, MayForensicPacket>;
   byFbiCategory?: Record<string, number>;
   improvementAnnex?: {
     title: string;
@@ -316,6 +332,9 @@ export function AnomalyTracker({ initialData }: { initialData?: TrackerBook }) {
   const [postdocQ, setPostdocQ] = useState("");
   const [postdocAxis, setPostdocAxis] = useState("");
   const [postdocShow, setPostdocShow] = useState(50);
+  const [forensicOpen, setForensicOpen] = useState(false);
+  const [forensicPacket, setForensicPacket] = useState<MayForensicPacket | null>(null);
+  const [forensicFbi, setForensicFbi] = useState<string | null>(null);
 
   async function load() {
     setBusy(true);
@@ -515,7 +534,32 @@ export function AnomalyTracker({ initialData }: { initialData?: TrackerBook }) {
                     <span>{book.evidenceMap.fixtureCount} fixture-collectable</span>
                     <span>·</span>
                     <span>{book.evidenceMap.constrainedCount} constrained / wont-do</span>
+                    {book.evidenceMap.mayPacket ? (
+                      <>
+                        <span>·</span>
+                        <span>
+                          May packet · {book.evidenceMap.mayPacket.categoryCount} categories ×{" "}
+                          {book.evidenceMap.mayPacket.entitiesCovered} companies
+                          {book.evidenceMap.mayPacket.everyEntityHasFullPacket
+                            ? " · full coverage"
+                            : ""}
+                        </span>
+                      </>
+                    ) : null}
                   </div>
+                  {book.mayForensicPackets && book.entities[0] ? (
+                    <ForensicMenuTrigger
+                      label="Open May forensic menu (first company)"
+                      onClick={() => {
+                        const first = book.entities[0];
+                        const packet = book.mayForensicPackets?.[first.id] ?? null;
+                        if (!packet) return;
+                        setForensicPacket(packet);
+                        setForensicFbi(null);
+                        setForensicOpen(true);
+                      }}
+                    />
+                  ) : null}
                 </CardContent>
               </Card>
             ) : null}
@@ -671,6 +715,18 @@ export function AnomalyTracker({ initialData }: { initialData?: TrackerBook }) {
                         Doctrine: {selectedAnomaly.doctrine.join(" · ")}
                       </p>
                       <p className="text-xs text-muted-foreground">Source: {selectedAnomaly.source}</p>
+                      {selectedAnomaly.entityId && book.mayForensicPackets?.[selectedAnomaly.entityId] ? (
+                        <ForensicMenuTrigger
+                          label="Open May forensic menu"
+                          onClick={() => {
+                            const packet = book.mayForensicPackets?.[selectedAnomaly.entityId!] ?? null;
+                            if (!packet) return;
+                            setForensicPacket(packet);
+                            setForensicFbi(selectedAnomaly.fbiCategory ?? null);
+                            setForensicOpen(true);
+                          }}
+                        />
+                      ) : null}
                     </>
                   ) : (
                     <p className="text-muted-foreground">Select an event from the queue or telemetry feed.</p>
@@ -1315,6 +1371,12 @@ export function AnomalyTracker({ initialData }: { initialData?: TrackerBook }) {
           </>
         ) : null}
       </main>
+      <ForensicEvidencePopup
+        open={forensicOpen}
+        onOpenChange={setForensicOpen}
+        packet={forensicPacket}
+        highlightFbiCategory={forensicFbi}
+      />
     </div>
   );
 }

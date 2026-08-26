@@ -51,6 +51,25 @@ if checks and not all(c.get("ok") for c in checks):
     bad = [c["id"] for c in checks if not c.get("ok")]
     errors.append(f"pipelineHealth failed: {bad}")
 
+packets = d.get("mayForensicPackets") or {}
+if len(packets) != len(nodes):
+    errors.append(f"mayForensicPackets expected {len(nodes)} entities, got {len(packets)}")
+for nid in (n.get("id") for n in nodes):
+    pkt = packets.get(nid)
+    if not pkt:
+        errors.append(f"missing May packet for {nid}")
+        break
+    cats = pkt.get("categories") or []
+    if len(cats) < 10:
+        errors.append(f"{nid} May packet has {len(cats)} categories (need 10)")
+        break
+    if (pkt.get("elementCount") or 0) < 20:
+        errors.append(f"{nid} May packet elementCount too low")
+        break
+may = (d.get("evidenceMap") or {}).get("mayPacket") or {}
+if not may.get("everyEntityHasFullPacket"):
+    errors.append("evidenceMap.mayPacket.everyEntityHasFullPacket false")
+
 if errors:
     print("PIPELINE FAIL tracker-3d-smoke")
     for e in errors:
@@ -61,5 +80,6 @@ print(
     "PIPELINE OK tracker-3d-smoke",
     f"nodes={len(nodes)} events={len(events)} postdoc=500",
     f"telemetryTicks={telemetry.get('totalTicks')} health={len(checks)}",
+    f"mayPackets={len(packets)} mayCats={may.get('categoryCount')}",
 )
 PY

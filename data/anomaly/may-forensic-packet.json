@@ -1,0 +1,421 @@
+{
+  "title": "May LE forensic packet · business-law rehearsal",
+  "period": "May",
+  "audience": "Corporate counsel / internal investigation / LE liaison typology",
+  "classified": false,
+  "simulated": true,
+  "note": "May FBI-style evidence typology mapped into Corporate Forensic Evidence Taxonomy. Every entity receives this full packet as fixture rehearsal. Live SIGINT, WeChat/VoIP decrypt, IMEI triangulation, and live SWIFT sessions remain wont-do.",
+  "categories": [
+    {
+      "fbiCategory": "Digital Evidence",
+      "corporateCategoryId": "esi",
+      "corporateLabel": "Electronically Stored Information (ESI)",
+      "businessLawHook": "FRCP 34 / 37(e) company-controlled BMS, HMI, VPN, and OT logs under legal hold",
+      "priority": "P1",
+      "collectionStatus": "fixture",
+      "elements": [
+        {
+          "artifact": "BMS logs (mass shutdown)",
+          "title": "BMS mass-shutdown sequence in company OT export",
+          "detail": "Johnson Controls BMS fixture shows coordinated zone shutdown across chilled-water loops.",
+          "timestamp": "00:10:22 EST",
+          "doctrine": ["FRCP 34", "FRCP 37(e)", "FRE 803(6)"]
+        },
+        {
+          "artifact": "temperature alarm overrides",
+          "title": "Temperature alarm overrides on HMI",
+          "detail": "HMI operator overrides disable high-temp interlocks during the same window as BMS shutdown.",
+          "timestamp": "00:14:15 EST",
+          "doctrine": ["FRCP 34", "FRE 803(6)"]
+        },
+        {
+          "artifact": "HMI lock commands",
+          "title": "HMI lock commands outside change ticket",
+          "detail": "Lock/unlock commands lack matching change-management tickets in the company CMDB.",
+          "timestamp": "00:20:30 EST",
+          "doctrine": ["FRCP 34", "FRCP 37(e)"]
+        },
+        {
+          "artifact": "VPN access logs",
+          "title": "VPN access log spike into OT VLAN",
+          "detail": "Corporate VPN session jumps from office VLAN into BMS management VLAN.",
+          "timestamp": "00:10:22 EST",
+          "doctrine": ["FRCP 34", "FRE 803(6)"]
+        },
+        {
+          "artifact": "Johnson Controls system intrusion",
+          "title": "Johnson Controls BMS intrusion indicators",
+          "detail": "Intrusion narrative against company-held BMS admin plane; preserve under ESI hold.",
+          "timestamp": "00:14:15 EST",
+          "doctrine": ["FRCP 34", "FRCP 37(e)"]
+        },
+        {
+          "artifact": "password scramble",
+          "title": "Credential scramble on shared OT accounts",
+          "detail": "Password scramble events on shared operator accounts during the May window.",
+          "timestamp": "00:20:30 EST",
+          "doctrine": ["FRCP 34", "FRE 901"]
+        }
+      ]
+    },
+    {
+      "fbiCategory": "Mobile Device Evidence",
+      "corporateCategoryId": "mobile-device",
+      "corporateLabel": "Mobile Device Evidence",
+      "businessLawHook": "Company MDM / asset inventory fields — no carrier IMEI triangulation",
+      "priority": "P1",
+      "collectionStatus": "fixture",
+      "elements": [
+        {
+          "artifact": "IMEI 35-209900-176548-26",
+          "title": "Company MDM IMEI inventory record (fixture)",
+          "detail": "Asset inventory lists IMEI 35-209900-176548-26 on a managed handset. Fixture only — no carrier triangulation.",
+          "timestamp": "00:10:22 EST",
+          "doctrine": ["FRCP 34", "FRE 901"]
+        },
+        {
+          "artifact": "IMEI 86-319604-528391-26",
+          "title": "Secondary MDM IMEI inventory record",
+          "detail": "Second managed device IMEI in May MDM export.",
+          "timestamp": "00:14:15 EST",
+          "doctrine": ["FRCP 34"]
+        },
+        {
+          "artifact": "IMEI 35-210000-176526-26",
+          "title": "Tertiary MDM IMEI inventory record",
+          "detail": "Third managed device IMEI in May MDM export.",
+          "timestamp": "00:20:30 EST",
+          "doctrine": ["FRCP 34"]
+        },
+        {
+          "artifact": "iPad Pro 12.9",
+          "title": "Company iPad Pro 12.9 asset tag",
+          "detail": "Assigned corporate tablet under MDM enrollment.",
+          "timestamp": "00:14:15 EST",
+          "doctrine": ["FRCP 34", "FRE 803(6)"]
+        },
+        {
+          "artifact": "iPhone",
+          "title": "Company iPhone asset tag",
+          "detail": "Assigned corporate handset under MDM enrollment.",
+          "timestamp": "00:10:22 EST",
+          "doctrine": ["FRCP 34"]
+        },
+        {
+          "artifact": "MAC 00:GA100T:CC:DD:EE:F0",
+          "title": "Wi-Fi MAC from company network inventory",
+          "detail": "Fixture MAC address from corporate WLAN controller export (not live probe).",
+          "timestamp": "00:20:30 EST",
+          "doctrine": ["FRCP 34", "FRE 901"]
+        },
+        {
+          "artifact": "MAC 00:GA100C:00:11:22:70",
+          "title": "Secondary MAC from company network inventory",
+          "detail": "Second fixture MAC from corporate WLAN controller export.",
+          "timestamp": "00:20:30 EST",
+          "doctrine": ["FRCP 34"]
+        }
+      ]
+    },
+    {
+      "fbiCategory": "Removable Media Evidence",
+      "corporateCategoryId": "removable-media",
+      "corporateLabel": "Removable Media / Portable Storage",
+      "businessLawHook": "DLP + chain-of-custody on media the company seized under policy",
+      "priority": "P1",
+      "collectionStatus": "fixture",
+      "elements": [
+        {
+          "artifact": "USB SanDisk 512GB (serial SD100-26)",
+          "title": "Seized SanDisk USB under company DLP policy",
+          "detail": "512GB SanDisk serial SD100-26 logged in chain-of-custody after DLP alert.",
+          "timestamp": "00:14:15 EST",
+          "doctrine": ["FRCP 34", "FRE 901", "chain-of-custody"]
+        }
+      ]
+    },
+    {
+      "fbiCategory": "Financial Evidence",
+      "corporateCategoryId": "financial-records",
+      "corporateLabel": "Financial Records / Accounting Evidence",
+      "businessLawHook": "Company-held bank/ERP/PAC exports — no live SWIFT gateway",
+      "priority": "P1",
+      "collectionStatus": "fixture",
+      "elements": [
+        {
+          "artifact": "SWIFT MT202 flagged transfer",
+          "title": "Company-held MT202 export flagged in treasury review",
+          "detail": "ERP/treasury export includes MT202 narrative. Fixture packet — no live SWIFT session.",
+          "timestamp": "00:10:22 EST",
+          "doctrine": ["FRE 803(6)", "FRCP 34"]
+        },
+        {
+          "artifact": "wire CN-BKCH-100260042-IL",
+          "title": "Wire transfer record in company bank export",
+          "detail": "Wire reference CN-BKCH-100260042-IL in May bank CSV under counsel hold.",
+          "timestamp": "00:14:15 EST",
+          "doctrine": ["FRE 803(6)"]
+        },
+        {
+          "artifact": "US-021000021-ACCT-AA26",
+          "title": "Bank account number in company ledger",
+          "detail": "Account US-021000021-ACCT-AA26 from regularly kept accounting records.",
+          "timestamp": "00:10:22 EST",
+          "doctrine": ["FRE 803(6)"]
+        },
+        {
+          "artifact": "US-026009593-ACCT-CA26",
+          "title": "Secondary bank account in company ledger",
+          "detail": "Account US-026009593-ACCT-CA26 from regularly kept accounting records.",
+          "timestamp": "00:14:15 EST",
+          "doctrine": ["FRE 803(6)"]
+        },
+        {
+          "artifact": "US-021000021-ACCT-ALD26",
+          "title": "Tertiary bank account in company ledger",
+          "detail": "Account US-021000021-ACCT-ALD26 from regularly kept accounting records.",
+          "timestamp": "00:20:30 EST",
+          "doctrine": ["FRE 803(6)"]
+        },
+        {
+          "artifact": "PAC funding ($400k)",
+          "title": "PAC disbursement of $400k in company PAC ledger",
+          "detail": "Political committee disbursement row for $400,000 in May PAC books.",
+          "timestamp": "00:14:15 EST",
+          "doctrine": ["FRE 803(6)", "FRCP 34"]
+        },
+        {
+          "artifact": "memo: School Nutrition Security Audit",
+          "title": "Wire memo field — School Nutrition Security Audit",
+          "detail": "Memo field on flagged wire references School Nutrition Security Audit.",
+          "timestamp": "00:20:30 EST",
+          "doctrine": ["FRE 803(6)"]
+        }
+      ]
+    },
+    {
+      "fbiCategory": "Electronic Communications Evidence",
+      "corporateCategoryId": "electronic-communications",
+      "corporateLabel": "Electronic Communications",
+      "businessLawHook": "Company-administered mail/chat under hold — decrypt/intercept remains constrained",
+      "priority": "P1",
+      "collectionStatus": "constrained",
+      "wontDo": "intercept-decrypt",
+      "elements": [
+        {
+          "artifact": "WeChat message (decrypt typology)",
+          "title": "WeChat decrypt typology — company store only",
+          "detail": "LE typology label only. Do not decrypt WeChat. Closest path: company-administered chat exports under counsel hold.",
+          "timestamp": "00:10:22 EST",
+          "doctrine": ["FRCP 34", "ECPA typology"]
+        },
+        {
+          "artifact": "VoIP intercept (decrypt typology)",
+          "title": "VoIP intercept typology — constrained",
+          "detail": "Intercept/decrypt is wont-do. Record typology; use company call-detail or licensed archive if held.",
+          "timestamp": "00:14:15 EST",
+          "doctrine": ["FRCP 34"]
+        },
+        {
+          "artifact": "email Subject: IL-26",
+          "title": "Company email Subject IL-26 under legal hold",
+          "detail": "Mailbox hold hit on Subject: IL-26 from company-administered mail.",
+          "timestamp": "00:20:30 EST",
+          "doctrine": ["FRCP 34", "FRE 803(6)"]
+        },
+        {
+          "artifact": "voice intercept (decrypt typology)",
+          "title": "Voice intercept typology — constrained",
+          "detail": "Live voice intercept/decrypt is wont-do. Preserve company-held recordings only if lawfully retained.",
+          "timestamp": "00:20:30 EST",
+          "doctrine": ["FRCP 34"]
+        }
+      ]
+    },
+    {
+      "fbiCategory": "Geolocation Evidence",
+      "corporateCategoryId": "geolocation",
+      "corporateLabel": "Geolocation / Location Data",
+      "businessLawHook": "Facility coordinates and lease GPS fixtures — no live device tracking",
+      "priority": "P2",
+      "collectionStatus": "fixture",
+      "elements": [
+        {
+          "artifact": "41.8180°N, -87.6480°W",
+          "title": "Operational facility coordinate A",
+          "detail": "Lease/facility GPS fixture for May operations map.",
+          "timestamp": "00:10:22 EST",
+          "doctrine": ["FRCP 34", "FRE 901"],
+          "lat": 41.818,
+          "lon": -87.648
+        },
+        {
+          "artifact": "41.8130°N, -87.6450°W",
+          "title": "Operational facility coordinate B",
+          "detail": "Secondary facility GPS fixture.",
+          "timestamp": "00:14:15 EST",
+          "doctrine": ["FRCP 34"],
+          "lat": 41.813,
+          "lon": -87.645
+        },
+        {
+          "artifact": "41.8220°N, -87.6520°W",
+          "title": "Operational facility coordinate C",
+          "detail": "Tertiary facility GPS fixture.",
+          "timestamp": "00:20:30 EST",
+          "doctrine": ["FRCP 34"],
+          "lat": 41.822,
+          "lon": -87.652
+        },
+        {
+          "artifact": "drone loiter · McKinley Park",
+          "title": "Drone loiter coordinate — McKinley Park fixture",
+          "detail": "Company UAS flight-log fixture naming McKinley Park loiter.",
+          "timestamp": "00:14:15 EST",
+          "doctrine": ["FRCP 34", "FRE 803(6)"]
+        },
+        {
+          "artifact": "GTRI Wind Tunnel 33.8900°N, 84.5260°W",
+          "title": "GTRI Wind Tunnel coordinate fixture",
+          "detail": "Vendor/site coordinate for wind-tunnel related business record.",
+          "timestamp": "00:20:30 EST",
+          "doctrine": ["FRCP 34"],
+          "lat": 33.89,
+          "lon": -84.526
+        }
+      ]
+    },
+    {
+      "fbiCategory": "Signals Intelligence (SIGINT)",
+      "corporateCategoryId": "electronic-communications",
+      "corporateLabel": "Electronic Communications (SIGINT typology → constrained)",
+      "businessLawHook": "Narrative typology only — SIGINT collection is wont-do",
+      "priority": "P1",
+      "collectionStatus": "constrained",
+      "wontDo": "sigint-intercepts",
+      "elements": [
+        {
+          "artifact": "WSB-TV UHF 32 hidden subcarrier embedding",
+          "title": "UHF subcarrier embedding typology — constrained",
+          "detail": "SIGINT typology for product rehearsal. Do not collect RF. Closest path: company broadcast-engineering change tickets if any.",
+          "timestamp": "00:10:22 EST",
+          "doctrine": ["typology-only"]
+        },
+        {
+          "artifact": "wind tunnel fragment transmission",
+          "title": "Wind-tunnel fragment transmission typology",
+          "detail": "Constrained SIGINT narrative. Preserve company lab telemetry exports only.",
+          "timestamp": "00:14:15 EST",
+          "doctrine": ["typology-only"]
+        },
+        {
+          "artifact": "exciter FPGA clone",
+          "title": "Exciter FPGA clone typology",
+          "detail": "Hardware/firmware clone narrative maps to physical + ESI holds, not RF intercept.",
+          "timestamp": "00:20:30 EST",
+          "doctrine": ["FRCP 34"]
+        },
+        {
+          "artifact": "SDR baseband modification",
+          "title": "SDR baseband modification typology",
+          "detail": "Constrained. Company-owned SDR lab notes under hold if they exist — no live SDR collection.",
+          "timestamp": "00:20:30 EST",
+          "doctrine": ["typology-only"]
+        }
+      ]
+    },
+    {
+      "fbiCategory": "Physical Evidence",
+      "corporateCategoryId": "physical-evidence",
+      "corporateLabel": "Physical Evidence",
+      "businessLawHook": "Hardware inventory + facility chain-of-custody checklists",
+      "priority": "P1",
+      "collectionStatus": "fixture",
+      "elements": [
+        {
+          "artifact": "Modified WSB-TV exciter FPGA hardware",
+          "title": "Modified exciter FPGA in company hardware intake",
+          "detail": "Physical intake checklist for modified FPGA board under chain-of-custody.",
+          "timestamp": "00:14:15 EST",
+          "doctrine": ["FRE 901", "chain-of-custody"]
+        },
+        {
+          "artifact": "drone MAT100-26 (aircraft/UAV)",
+          "title": "Company UAV MAT100-26 asset",
+          "detail": "Aircraft/UAV MAT100-26 listed on company UAS inventory.",
+          "timestamp": "00:20:30 EST",
+          "doctrine": ["FRCP 34", "FRE 803(6)"]
+        }
+      ]
+    },
+    {
+      "fbiCategory": "Documentary Evidence",
+      "corporateCategoryId": "business-records",
+      "corporateLabel": "Business Records",
+      "businessLawHook": "FRE 803(6) regularly kept PAC / wire memo packets",
+      "priority": "P2",
+      "collectionStatus": "fixture",
+      "elements": [
+        {
+          "artifact": "SWIFT MT202 message",
+          "title": "MT202 documentary packet in company files",
+          "detail": "Paper/PDF MT202 message retained with treasury correspondence.",
+          "timestamp": "00:10:22 EST",
+          "doctrine": ["FRE 803(6)"]
+        },
+        {
+          "artifact": "wire transfer memo",
+          "title": "Wire transfer memo in regularly kept files",
+          "detail": "Wire memo document tied to School Nutrition Security Audit narrative.",
+          "timestamp": "00:14:15 EST",
+          "doctrine": ["FRE 803(6)"]
+        },
+        {
+          "artifact": "PAC disbursement records",
+          "title": "PAC disbursement records ($400k)",
+          "detail": "PAC books showing $400k disbursement for May period.",
+          "timestamp": "00:20:30 EST",
+          "doctrine": ["FRE 803(6)", "FRCP 34"]
+        }
+      ]
+    },
+    {
+      "fbiCategory": "Metadata",
+      "corporateCategoryId": "metadata-audit",
+      "corporateLabel": "Metadata / Audit Trails",
+      "businessLawHook": "Log sequence + timestamp provenance under FRE 901",
+      "priority": "P2",
+      "collectionStatus": "fixture",
+      "elements": [
+        {
+          "artifact": "timestamp 00:10:22 EST",
+          "title": "Audit timestamp 00:10:22 EST",
+          "detail": "Canonical May window start timestamp across BMS/VPN exports.",
+          "timestamp": "00:10:22 EST",
+          "doctrine": ["FRE 901"]
+        },
+        {
+          "artifact": "timestamp 00:14:15",
+          "title": "Audit timestamp 00:14:15",
+          "detail": "Mid-window timestamp across HMI and financial exports.",
+          "timestamp": "00:14:15 EST",
+          "doctrine": ["FRE 901"]
+        },
+        {
+          "artifact": "timestamp 00:20:30",
+          "title": "Audit timestamp 00:20:30",
+          "detail": "Window-close timestamp across lock and mail hold hits.",
+          "timestamp": "00:20:30 EST",
+          "doctrine": ["FRE 901"]
+        },
+        {
+          "artifact": "log sequence data",
+          "title": "Log sequence / hash-chain provenance",
+          "detail": "Sequence numbers and hash links for May OT and VPN exports.",
+          "timestamp": "00:20:30 EST",
+          "doctrine": ["FRE 901", "FRCP 37(e)"]
+        }
+      ]
+    }
+  ]
+}

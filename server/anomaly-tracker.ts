@@ -3,6 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import fixtures from "../data/anomaly/fixtures.json";
 import evidenceCorpus from "../data/anomaly/evidence-corpus.json";
+import mayForensicPacket from "../data/anomaly/may-forensic-packet.json";
 import inventoryLedger from "../data/anomaly/inventory-ledger.json";
 import dependencyStrategyDoc from "../data/anomaly/dependency-strategy.json";
 import mcpAuditDoc from "../data/anomaly/mcp-audit.json";
@@ -231,6 +232,63 @@ type City = (typeof fixtures.cities)[number];
 type FixtureEntity = (typeof fixtures.entities)[number];
 type FixtureAnomaly = (typeof fixtures.anomalies)[number];
 
+function slugPart(value: string) {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 48);
+}
+
+function buildMayForensicPacket(entity: FixtureEntity) {
+  const categories = mayForensicPacket.categories.map((cat) => {
+    const constrained = cat.collectionStatus === "constrained";
+    const wontDo =
+      "wontDo" in cat && typeof cat.wontDo === "string"
+        ? cat.wontDo
+        : constrained
+          ? "sigint-intercepts"
+          : null;
+    return {
+      fbiCategory: cat.fbiCategory,
+      corporateCategoryId: cat.corporateCategoryId,
+      corporateLabel: cat.corporateLabel,
+      businessLawHook: cat.businessLawHook,
+      priority: cat.priority,
+      collectionStatus: cat.collectionStatus,
+      wontDo,
+      elements: cat.elements.map((el, index) => {
+        const lat = "lat" in el && typeof el.lat === "number" ? el.lat : undefined;
+        const lon = "lon" in el && typeof el.lon === "number" ? el.lon : undefined;
+        return {
+          id: `may-${entity.id}-${slugPart(cat.fbiCategory)}-${index + 1}`,
+          artifact: `${el.artifact} · ${entity.name}`,
+          title: el.title,
+          detail: `${el.detail} Bound to ${entity.name} (${entity.id}) for May corporate LE rehearsal.`,
+          timestamp: el.timestamp,
+          doctrine: el.doctrine,
+          collectionStatus: cat.collectionStatus,
+          wontDo,
+          lat,
+          lon,
+        };
+      }),
+    };
+  });
+
+  const elementCount = categories.reduce((sum, c) => sum + c.elements.length, 0);
+  return {
+    period: mayForensicPacket.period,
+    entityId: entity.id,
+    entityName: entity.name,
+    title: `${mayForensicPacket.title} · ${entity.name}`,
+    note: mayForensicPacket.note,
+    categoryCount: categories.length,
+    elementCount,
+    categories,
+  };
+}
+
 function corpusToAnomaly(el: EvidenceElement, index: number): CompiledAnomalyBase {
   const constrained = el.collectionStatus === "constrained";
   const wontDo =
@@ -280,6 +338,7 @@ function mergeAnomalyCatalog(): CompiledAnomalyBase[] {
   }));
   const corpus = evidenceCorpus.elements.map((el, i) => corpusToAnomaly(el, i));
   // Preserve original fixtures first; append corpus without dropping anything.
+  // Full May forensic menus live on each entity.mayForensicPacket (popup), not as scene floods.
   const seen = new Set(base.map((a) => a.id));
   for (const row of corpus) {
     if (!seen.has(row.id)) {
@@ -536,6 +595,7 @@ function enrichEntity(entity: FixtureEntity, index: number, anomalyCatalog: Comp
       "ownershipNote" in entity && typeof entity.ownershipNote === "string"
         ? entity.ownershipNote
         : null,
+    mayForensicPacket: buildMayForensicPacket(entity),
     position: project3d(city.lat, city.lon, topPriority === "ok" ? "P3" : topPriority, index),
   };
 }
@@ -682,6 +742,9 @@ export function compileAnomalyTracker(opts?: {
       inventoryLedgerOk: ledgerOkCount,
       inventoryAssets: inventory.assets.length,
       blackOwnedEntities: entities.filter((e) => e.blackOwned).length,
+      mayForensicPackets: entities.length,
+      mayForensicCategories: mayForensicPacket.categories.length,
+      mayForensicElementsPerEntity: entities[0]?.mayForensicPacket.elementCount ?? 0,
       intercepts: false,
       cjisLiveQueries: false,
       cuckooLiveSandbox: false,
@@ -706,6 +769,9 @@ export function compileAnomalyTracker(opts?: {
         anomalyCount: e.anomalyCount,
         blackOwned: e.blackOwned,
         ownershipVerification: e.ownershipVerification,
+        hasMayForensicPacket: Boolean(e.mayForensicPacket),
+        mayForensicElementCount: e.mayForensicPacket.elementCount,
+        mayForensicCategoryCount: e.mayForensicPacket.categoryCount,
       })),
       events: anomalies.map((a) => ({
         id: a.id,
@@ -739,7 +805,27 @@ export function compileAnomalyTracker(opts?: {
       fixtureCount: evidenceCorpus.elements.filter((e) => e.collectionStatus === "fixture").length,
       constrainedCount: evidenceCorpus.elements.filter((e) => e.collectionStatus === "constrained")
         .length,
+      mayPacket: {
+        period: mayForensicPacket.period,
+        title: mayForensicPacket.title,
+        note: mayForensicPacket.note,
+        categoryCount: mayForensicPacket.categories.length,
+        templateElementCount: mayForensicPacket.categories.reduce(
+          (sum, c) => sum + c.elements.length,
+          0,
+        ),
+        entitiesCovered: entities.length,
+        everyEntityHasFullPacket: entities.every(
+          (e) =>
+            e.mayForensicPacket.categoryCount === mayForensicPacket.categories.length &&
+            e.mayForensicPacket.elementCount ===
+              mayForensicPacket.categories.reduce((sum, c) => sum + c.elements.length, 0),
+        ),
+      },
     },
+    mayForensicPackets: Object.fromEntries(
+      entities.map((e) => [e.id, e.mayForensicPacket]),
+    ),
     entities,
     anomalies,
     p1Queue: p1Events,
@@ -936,6 +1022,17 @@ export function compileAnomalyTracker(opts?: {
           id: "evidence-corpus",
           ok: evidenceCorpus.elements.length >= 30,
           detail: `${evidenceCorpus.elements.length} FBI→corporate evidence elements`,
+        },
+        {
+          id: "may-forensic-packets",
+          ok:
+            entities.length > 0 &&
+            entities.every(
+              (e) =>
+                e.mayForensicPacket.categoryCount === mayForensicPacket.categories.length &&
+                e.mayForensicPacket.elementCount > 0,
+            ),
+          detail: `${entities.length} entities × ${mayForensicPacket.categories.length} May FBI→business-law categories`,
         },
         {
           id: "no-live-surveillance",

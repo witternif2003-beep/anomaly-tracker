@@ -14,6 +14,11 @@ import { OrbitControls, Stars, Html } from "@react-three/drei";
 import type { Group, Mesh } from "three";
 import { HudFrame } from "@/components/lyra/hud-frame";
 import { OrbitalChamber } from "@/components/3d/orbital-chamber";
+import {
+  ForensicEvidencePopup,
+  ForensicMenuTrigger,
+  type MayForensicPacket,
+} from "@/components/lyra/forensic-evidence-popup";
 import { withBasePath } from "@/lib/static-data";
 
 type SceneNode = {
@@ -28,6 +33,9 @@ type SceneNode = {
   anomalyCount: number;
   blackOwned?: boolean;
   ownershipVerification?: string;
+  hasMayForensicPacket?: boolean;
+  mayForensicElementCount?: number;
+  mayForensicCategoryCount?: number;
 };
 
 type SceneEvent = {
@@ -66,9 +74,20 @@ type GlobePayload = {
     telemetryTicks?: number;
     entities?: number;
     blackOwnedEntities?: number;
+    mayForensicPackets?: number;
+    mayForensicCategories?: number;
+    mayForensicElementsPerEntity?: number;
   };
   postdocCatalog?: { total?: number };
   telemetry?: { active?: boolean; totalTicks?: number; mode?: string };
+  mayForensicPackets?: Record<string, MayForensicPacket>;
+  evidenceMap?: {
+    mayPacket?: {
+      period?: string;
+      everyEntityHasFullPacket?: boolean;
+      categoryCount?: number;
+    };
+  };
 };
 
 function priorityColor(priority: string) {
@@ -436,6 +455,9 @@ export default function BusinessGlobe({ initialData }: { initialData?: GlobePayl
   const [webglOk, setWebglOk] = useState(false);
   const [preferWebgl, setPreferWebgl] = useState(false);
   const [blackOwnedOnly, setBlackOwnedOnly] = useState(true);
+  const [forensicOpen, setForensicOpen] = useState(false);
+  const [forensicPacket, setForensicPacket] = useState<MayForensicPacket | null>(null);
+  const [forensicFbi, setForensicFbi] = useState<string | null>(null);
 
   useEffect(() => {
     try {
@@ -512,9 +534,24 @@ export default function BusinessGlobe({ initialData }: { initialData?: GlobePayl
     filteredEvents.find((e) => e.id === selectedEventId) ?? p1Events[hotEventIndex] ?? null;
 
   const postdoc = payload?.summary?.postdocImprovements ?? payload?.postdocCatalog?.total ?? 0;
-  const telemetryTicks = payload?.summary?.telemetryTicks ?? payload?.telemetry?.totalTicks ?? 0;
   const blackOwnedCount =
     payload?.summary?.blackOwnedEntities ?? nodes.filter((n) => n.blackOwned).length;
+  const mayCategories =
+    payload?.summary?.mayForensicCategories ??
+    payload?.evidenceMap?.mayPacket?.categoryCount ??
+    10;
+  const mayElements =
+    payload?.summary?.mayForensicElementsPerEntity ??
+    selectedEntity?.mayForensicElementCount ??
+    0;
+
+  function openForensicForEntity(entityId: string, fbiCategory?: string | null) {
+    const packet = payload?.mayForensicPackets?.[entityId] ?? null;
+    if (!packet) return;
+    setForensicPacket(packet);
+    setForensicFbi(fbiCategory ?? null);
+    setForensicOpen(true);
+  }
 
   if (error) {
     return (
@@ -548,11 +585,15 @@ export default function BusinessGlobe({ initialData }: { initialData?: GlobePayl
       onSelectEntity={(id) => {
         setSelectedEntityId(id);
         setSelectedEventId(null);
+        openForensicForEntity(id);
       }}
       onSelectEvent={(id) => {
         setSelectedEventId(id);
         const ev = events.find((e) => e.id === id);
-        if (ev) setSelectedEntityId(ev.entityId);
+        if (ev) {
+          setSelectedEntityId(ev.entityId);
+          openForensicForEntity(ev.entityId, ev.fbiCategory ?? null);
+        }
       }}
     />
   );
@@ -593,9 +634,16 @@ export default function BusinessGlobe({ initialData }: { initialData?: GlobePayl
             {preferWebgl ? "3D chamber" : "WebGL globe"}
           </button>
         ) : null}
+        <ForensicMenuTrigger
+          label="May forensic menu"
+          disabled={!selectedEntityId || !payload?.mayForensicPackets?.[selectedEntityId]}
+          onClick={() => {
+            if (selectedEntityId) openForensicForEntity(selectedEntityId, selectedEvent?.fbiCategory);
+          }}
+        />
       </div>
 
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-7">
         <div className="hud-stat">
           <span className="hud-stat-value">{filteredNodes.length}</span>
           <span className="hud-stat-label">Entities</span>
@@ -613,12 +661,16 @@ export default function BusinessGlobe({ initialData }: { initialData?: GlobePayl
           <span className="hud-stat-label">Black-owned</span>
         </div>
         <div className="hud-stat">
-          <span className="hud-stat-value">{postdoc || 500}</span>
-          <span className="hud-stat-label">Post-doc</span>
+          <span className="hud-stat-value">{mayCategories}</span>
+          <span className="hud-stat-label">May FBI cats</span>
         </div>
         <div className="hud-stat">
-          <span className="hud-stat-value">{telemetryTicks.toLocaleString()}</span>
-          <span className="hud-stat-label">Telemetry</span>
+          <span className="hud-stat-value">{mayElements || "—"}</span>
+          <span className="hud-stat-label">May elements</span>
+        </div>
+        <div className="hud-stat">
+          <span className="hud-stat-value">{postdoc || 500}</span>
+          <span className="hud-stat-label">Post-doc</span>
         </div>
       </div>
 
@@ -653,11 +705,15 @@ export default function BusinessGlobe({ initialData }: { initialData?: GlobePayl
                     onSelectEntity={(id) => {
                       setSelectedEntityId(id);
                       setSelectedEventId(null);
+                      openForensicForEntity(id);
                     }}
                     onSelectEvent={(id) => {
                       setSelectedEventId(id);
                       const ev = filteredEvents.find((e) => e.id === id);
-                      if (ev) setSelectedEntityId(ev.entityId);
+                      if (ev) {
+                        setSelectedEntityId(ev.entityId);
+                        openForensicForEntity(ev.entityId, ev.fbiCategory ?? null);
+                      }
                     }}
                   />
                 </Canvas>
@@ -674,7 +730,8 @@ export default function BusinessGlobe({ initialData }: { initialData?: GlobePayl
         <span className="tracking-[0.14em] text-emerald-300/90 uppercase">3D populated</span>
         <span>
           {filteredNodes.length} entities · {filteredEvents.length} distinct anomalies
-          {blackOwnedOnly ? " · Black-owned verify" : ""} · fixture ownership only
+          {blackOwnedOnly ? " · Black-owned verify" : ""} · May forensic menus on every company ·
+          fixture ownership only
         </span>
       </div>
 
@@ -696,12 +753,20 @@ export default function BusinessGlobe({ initialData }: { initialData?: GlobePayl
                 {" "}
                 · {selectedEntity.entityType} · {selectedEntity.city} · {selectedEntity.priority}
                 {selectedEntity.blackOwned ? " · Black-owned (fixture-verified)" : ""} ·{" "}
-                {selectedEntity.anomalyCount} anomalies
+                {selectedEntity.anomalyCount} anomalies ·{" "}
+                {selectedEntity.mayForensicCategoryCount ?? mayCategories} May forensic categories
               </span>
             </>
           ) : null}
         </p>
       ) : null}
+
+      <ForensicEvidencePopup
+        open={forensicOpen}
+        onOpenChange={setForensicOpen}
+        packet={forensicPacket}
+        highlightFbiCategory={forensicFbi}
+      />
     </div>
   );
 }
