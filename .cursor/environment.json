@@ -1,6 +1,6 @@
 {
   "name": "Lyra",
-  "snapshot": "snapshot-20260826-fc04093a-6bf2-4b6f-bd55-6388aa4ec9b5",
+  "snapshot": "snapshot-20260826-917b31bd-9fd0-4900-b979-8b62e342e733",
   "install": "test -f package.json\ntest -f package-lock.json\nnpm ci\nnpx next typegen",
   "start": "npm run dev"
 }
