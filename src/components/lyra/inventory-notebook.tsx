@@ -8,6 +8,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { fetchJsonWithStaticFallback } from "@/lib/static-data";
 
 interface NotebookView {
   classified: boolean;
@@ -105,11 +106,13 @@ export function InventoryNotebook() {
     setBusy(true);
     setError(null);
     try {
-      const response = await fetch("/api/notebook");
-      const data = (await response.json()) as NotebookView & { error?: string };
-      if (!response.ok) {
+      const { data } = await fetchJsonWithStaticFallback<NotebookView & { error?: string }>(
+        "/api/notebook",
+        "/static/notebook.json",
+      );
+      if (data.error) {
         setBook(null);
-        setError(data.error ?? "Notebook failed to load.");
+        setError(data.error);
         return;
       }
       setBook(data);

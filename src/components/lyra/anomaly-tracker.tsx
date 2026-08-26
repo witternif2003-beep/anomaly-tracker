@@ -8,6 +8,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { fetchJsonWithStaticFallback } from "@/lib/static-data";
 
 interface SceneNode {
   id: string;
@@ -240,11 +241,13 @@ export function AnomalyTracker() {
       if (q.trim()) params.set("q", q.trim());
       if (priority) params.set("priority", priority);
       params.set("improvementLimit", "36");
-      const response = await fetch(`/api/anomaly?${params.toString()}`);
-      const data = (await response.json()) as TrackerBook & { error?: string };
-      if (!response.ok) {
+      const { data } = await fetchJsonWithStaticFallback<TrackerBook & { error?: string }>(
+        `/api/anomaly?${params.toString()}`,
+        "/static/anomaly.json",
+      );
+      if (data.error) {
         setBook(null);
-        setError(data.error ?? "Tracker failed to load.");
+        setError(data.error);
         return;
       }
       setBook(data);
@@ -273,6 +276,18 @@ export function AnomalyTracker() {
       if (priority && a.priority !== priority) return false;
       if (!needle) return true;
       return `${a.title} ${a.entityName} ${a.categoryLabel} ${a.indicator}`
+        .toLowerCase()
+        .includes(needle);
+    });
+  }, [book, q, priority]);
+
+  const filteredImprovements = useMemo(() => {
+    if (!book) return [];
+    const needle = q.trim().toLowerCase();
+    return book.improvements.data.filter((imp) => {
+      if (priority && imp.priority !== priority) return false;
+      if (!needle) return true;
+      return `${imp.title} ${imp.recommendation} ${imp.categoryLabel} ${imp.entityTypeLabel}`
         .toLowerCase()
         .includes(needle);
     });
@@ -607,7 +622,7 @@ export function AnomalyTracker() {
                   Improvements ({book.improvements.generated.toLocaleString()} generated)
                 </CardTitle>
                 <CardDescription>
-                  Mapped to the Corporate Forensic Evidence Taxonomy · showing {book.improvements.data.length} of{" "}
+                  Mapped to the Corporate Forensic Evidence Taxonomy · showing {filteredImprovements.length} of{" "}
                   {book.improvements.total.toLocaleString()} matched
                   {book.summary.improvementSeeds
                     ? ` · first ${book.summary.improvementSeeds} seeded from annex`
@@ -615,7 +630,7 @@ export function AnomalyTracker() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="grid gap-2 md:grid-cols-2">
-                {book.improvements.data.map((imp) => (
+                {filteredImprovements.map((imp) => (
                   <div key={imp.id} className="rounded-lg border border-border/50 px-3 py-2">
                     <div className="flex flex-wrap items-center gap-2">
                       <Badge variant="outline" className="text-[10px]">

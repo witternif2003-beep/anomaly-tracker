@@ -8,6 +8,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { fetchJsonWithStaticFallback } from "@/lib/static-data";
 
 interface Binding {
   kind: string;
@@ -78,11 +79,13 @@ export function CorporateTaxonomy() {
     setBusy(true);
     setError(null);
     try {
-      const response = await fetch("/api/corporate");
-      const data = (await response.json()) as Book & { error?: string };
-      if (!response.ok) {
+      const { data } = await fetchJsonWithStaticFallback<Book & { error?: string }>(
+        "/api/corporate",
+        "/static/corporate.json",
+      );
+      if (data.error) {
         setBook(null);
-        setError(data.error ?? "Taxonomy failed to load.");
+        setError(data.error);
         return;
       }
       setBook(data);
