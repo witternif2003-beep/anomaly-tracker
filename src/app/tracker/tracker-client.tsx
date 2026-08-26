@@ -18,10 +18,12 @@ type TrackerInitial = ComponentProps<typeof AnomalyTracker>["initialData"];
 export function TrackerClient({ initialData }: { initialData?: TrackerInitial }) {
   return (
     <div className="flex flex-1 flex-col gap-4">
-      <div className="mx-auto w-full max-w-5xl px-4 pt-4 sm:px-6">
-        <Suspense fallback={null}>
-          <BusinessGlobe initialData={initialData} />
-        </Suspense>
+      <div className="mx-auto w-full max-w-5xl px-4 pt-2 sm:px-6">
+        <div className="glass-panel overflow-hidden p-2">
+          <Suspense fallback={null}>
+            <BusinessGlobe initialData={initialData} />
+          </Suspense>
+        </div>
       </div>
       <AnomalyTracker initialData={initialData} />
     </div>

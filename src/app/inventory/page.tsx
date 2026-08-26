@@ -15,11 +15,10 @@ export default function InventoryPage() {
   ) as ComponentProps<typeof InventoryNotebook>["initialData"];
 
   return (
-    <div className="starfield relative flex min-h-full flex-1 flex-col">
+    <div className="relative flex min-h-full flex-1 flex-col">
       <InventoryNotebook initialData={initialData} />
-      <footer className="border-t border-border/60 px-4 py-4 text-center text-xs text-muted-foreground">
-        Compiled at build time from install snapshots for static Pages. Not a government program
-        document.
+      <footer className="border-t border-border/40 px-4 py-4 text-center text-xs text-muted-foreground">
+        Compiled at build time from install snapshots for static Pages.
       </footer>
     </div>
   );

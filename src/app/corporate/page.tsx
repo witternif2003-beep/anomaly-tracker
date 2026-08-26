@@ -1,9 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import Link from "next/link";
 import type { ReactElement } from "react";
-import { buttonVariants } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 
 export const metadata = {
   title: "Corporate taxonomy — Lyra",
@@ -69,33 +66,25 @@ export default async function CorporatePage(): Promise<ReactElement> {
       : [];
 
   return (
-    <main className="starfield relative mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 p-6">
-      <header className="flex flex-wrap items-end justify-between gap-3">
+    <main className="relative mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 p-6">
+      <header className="glass-panel flex flex-wrap items-end justify-between gap-3 p-5">
         <div>
-          <p className="text-xs tracking-[0.14em] text-muted-foreground uppercase">Build-time compile</p>
-          <h1 className="font-heading text-3xl tracking-tight">Corporate taxonomy</h1>
+          <p className="text-[10px] tracking-[0.22em] text-primary/80 uppercase">Build-time compile</p>
+          <h1 className="font-display text-3xl tracking-tight">Corporate taxonomy</h1>
           <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
             Sources are read during <code className="text-xs">next build</code> and baked into this
             static page — no client fetch, no loading spinner.
           </p>
         </div>
-        <div className="flex gap-2">
-          <Link href="/" className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
-            Studio
-          </Link>
-          <Link href="/tracker/" className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}>
-            Tracker
-          </Link>
-        </div>
       </header>
 
       <section className="grid gap-3 md:grid-cols-2">
         {compiled.map((src) => (
-          <article key={src.name} className="rounded-lg border border-border/60 bg-background/60 p-4">
+          <article key={src.name} className="glass-panel p-4">
             <p className="font-mono text-xs text-muted-foreground">{src.name}</p>
             <p
               className={
-                src.status === "loaded" ? "mt-2 text-sm text-emerald-600" : "mt-2 text-sm text-destructive"
+                src.status === "loaded" ? "mt-2 text-sm text-emerald-400" : "mt-2 text-sm text-destructive"
               }
             >
               {src.status === "loaded"
@@ -106,11 +95,11 @@ export default async function CorporatePage(): Promise<ReactElement> {
         ))}
       </section>
 
-      <section className="space-y-3">
-        <h2 className="text-lg font-medium">Categories ({categories.length})</h2>
+      <section className="glass-panel space-y-3 p-5">
+        <h2 className="font-display text-lg">Categories ({categories.length})</h2>
         <div className="grid gap-2">
           {categories.map((cat) => (
-            <div key={cat.id} className="rounded-lg border border-border/50 px-3 py-2">
+            <div key={cat.id} className="rounded-lg border border-border/40 bg-background/20 px-3 py-2">
               <p className="text-sm font-medium">{cat.label}</p>
               {cat.corporateUse ? (
                 <p className="mt-1 text-xs text-muted-foreground">{cat.corporateUse}</p>

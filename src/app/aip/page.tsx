@@ -8,11 +8,10 @@ export const metadata = {
 
 export default function AipPage() {
   return (
-    <div className="starfield relative flex min-h-full flex-1 flex-col">
+    <div className="relative flex min-h-full flex-1 flex-col">
       <AipConsole />
-      <footer className="border-t border-border/60 px-4 py-4 text-center text-xs text-muted-foreground">
-        AIP-Σ0 is local anti-hallucination hardening. It is not a live Cloudflare deploy and it
-        does not call a hosted model.
+      <footer className="border-t border-border/40 px-4 py-4 text-center text-xs text-muted-foreground">
+        AIP-Σ0 is local anti-hallucination hardening — not a live Cloudflare deploy.
       </footer>
     </div>
   );

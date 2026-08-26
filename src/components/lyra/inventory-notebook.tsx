@@ -155,37 +155,23 @@ export function InventoryNotebook({ initialData }: { initialData?: NotebookView 
 
   return (
     <div className="relative flex flex-1 flex-col">
-      <header className="border-b border-border/70 bg-background/80 backdrop-blur-md">
-        <div className="mx-auto flex w-full max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-4 sm:px-6">
+      <header className="border-b border-border/40 bg-transparent">
+        <div className="mx-auto flex w-full max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-5 sm:px-6">
           <div>
-            <p className="font-heading text-2xl leading-none tracking-tight">Install inventory</p>
-            <p className="mt-1 text-xs tracking-[0.14em] text-muted-foreground uppercase">
+            <p className="text-[10px] tracking-[0.22em] text-primary/80 uppercase">
               Live notebook · not a classified document
             </p>
+            <p className="font-display text-3xl leading-none tracking-tight">Install inventory</p>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <Link href="/" className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
-              Studio
-            </Link>
-            <Link href="/aip" className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}>
-              AIP-Σ0
-            </Link>
-            <Link href="/corporate" className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}>
-              Corporate
-            </Link>
-            <Link href="/tracker" className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}>
-              Tracker
-            </Link>
-            <Button size="sm" variant="ghost" onClick={() => void load()} disabled={busy}>
-              Refresh
-            </Button>
-          </div>
+          <Button size="sm" variant="ghost" className="glass-rail" onClick={() => void load()} disabled={busy}>
+            Refresh
+          </Button>
         </div>
       </header>
 
       <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 px-4 py-6 lg:px-6 lg:py-8">
-        <div className="max-w-3xl">
-          <h1 className="font-heading text-3xl leading-tight text-balance sm:text-4xl">
+        <div className="glass-panel max-w-3xl p-5">
+          <h1 className="font-display text-3xl leading-tight text-balance sm:text-4xl">
             What is installed, what is closest, and what this studio will not do.
           </h1>
           <p className="mt-2 text-sm leading-6 text-muted-foreground">

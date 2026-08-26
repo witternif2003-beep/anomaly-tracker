@@ -87,38 +87,24 @@ export function AipConsole() {
 
   return (
     <div className="relative flex flex-1 flex-col">
-      <header className="border-b border-border/70 bg-background/80 backdrop-blur-md">
-        <div className="mx-auto flex w-full max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-4 sm:px-6">
+      <header className="border-b border-border/40 bg-transparent">
+        <div className="mx-auto flex w-full max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-5 sm:px-6">
           <div>
-            <p className="font-heading text-2xl leading-none tracking-tight">AIP-Σ0</p>
-            <p className="mt-1 text-xs tracking-[0.14em] text-muted-foreground uppercase">
+            <p className="text-[10px] tracking-[0.22em] text-primary/80 uppercase">
               Full-spectrum anti-hallucination · live deep dive
             </p>
+            <p className="font-display text-3xl leading-none tracking-tight">AIP-Σ0</p>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <Link
-              href="/"
-              className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
-            >
-              Back to studio
-            </Link>
-            <Link
-              href="/inventory"
-              className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}
-            >
-              Inventory
-            </Link>
-            <Button size="sm" variant="ghost" onClick={() => void loadDive()} disabled={diveBusy}>
-              Re-run dive
-            </Button>
-          </div>
+          <Button size="sm" variant="ghost" className="glass-rail" onClick={() => void loadDive()} disabled={diveBusy}>
+            Re-run dive
+          </Button>
         </div>
       </header>
 
       <main className="mx-auto grid w-full max-w-7xl flex-1 gap-6 px-4 py-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)] lg:gap-8 lg:px-6 lg:py-8">
         <section className="flex flex-col gap-4">
-          <div>
-            <h1 className="font-heading text-3xl leading-tight text-balance sm:text-4xl">
+          <div className="glass-panel p-5">
+            <h1 className="font-display text-3xl leading-tight text-balance sm:text-4xl">
               Real scanner. Live fixtures. No simulated pass.
             </h1>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">

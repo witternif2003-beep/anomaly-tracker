@@ -309,25 +309,19 @@ export function AnomalyTracker({ initialData }: { initialData?: TrackerBook }) {
 
   return (
     <div className="relative flex flex-1 flex-col">
-      <header className="border-b border-border/70 bg-background/80 backdrop-blur-md">
-        <div className="mx-auto flex w-full max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-4 sm:px-6">
+      <header className="border-b border-border/40 bg-transparent">
+        <div className="mx-auto flex w-full max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-5 sm:px-6">
           <div>
-            <p className="font-heading text-2xl leading-none tracking-tight">Anomaly tracker</p>
-            <p className="mt-1 text-xs tracking-[0.14em] text-muted-foreground uppercase">
+            <p className="text-[10px] tracking-[0.22em] text-primary/80 uppercase">
               3D fixture map · taxonomy-bound · unclassified
+            </p>
+            <p className="font-display text-3xl leading-none tracking-tight">Anomaly tracker</p>
+            <p className="mt-2 max-w-2xl text-xs text-muted-foreground">
+              Glass console over hard-coded fixtures. Not live device tracking, intercepts, or NCIC.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <Link href="/" className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
-              Studio
-            </Link>
-            <Link href="/corporate" className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}>
-              Corporate
-            </Link>
-            <Link href="/inventory" className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}>
-              Inventory
-            </Link>
-            <Button type="button" size="sm" variant="ghost" onClick={() => void load()} disabled={busy}>
+            <Button type="button" size="sm" variant="ghost" className="glass-rail" onClick={() => void load()} disabled={busy}>
               Reload
             </Button>
           </div>

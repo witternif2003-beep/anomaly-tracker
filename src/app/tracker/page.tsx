@@ -15,11 +15,10 @@ export default function TrackerPage() {
   ) as ComponentProps<typeof TrackerClient>["initialData"];
 
   return (
-    <div className="starfield relative flex min-h-full flex-1 flex-col">
+    <div className="relative flex min-h-full flex-1 flex-col">
       <TrackerClient initialData={initialData} />
-      <footer className="border-t border-border/60 px-4 py-4 text-center text-xs text-muted-foreground">
-        Fixture rehearsal only. Intercepts, SIGINT, and mass surveillance of U.S. businesses are out of
-        scope. Data is baked at build time for GitHub Pages.
+      <footer className="border-t border-border/40 px-4 py-4 text-center text-xs text-muted-foreground">
+        Fixture rehearsal only. Data is baked at build time for GitHub Pages.
       </footer>
     </div>
   );
