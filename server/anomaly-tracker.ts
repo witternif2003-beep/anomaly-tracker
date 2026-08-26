@@ -527,6 +527,15 @@ function enrichEntity(entity: FixtureEntity, index: number, anomalyCatalog: Comp
     city,
     anomalyCount: related.length,
     topPriority,
+    blackOwned: Boolean("blackOwned" in entity && entity.blackOwned),
+    ownershipVerification:
+      "ownershipVerification" in entity && typeof entity.ownershipVerification === "string"
+        ? entity.ownershipVerification
+        : "not-asserted",
+    ownershipNote:
+      "ownershipNote" in entity && typeof entity.ownershipNote === "string"
+        ? entity.ownershipNote
+        : null,
     position: project3d(city.lat, city.lon, topPriority === "ok" ? "P3" : topPriority, index),
   };
 }
@@ -672,6 +681,7 @@ export function compileAnomalyTracker(opts?: {
       inventoryLedgerItems: ledgerItemCount,
       inventoryLedgerOk: ledgerOkCount,
       inventoryAssets: inventory.assets.length,
+      blackOwnedEntities: entities.filter((e) => e.blackOwned).length,
       intercepts: false,
       cjisLiveQueries: false,
       cuckooLiveSandbox: false,
@@ -680,7 +690,7 @@ export function compileAnomalyTracker(opts?: {
     byCategory,
     byFbiCategory,
     scene: {
-      kind: "css-perspective-3d",
+      kind: "css-3d-anomaly-chamber",
       realtime: "fixture-clock-24x7",
       telemetryActive: true,
       tickMs: TELEMETRY_TICK_MS,
@@ -694,6 +704,8 @@ export function compileAnomalyTracker(opts?: {
         lat: e.city.lat,
         lon: e.city.lon,
         anomalyCount: e.anomalyCount,
+        blackOwned: e.blackOwned,
+        ownershipVerification: e.ownershipVerification,
       })),
       events: anomalies.map((a) => ({
         id: a.id,

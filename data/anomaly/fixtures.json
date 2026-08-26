@@ -1,38 +1,133 @@
 {
-  "title": "Advanced Business Anomaly 3D Realtime Tracker — 24/7 fixture-clock",
-  "product": "Lyra local studio — unclassified corporate LE compliance demo",
+  "title": "Advanced Business Anomaly 3D Realtime Tracker \u2014 24/7 fixture-clock",
+  "product": "Lyra local studio \u2014 unclassified corporate LE compliance demo",
   "classified": false,
   "governmentProgram": false,
   "simulated": true,
-  "note": "Hard-coded fixture entities, anomalies, and FBI→corporate evidence narrative for internal-investigation rehearsal. Fixture-clock telemetry runs 24/7 across every business entity. Not a law-enforcement field collection system. No intercepts, SIGINT, live NCIC, or mass surveillance of U.S. businesses.",
+  "note": "Hard-coded fixture entities, anomalies, and FBI\u2192corporate evidence narrative for internal-investigation rehearsal. Fixture-clock telemetry runs 24/7 across every business entity. Not a law-enforcement field collection system. No intercepts, SIGINT, live NCIC, or mass surveillance of U.S. businesses. Ownership flags are hard-coded fixture attestations for supplier-verify rehearsal \u2014 not live CERT.gov / SBA queries.",
   "entityTypes": [
-    { "id": "sole-proprietorship", "label": "Sole proprietorship" },
-    { "id": "partnership", "label": "Partnership" },
-    { "id": "llc", "label": "LLC" },
-    { "id": "c-corp", "label": "C corporation" },
-    { "id": "s-corp", "label": "S corporation" },
-    { "id": "benefit-corp", "label": "Benefit corporation" },
-    { "id": "close-corp", "label": "Close corporation" },
-    { "id": "cooperative", "label": "Cooperative" },
-    { "id": "nonprofit", "label": "Nonprofit" },
-    { "id": "private-company", "label": "Private company" },
-    { "id": "public-company", "label": "Public company" },
-    { "id": "holding-company", "label": "Holding company" },
-    { "id": "joint-venture", "label": "Joint venture" },
-    { "id": "enterprise", "label": "Enterprise" },
-    { "id": "conglomerate", "label": "Conglomerate" }
+    {
+      "id": "sole-proprietorship",
+      "label": "Sole proprietorship"
+    },
+    {
+      "id": "partnership",
+      "label": "Partnership"
+    },
+    {
+      "id": "llc",
+      "label": "LLC"
+    },
+    {
+      "id": "c-corp",
+      "label": "C corporation"
+    },
+    {
+      "id": "s-corp",
+      "label": "S corporation"
+    },
+    {
+      "id": "benefit-corp",
+      "label": "Benefit corporation"
+    },
+    {
+      "id": "close-corp",
+      "label": "Close corporation"
+    },
+    {
+      "id": "cooperative",
+      "label": "Cooperative"
+    },
+    {
+      "id": "nonprofit",
+      "label": "Nonprofit"
+    },
+    {
+      "id": "private-company",
+      "label": "Private company"
+    },
+    {
+      "id": "public-company",
+      "label": "Public company"
+    },
+    {
+      "id": "holding-company",
+      "label": "Holding company"
+    },
+    {
+      "id": "joint-venture",
+      "label": "Joint venture"
+    },
+    {
+      "id": "enterprise",
+      "label": "Enterprise"
+    },
+    {
+      "id": "conglomerate",
+      "label": "Conglomerate"
+    }
   ],
   "cities": [
-    { "id": "nyc", "label": "New York, NY", "lat": 40.7128, "lon": -74.006 },
-    { "id": "dc", "label": "Washington, DC", "lat": 38.9072, "lon": -77.0369 },
-    { "id": "chi", "label": "Chicago, IL", "lat": 41.8781, "lon": -87.6298 },
-    { "id": "sf", "label": "San Francisco, CA", "lat": 37.7749, "lon": -122.4194 },
-    { "id": "dal", "label": "Dallas, TX", "lat": 32.7767, "lon": -96.797 },
-    { "id": "atl", "label": "Atlanta, GA", "lat": 33.749, "lon": -84.388 },
-    { "id": "sea", "label": "Seattle, WA", "lat": 47.6062, "lon": -122.3321 },
-    { "id": "bos", "label": "Boston, MA", "lat": 42.3601, "lon": -71.0589 },
-    { "id": "den", "label": "Denver, CO", "lat": 39.7392, "lon": -104.9903 },
-    { "id": "mia", "label": "Miami, FL", "lat": 25.7617, "lon": -80.1918 }
+    {
+      "id": "nyc",
+      "label": "New York, NY",
+      "lat": 40.7128,
+      "lon": -74.006
+    },
+    {
+      "id": "dc",
+      "label": "Washington, DC",
+      "lat": 38.9072,
+      "lon": -77.0369
+    },
+    {
+      "id": "chi",
+      "label": "Chicago, IL",
+      "lat": 41.8781,
+      "lon": -87.6298
+    },
+    {
+      "id": "sf",
+      "label": "San Francisco, CA",
+      "lat": 37.7749,
+      "lon": -122.4194
+    },
+    {
+      "id": "dal",
+      "label": "Dallas, TX",
+      "lat": 32.7767,
+      "lon": -96.797
+    },
+    {
+      "id": "atl",
+      "label": "Atlanta, GA",
+      "lat": 33.749,
+      "lon": -84.388
+    },
+    {
+      "id": "sea",
+      "label": "Seattle, WA",
+      "lat": 47.6062,
+      "lon": -122.3321
+    },
+    {
+      "id": "bos",
+      "label": "Boston, MA",
+      "lat": 42.3601,
+      "lon": -71.0589
+    },
+    {
+      "id": "den",
+      "label": "Denver, CO",
+      "lat": 39.7392,
+      "lon": -104.9903
+    },
+    {
+      "id": "mia",
+      "label": "Miami, FL",
+      "lat": 25.7617,
+      "lon": -80.1918
+    }
   ],
   "entities": [
     {
@@ -41,7 +136,10 @@
       "entityType": "llc",
       "cityId": "nyc",
       "sector": "Software services",
-      "risk": "medium"
+      "risk": "medium",
+      "blackOwned": true,
+      "ownershipVerification": "fixture-verified",
+      "ownershipNote": "Fixture self-attestation + counsel packet (not live SBA CERT)"
     },
     {
       "id": "ent-helios-public",
@@ -49,7 +147,10 @@
       "entityType": "public-company",
       "cityId": "dc",
       "sector": "Industrial conglomerate",
-      "risk": "high"
+      "risk": "high",
+      "blackOwned": false,
+      "ownershipVerification": "not-asserted",
+      "ownershipNote": "No Black-owned assertion in fixture packet"
     },
     {
       "id": "ent-cedar-nonprofit",
@@ -57,7 +158,10 @@
       "entityType": "nonprofit",
       "cityId": "chi",
       "sector": "Education nonprofit",
-      "risk": "low"
+      "risk": "low",
+      "blackOwned": true,
+      "ownershipVerification": "fixture-verified",
+      "ownershipNote": "Board composition fixture \u2014 Black-led nonprofit"
     },
     {
       "id": "ent-northwind-scorp",
@@ -65,7 +169,10 @@
       "entityType": "s-corp",
       "cityId": "dal",
       "sector": "Manufacturing",
-      "risk": "medium"
+      "risk": "medium",
+      "blackOwned": false,
+      "ownershipVerification": "not-asserted",
+      "ownershipNote": "No Black-owned assertion in fixture packet"
     },
     {
       "id": "ent-pacific-benefit",
@@ -73,7 +180,10 @@
       "entityType": "benefit-corp",
       "cityId": "sf",
       "sector": "Clean energy",
-      "risk": "medium"
+      "risk": "medium",
+      "blackOwned": true,
+      "ownershipVerification": "fixture-verified",
+      "ownershipNote": "Benefit-corp DEI disclosure fixture"
     },
     {
       "id": "ent-ridge-jv",
@@ -81,7 +191,10 @@
       "entityType": "joint-venture",
       "cityId": "den",
       "sector": "Logistics",
-      "risk": "high"
+      "risk": "high",
+      "blackOwned": false,
+      "ownershipVerification": "not-asserted",
+      "ownershipNote": "No Black-owned assertion in fixture packet"
     },
     {
       "id": "ent-harbor-holding",
@@ -89,7 +202,10 @@
       "entityType": "holding-company",
       "cityId": "bos",
       "sector": "Financial holding",
-      "risk": "high"
+      "risk": "high",
+      "blackOwned": false,
+      "ownershipVerification": "not-asserted",
+      "ownershipNote": "No Black-owned assertion in fixture packet"
     },
     {
       "id": "ent-mesa-coop",
@@ -97,7 +213,10 @@
       "entityType": "cooperative",
       "cityId": "atl",
       "sector": "Agriculture",
-      "risk": "low"
+      "risk": "low",
+      "blackOwned": true,
+      "ownershipVerification": "fixture-verified",
+      "ownershipNote": "Co-op membership roster fixture \u2014 majority Black-owned"
     },
     {
       "id": "ent-summit-ccorp",
@@ -105,7 +224,10 @@
       "entityType": "c-corp",
       "cityId": "sea",
       "sector": "Semiconductors",
-      "risk": "high"
+      "risk": "high",
+      "blackOwned": false,
+      "ownershipVerification": "not-asserted",
+      "ownershipNote": "No Black-owned assertion in fixture packet"
     },
     {
       "id": "ent-bayou-sole",
@@ -113,7 +235,10 @@
       "entityType": "sole-proprietorship",
       "cityId": "mia",
       "sector": "Professional services",
-      "risk": "low"
+      "risk": "low",
+      "blackOwned": true,
+      "ownershipVerification": "fixture-verified",
+      "ownershipNote": "Sole proprietor attestation fixture"
     },
     {
       "id": "ent-ironclad-close",
@@ -121,7 +246,10 @@
       "entityType": "close-corp",
       "cityId": "chi",
       "sector": "Defense contracting (commercial)",
-      "risk": "high"
+      "risk": "high",
+      "blackOwned": false,
+      "ownershipVerification": "not-asserted",
+      "ownershipNote": "No Black-owned assertion in fixture packet"
     },
     {
       "id": "ent-atlas-enterprise",
@@ -129,7 +257,10 @@
       "entityType": "enterprise",
       "cityId": "nyc",
       "sector": "Diversified enterprise",
-      "risk": "medium"
+      "risk": "medium",
+      "blackOwned": true,
+      "ownershipVerification": "fixture-verified",
+      "ownershipNote": "Enterprise ownership ledger fixture"
     },
     {
       "id": "ent-polaris-private",
@@ -137,7 +268,10 @@
       "entityType": "private-company",
       "cityId": "sf",
       "sector": "Private equity portfolio ops",
-      "risk": "medium"
+      "risk": "medium",
+      "blackOwned": false,
+      "ownershipVerification": "not-asserted",
+      "ownershipNote": "No Black-owned assertion in fixture packet"
     },
     {
       "id": "ent-cascade-partnership",
@@ -145,7 +279,10 @@
       "entityType": "partnership",
       "cityId": "sea",
       "sector": "Legal services",
-      "risk": "low"
+      "risk": "low",
+      "blackOwned": true,
+      "ownershipVerification": "fixture-verified",
+      "ownershipNote": "Partnership schedule fixture \u2014 majority Black partners"
     },
     {
       "id": "ent-omnibus-conglomerate",
@@ -153,7 +290,10 @@
       "entityType": "conglomerate",
       "cityId": "dc",
       "sector": "Multi-industry conglomerate",
-      "risk": "high"
+      "risk": "high",
+      "blackOwned": false,
+      "ownershipVerification": "not-asserted",
+      "ownershipNote": "No Black-owned assertion in fixture packet"
     }
   ],
   "anomalies": [
@@ -164,7 +304,10 @@
       "title": "OFAC name-screen match on vendor remittance list",
       "categoryId": "financial-records",
       "indicator": "Public sanctions screening typology (not a live FBI feed)",
-      "doctrine": ["31 C.F.R. Part 501 overview", "FRE 803(6)"],
+      "doctrine": [
+        "31 C.F.R. Part 501 overview",
+        "FRE 803(6)"
+      ],
       "source": "api-ofac stub + fixture remittance CSV",
       "geo": true,
       "action": "Freeze outbound payment pending counsel review; preserve bank export."
@@ -176,7 +319,10 @@
       "title": "EDGAR 8-K filing lag vs board-minute date stamp",
       "categoryId": "regulatory-compliance",
       "indicator": "Disclosure timing anomaly (public EDGAR)",
-      "doctrine": ["Exchange Act reporting overview", "FRE 902(11)"],
+      "doctrine": [
+        "Exchange Act reporting overview",
+        "FRE 902(11)"
+      ],
       "source": "api-edgar stub + fixture board minutes",
       "geo": false,
       "action": "Open disclosure chronologies; counsel reviews materiality."
@@ -188,7 +334,10 @@
       "title": "Legal-hold notice overdue on ESI custodians",
       "categoryId": "esi",
       "indicator": "Spoliation-risk clock (FRCP 37(e) typology)",
-      "doctrine": ["FRCP 37(e)", "FRCP 34"],
+      "doctrine": [
+        "FRCP 37(e)",
+        "FRCP 34"
+      ],
       "source": "fixture hold tracker",
       "geo": false,
       "action": "Issue hold, suspend auto-delete, inventory custodian mailboxes."
@@ -200,7 +349,10 @@
       "title": "Corporate Slack channel retention gap on deal desk",
       "categoryId": "electronic-communications",
       "indicator": "Retention policy miss (company-administered workspace)",
-      "doctrine": ["FRCP 37(e)", "Stored Communications Act overview"],
+      "doctrine": [
+        "FRCP 37(e)",
+        "Stored Communications Act overview"
+      ],
       "source": "Slack MCP placeholder + fixture retention matrix",
       "geo": false,
       "action": "Export channel under hold; do not intercept third-party messaging apps."
@@ -212,8 +364,10 @@
       "title": "Registered office vs warehouse GPS mismatch",
       "categoryId": "geolocation",
       "indicator": "Address consistency check (public registry + fixture GPS)",
-      "doctrine": ["Carpenter v. United States (doctrine label only)"],
-      "source": "fixture geocode — no live IMEI triangulation",
+      "doctrine": [
+        "Carpenter v. United States (doctrine label only)"
+      ],
+      "source": "fixture geocode \u2014 no live IMEI triangulation",
       "geo": true,
       "action": "Reconcile SOS filing address with lease; no device tracking."
     },
@@ -224,7 +378,9 @@
       "title": "MDM inventory missing executive BYOD devices",
       "categoryId": "mobile-device",
       "indicator": "Asset-list incompleteness",
-      "doctrine": ["Carpenter v. United States"],
+      "doctrine": [
+        "Carpenter v. United States"
+      ],
       "source": "fixture MDM export",
       "geo": false,
       "action": "Update MDM roster from HR assets; no carrier IMSI query."
@@ -236,7 +392,9 @@
       "title": "Removable-media write events outside change window",
       "categoryId": "removable-media",
       "indicator": "Endpoint policy deviation (company DLP log)",
-      "doctrine": ["FRE 803(6)"],
+      "doctrine": [
+        "FRE 803(6)"
+      ],
       "source": "fixture endpoint log",
       "geo": false,
       "action": "Preserve DLP export; interview custodian under privilege protocol."
@@ -248,7 +406,9 @@
       "title": "PDF metadata author string vs HR roster mismatch",
       "categoryId": "metadata-audit",
       "indicator": "Document provenance anomaly",
-      "doctrine": ["FRE 901"],
+      "doctrine": [
+        "FRE 901"
+      ],
       "source": "fixture PDF sample",
       "geo": false,
       "action": "Hash and bag document; note authenticity questions for counsel."
@@ -260,7 +420,10 @@
       "title": "Vendor SOC2 report expired for payment processor",
       "categoryId": "third-party-records",
       "indicator": "Third-party assurance lag",
-      "doctrine": ["FRE 803(6)", "FRE 902(11)"],
+      "doctrine": [
+        "FRE 803(6)",
+        "FRE 902(11)"
+      ],
       "source": "fixture vendor register",
       "geo": false,
       "action": "Request updated SOC2; map to vendor-risk workflow."
@@ -272,7 +435,9 @@
       "title": "Badge-access log gap at cold-storage door",
       "categoryId": "physical-evidence",
       "indicator": "Facility access continuity",
-      "doctrine": ["FRE 803(6)"],
+      "doctrine": [
+        "FRE 803(6)"
+      ],
       "source": "fixture BMS export",
       "geo": true,
       "action": "Preserve BMS CSV; photograph door hardware if relevant."
@@ -284,7 +449,10 @@
       "title": "ERP hash chain break flagged by internal auditor",
       "categoryId": "technical-expert",
       "indicator": "Forensic integrity check on company systems",
-      "doctrine": ["FRE 702 overview", "FRE 901"],
+      "doctrine": [
+        "FRE 702 overview",
+        "FRE 901"
+      ],
       "source": "fixture auditor worksheet",
       "geo": false,
       "action": "Queue expert protocol; image ERP tables the company owns."
@@ -296,14 +464,17 @@
       "title": "Board consent packet incomplete for related-party loan",
       "categoryId": "business-records",
       "indicator": "Governance completeness (white-collar typology label)",
-      "doctrine": ["FRE 803(6)", "FRE 902(11)"],
+      "doctrine": [
+        "FRE 803(6)",
+        "FRE 902(11)"
+      ],
       "source": "fixture minute book index",
       "geo": false,
       "action": "Privilege screen, then assemble regularly kept board records."
     }
   ],
   "architecture": {
-    "title": "3D Realtime Business Anomaly Tracker — architectural blueprint",
+    "title": "3D Realtime Business Anomaly Tracker \u2014 architectural blueprint",
     "classified": false,
     "note": "Research blueprint hard-coded against this checkout. Aspirational stack names stay narrative; runtime uses fixtures, public stubs, and closest installs.",
     "systemOverview": [

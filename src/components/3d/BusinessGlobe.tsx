@@ -13,6 +13,7 @@ import { Canvas, useFrame } from "@react-three/fiber";
 import { OrbitControls, Stars, Html } from "@react-three/drei";
 import type { Group, Mesh } from "three";
 import { HudFrame } from "@/components/lyra/hud-frame";
+import { OrbitalChamber } from "@/components/3d/orbital-chamber";
 import { withBasePath } from "@/lib/static-data";
 
 type SceneNode = {
@@ -25,6 +26,8 @@ type SceneNode = {
   lat?: number;
   lon?: number;
   anomalyCount: number;
+  blackOwned?: boolean;
+  ownershipVerification?: string;
 };
 
 type SceneEvent = {
@@ -62,6 +65,7 @@ type GlobePayload = {
     postdocImprovements?: number;
     telemetryTicks?: number;
     entities?: number;
+    blackOwnedEntities?: number;
   };
   postdocCatalog?: { total?: number };
   telemetry?: { active?: boolean; totalTicks?: number; mode?: string };
@@ -395,40 +399,29 @@ function CssFallbackGlobe({
   nodes,
   events,
   selectedEntityId,
+  hotEventId,
+  blackOwnedOnly,
   onSelectEntity,
+  onSelectEvent,
 }: {
   nodes: SceneNode[];
   events: SceneEvent[];
   selectedEntityId: string | null;
+  hotEventId: string | null;
+  blackOwnedOnly: boolean;
   onSelectEntity: (id: string) => void;
+  onSelectEvent: (id: string) => void;
 }) {
   return (
-    <div className="tracker-stage relative h-[min(70vh,560px)] w-full overflow-hidden">
-      <div className="tracker-grid absolute inset-0" aria-hidden />
-      <div className="tracker-scene relative h-full w-full">
-        {nodes.map((node, i) => {
-          const left = 50 + (node.position?.x ?? 0) * 0.72;
-          const top = 52 - (node.position?.z ?? 0) * 0.55 - (node.position?.y ?? 0) * 0.35;
-          const isHot = node.priority === "P1" || selectedEntityId === node.id;
-          return (
-            <button
-              key={node.id}
-              type="button"
-              className={`tracker-node absolute -translate-x-1/2 -translate-y-1/2 rounded-full border px-2 py-1 text-left ${
-                isHot ? "tracker-pulse border-destructive/70 bg-destructive/20" : "border-border/70 bg-card/80"
-              }`}
-              style={{ left: `${left}%`, top: `${top}%`, zIndex: 20 + i }}
-              onClick={() => onSelectEntity(node.id)}
-            >
-              <span className="text-[10px] font-medium sm:text-xs">{node.label}</span>
-            </button>
-          );
-        })}
-      </div>
-      <p className="absolute bottom-3 left-3 text-[10px] tracking-[0.16em] text-muted-foreground uppercase">
-        CSS fallback · {nodes.length} nodes · {events.length} events · WebGL unavailable
-      </p>
-    </div>
+    <OrbitalChamber
+      nodes={nodes}
+      events={events}
+      selectedEntityId={selectedEntityId}
+      hotEventId={hotEventId}
+      blackOwnedOnly={blackOwnedOnly}
+      onSelectEntity={onSelectEntity}
+      onSelectEvent={onSelectEvent}
+    />
   );
 }
 
@@ -440,15 +433,16 @@ export default function BusinessGlobe({ initialData }: { initialData?: GlobePayl
   );
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [hotEventIndex, setHotEventIndex] = useState(0);
-  const [webglOk, setWebglOk] = useState(true);
+  const [webglOk, setWebglOk] = useState(false);
+  const [preferWebgl, setPreferWebgl] = useState(false);
+  const [blackOwnedOnly, setBlackOwnedOnly] = useState(true);
 
   useEffect(() => {
     try {
       const canvas = document.createElement("canvas");
       const gl =
-        canvas.getContext("webgl2") ||
-        canvas.getContext("webgl") ||
-        canvas.getContext("experimental-webgl");
+        canvas.getContext("webgl2", { failIfMajorPerformanceCaveat: true }) ||
+        canvas.getContext("webgl", { failIfMajorPerformanceCaveat: true });
       setWebglOk(Boolean(gl));
     } catch {
       setWebglOk(false);
@@ -471,7 +465,8 @@ export default function BusinessGlobe({ initialData }: { initialData?: GlobePayl
         const data = (await response.json()) as GlobePayload;
         if (!cancelled) {
           setPayload(data);
-          setSelectedEntityId(data.scene?.nodes?.[0]?.id ?? null);
+          const firstOwned = data.scene?.nodes?.find((n) => n.blackOwned)?.id;
+          setSelectedEntityId(firstOwned ?? data.scene?.nodes?.[0]?.id ?? null);
         }
       } catch {
         if (!cancelled && !initialData) setError("Could not load fixture globe data.");
@@ -484,7 +479,16 @@ export default function BusinessGlobe({ initialData }: { initialData?: GlobePayl
 
   const nodes = useMemo(() => payload?.scene?.nodes ?? [], [payload]);
   const events = useMemo(() => payload?.scene?.events ?? [], [payload]);
-  const p1Events = useMemo(() => events.filter((e) => e.priority === "P1"), [events]);
+  const filteredNodes = useMemo(
+    () => (blackOwnedOnly ? nodes.filter((n) => n.blackOwned) : nodes),
+    [nodes, blackOwnedOnly],
+  );
+  const filteredEvents = useMemo(() => {
+    if (!blackOwnedOnly) return events;
+    const ids = new Set(filteredNodes.map((n) => n.id));
+    return events.filter((e) => ids.has(e.entityId));
+  }, [events, blackOwnedOnly, filteredNodes]);
+  const p1Events = useMemo(() => filteredEvents.filter((e) => e.priority === "P1"), [filteredEvents]);
 
   useEffect(() => {
     if (!p1Events.length) return;
@@ -494,13 +498,23 @@ export default function BusinessGlobe({ initialData }: { initialData?: GlobePayl
     return () => window.clearInterval(id);
   }, [p1Events]);
 
+  useEffect(() => {
+    if (blackOwnedOnly && filteredNodes.length) {
+      if (!filteredNodes.some((n) => n.id === selectedEntityId)) {
+        setSelectedEntityId(filteredNodes[0].id);
+      }
+    }
+  }, [blackOwnedOnly, filteredNodes, selectedEntityId]);
+
   const hotEventId = p1Events[hotEventIndex]?.id ?? null;
-  const selectedEntity = nodes.find((n) => n.id === selectedEntityId) ?? null;
-  const selectedEvent = events.find((e) => e.id === selectedEventId) ?? p1Events[hotEventIndex] ?? null;
+  const selectedEntity = filteredNodes.find((n) => n.id === selectedEntityId) ?? null;
+  const selectedEvent =
+    filteredEvents.find((e) => e.id === selectedEventId) ?? p1Events[hotEventIndex] ?? null;
 
   const postdoc = payload?.summary?.postdocImprovements ?? payload?.postdocCatalog?.total ?? 0;
-  const anomalies = payload?.summary?.anomalies ?? events.length;
   const telemetryTicks = payload?.summary?.telemetryTicks ?? payload?.telemetry?.totalTicks ?? 0;
+  const blackOwnedCount =
+    payload?.summary?.blackOwnedEntities ?? nodes.filter((n) => n.blackOwned).length;
 
   if (error) {
     return (
@@ -524,37 +538,83 @@ export default function BusinessGlobe({ initialData }: { initialData?: GlobePayl
     );
   }
 
-  const fallback = (
-    <CssFallbackGlobe
+  const chamber = (
+    <OrbitalChamber
       nodes={nodes}
       events={events}
       selectedEntityId={selectedEntityId}
-      onSelectEntity={setSelectedEntityId}
+      hotEventId={hotEventId}
+      blackOwnedOnly={blackOwnedOnly}
+      onSelectEntity={(id) => {
+        setSelectedEntityId(id);
+        setSelectedEventId(null);
+      }}
+      onSelectEvent={(id) => {
+        setSelectedEventId(id);
+        const ev = events.find((e) => e.id === id);
+        if (ev) setSelectedEntityId(ev.entityId);
+      }}
     />
   );
 
+  const useWebgl = preferWebgl && webglOk;
+
   return (
     <div className="space-y-3">
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          className={`rounded-full border px-3 py-1 text-[10px] tracking-[0.14em] uppercase transition ${
+            blackOwnedOnly
+              ? "border-emerald-400/40 bg-emerald-500/15 text-emerald-200"
+              : "border-border/60 text-muted-foreground hover:text-foreground"
+          }`}
+          onClick={() => setBlackOwnedOnly(true)}
+        >
+          Verify Black-owned only
+        </button>
+        <button
+          type="button"
+          className={`rounded-full border px-3 py-1 text-[10px] tracking-[0.14em] uppercase transition ${
+            !blackOwnedOnly
+              ? "border-primary/40 bg-primary/15 text-primary"
+              : "border-border/60 text-muted-foreground hover:text-foreground"
+          }`}
+          onClick={() => setBlackOwnedOnly(false)}
+        >
+          All businesses
+        </button>
+        {webglOk ? (
+          <button
+            type="button"
+            className="rounded-full border border-border/60 px-3 py-1 text-[10px] tracking-[0.14em] text-muted-foreground uppercase hover:text-foreground"
+            onClick={() => setPreferWebgl((v) => !v)}
+          >
+            {preferWebgl ? "3D chamber" : "WebGL globe"}
+          </button>
+        ) : null}
+      </div>
+
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
         <div className="hud-stat">
-          <span className="hud-stat-value">{nodes.length}</span>
+          <span className="hud-stat-value">{filteredNodes.length}</span>
           <span className="hud-stat-label">Entities</span>
         </div>
         <div className="hud-stat">
-          <span className="hud-stat-value">{events.length || anomalies}</span>
-          <span className="hud-stat-label">Events</span>
+          <span className="hud-stat-value">{filteredEvents.length}</span>
+          <span className="hud-stat-label">Anomalies</span>
         </div>
         <div className="hud-stat">
-          <span className="hud-stat-value">{payload.summary?.p1Events ?? p1Events.length}</span>
+          <span className="hud-stat-value">{p1Events.length}</span>
           <span className="hud-stat-label">P1 live</span>
+        </div>
+        <div className="hud-stat">
+          <span className="hud-stat-value">{blackOwnedCount}</span>
+          <span className="hud-stat-label">Black-owned</span>
         </div>
         <div className="hud-stat">
           <span className="hud-stat-value">{postdoc || 500}</span>
           <span className="hud-stat-label">Post-doc</span>
-        </div>
-        <div className="hud-stat">
-          <span className="hud-stat-value">{(payload.summary?.improvements ?? 0).toLocaleString()}</span>
-          <span className="hud-stat-label">Improvements</span>
         </div>
         <div className="hud-stat">
           <span className="hud-stat-value">{telemetryTicks.toLocaleString()}</span>
@@ -562,40 +622,49 @@ export default function BusinessGlobe({ initialData }: { initialData?: GlobePayl
         </div>
       </div>
 
-      <HudFrame label="Orbital globe · drag to inspect" className="globe-stage">
-        <div className="relative z-[2] h-[min(70vh,560px)] w-full">
-          {webglOk ? (
-            <GlobeErrorBoundary fallback={fallback}>
-              <Canvas
-                camera={{ position: [0, 0.35, 3.7], fov: 42 }}
-                dpr={[1, 1.75]}
-                gl={{ antialias: true, alpha: false, powerPreference: "high-performance" }}
-                onCreated={({ gl }) => {
-                  gl.setClearColor("#030a10");
-                }}
-              >
-                <color attach="background" args={["#030a10"]} />
-                <fog attach="fog" args={["#030a10", 6, 16]} />
-                <GlobeScene
-                  nodes={nodes}
-                  events={events}
-                  selectedEntityId={selectedEntityId}
-                  selectedEventId={selectedEventId}
-                  hotEventId={hotEventId}
-                  onSelectEntity={(id) => {
-                    setSelectedEntityId(id);
-                    setSelectedEventId(null);
+      <HudFrame
+        label={
+          useWebgl
+            ? "Orbital globe · drag to inspect"
+            : "3D anomaly chamber · distinct rotating anomalies"
+        }
+        className="globe-stage"
+      >
+        <div className="relative z-[2] w-full">
+          {useWebgl ? (
+            <GlobeErrorBoundary fallback={chamber}>
+              <div className="h-[min(70vh,560px)] w-full">
+                <Canvas
+                  camera={{ position: [0, 0.35, 3.7], fov: 42 }}
+                  dpr={[1, 1.75]}
+                  gl={{ antialias: true, alpha: false, powerPreference: "high-performance" }}
+                  onCreated={({ gl }) => {
+                    gl.setClearColor("#030a10");
                   }}
-                  onSelectEvent={(id) => {
-                    setSelectedEventId(id);
-                    const ev = events.find((e) => e.id === id);
-                    if (ev) setSelectedEntityId(ev.entityId);
-                  }}
-                />
-              </Canvas>
+                >
+                  <color attach="background" args={["#030a10"]} />
+                  <fog attach="fog" args={["#030a10", 6, 16]} />
+                  <GlobeScene
+                    nodes={filteredNodes}
+                    events={filteredEvents}
+                    selectedEntityId={selectedEntityId}
+                    selectedEventId={selectedEventId}
+                    hotEventId={hotEventId}
+                    onSelectEntity={(id) => {
+                      setSelectedEntityId(id);
+                      setSelectedEventId(null);
+                    }}
+                    onSelectEvent={(id) => {
+                      setSelectedEventId(id);
+                      const ev = filteredEvents.find((e) => e.id === id);
+                      if (ev) setSelectedEntityId(ev.entityId);
+                    }}
+                  />
+                </Canvas>
+              </div>
             </GlobeErrorBoundary>
           ) : (
-            fallback
+            chamber
           )}
         </div>
       </HudFrame>
@@ -604,7 +673,8 @@ export default function BusinessGlobe({ initialData }: { initialData?: GlobePayl
         <span className="hud-beacon" aria-hidden />
         <span className="tracking-[0.14em] text-emerald-300/90 uppercase">3D populated</span>
         <span>
-          {nodes.length} entities · {events.length} events · {p1Events.length} P1 arcs · fixture lat/lon
+          {filteredNodes.length} entities · {filteredEvents.length} distinct anomalies
+          {blackOwnedOnly ? " · Black-owned verify" : ""} · fixture ownership only
         </span>
       </div>
 
@@ -624,7 +694,8 @@ export default function BusinessGlobe({ initialData }: { initialData?: GlobePayl
               <span className="font-medium text-primary">{selectedEntity.label}</span>
               <span className="text-muted-foreground">
                 {" "}
-                · {selectedEntity.entityType} · {selectedEntity.city} · {selectedEntity.priority} ·{" "}
+                · {selectedEntity.entityType} · {selectedEntity.city} · {selectedEntity.priority}
+                {selectedEntity.blackOwned ? " · Black-owned (fixture-verified)" : ""} ·{" "}
                 {selectedEntity.anomalyCount} anomalies
               </span>
             </>
