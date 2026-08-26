@@ -1,45 +1,64 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { LoaderCircleIcon, ShieldCheckIcon, ShieldAlertIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import type { AipDeepDive } from "@/lib/aip-sigma0/dive";
-import type { AipScan } from "@/lib/aip-sigma0/scanner";
-import { cn } from "@/lib/utils";
+import { runAipDeepDive, type AipDeepDive } from "@/lib/aip-sigma0/dive";
+import { scanText, type AipScan } from "@/lib/aip-sigma0/scanner";
+import { withBasePath } from "@/lib/static-data";
 
 const SAMPLE =
   "Miranda v. Arizona held that 87% of suspects waive, see 384 U.S. 436. Studies show https://example.com/holdings.";
+
+function looksLikeJson(response: Response) {
+  const type = response.headers.get("content-type") ?? "";
+  return type.includes("json");
+}
 
 export function AipConsole() {
   const [dive, setDive] = useState<AipDeepDive | null>(null);
   const [diveError, setDiveError] = useState<string | null>(null);
   const [diveBusy, setDiveBusy] = useState(true);
+  const [diveSource, setDiveSource] = useState<"api" | "in-browser" | null>(null);
   const [text, setText] = useState(SAMPLE);
   const [anchors, setAnchors] = useState("");
   const [scan, setScan] = useState<AipScan | null>(null);
   const [scanError, setScanError] = useState<string | null>(null);
   const [scanBusy, setScanBusy] = useState(false);
+  const [scanSource, setScanSource] = useState<"api" | "in-browser" | null>(null);
 
   async function loadDive() {
     setDiveBusy(true);
     setDiveError(null);
     try {
-      const response = await fetch("/api/aip/dive");
-      const data = (await response.json()) as AipDeepDive & { error?: string };
-      if (!response.ok) {
-        setDive(null);
-        setDiveError(data.error ?? "Deep dive failed.");
-        return;
+      const response = await fetch(withBasePath("/api/aip/dive"), { cache: "no-store" });
+      if (response.ok && looksLikeJson(response)) {
+        const data = (await response.json()) as AipDeepDive & { error?: string };
+        if (!data.error) {
+          setDive(data);
+          setDiveSource("api");
+          return;
+        }
       }
+      // Static Pages / missing API: run the same fixture suite in-browser.
+      const data = await runAipDeepDive();
       setDive(data);
+      setDiveSource("in-browser");
     } catch {
-      setDive(null);
-      setDiveError("Could not reach the AIP-Σ0 deep-dive endpoint.");
+      try {
+        const data = await runAipDeepDive();
+        setDive(data);
+        setDiveSource("in-browser");
+        setDiveError(null);
+      } catch (err) {
+        setDive(null);
+        setDiveSource(null);
+        setDiveError(err instanceof Error ? err.message : "Deep dive failed.");
+      }
     } finally {
       setDiveBusy(false);
     }
@@ -58,28 +77,38 @@ export function AipConsole() {
     }
     setScanBusy(true);
     setScanError(null);
+    const anchorList = anchors
+      .split(/\n+/)
+      .map((line) => line.trim())
+      .filter(Boolean);
     try {
-      const response = await fetch("/api/aip/scan", {
+      const response = await fetch(withBasePath("/api/aip/scan"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          text: body,
-          anchors: anchors
-            .split(/\n+/)
-            .map((line) => line.trim())
-            .filter(Boolean),
-        }),
+        body: JSON.stringify({ text: body, anchors: anchorList }),
       });
-      const data = (await response.json()) as AipScan & { error?: string };
-      if (!response.ok) {
-        setScan(null);
-        setScanError(data.error ?? "Scan failed.");
-        return;
+      if (response.ok && looksLikeJson(response)) {
+        const data = (await response.json()) as AipScan & { error?: string };
+        if (!data.error && data.verdict) {
+          setScan(data);
+          setScanSource("api");
+          return;
+        }
       }
+      const data = scanText(body, anchorList);
       setScan(data);
+      setScanSource("in-browser");
     } catch {
-      setScan(null);
-      setScanError("Could not reach the scanner.");
+      try {
+        const data = scanText(body, anchorList);
+        setScan(data);
+        setScanSource("in-browser");
+        setScanError(null);
+      } catch (err) {
+        setScan(null);
+        setScanSource(null);
+        setScanError(err instanceof Error ? err.message : "Scan failed.");
+      }
     } finally {
       setScanBusy(false);
     }
@@ -90,14 +119,28 @@ export function AipConsole() {
       <header className="border-b border-border/40 bg-transparent">
         <div className="mx-auto flex w-full max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-5 sm:px-6">
           <div>
-            <p className="text-[10px] tracking-[0.22em] text-primary/80 uppercase">
-              Full-spectrum anti-hallucination · live deep dive
+            <p className="flex items-center gap-2 text-[10px] tracking-[0.22em] text-primary/80 uppercase">
+              <span className="hud-beacon" aria-hidden />
+              Full-spectrum anti-hallucination · in-process fixtures
             </p>
             <p className="font-display text-3xl leading-none tracking-tight">AIP-Σ0</p>
           </div>
-          <Button size="sm" variant="ghost" className="glass-rail" onClick={() => void loadDive()} disabled={diveBusy}>
-            Re-run dive
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            {diveSource ? (
+              <Badge variant="outline" className="text-[10px]">
+                dive={diveSource}
+              </Badge>
+            ) : null}
+            <Button
+              size="sm"
+              variant="ghost"
+              className="glass-rail"
+              onClick={() => void loadDive()}
+              disabled={diveBusy}
+            >
+              Re-run dive
+            </Button>
+          </div>
         </div>
       </header>
 
@@ -109,8 +152,8 @@ export function AipConsole() {
             </h1>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">
               Anchor Inventory Protocol Σ0 flags citations, percents, URLs, case names, and weasel
-              authority unless they appear in the brief or a SHA-256 tool receipt. This page runs
-              the fixture suite in-process on every load.
+              authority unless they appear in the brief or a SHA-256 tool receipt. On GitHub Pages
+              this console runs the same fixture suite in-browser — no Node API required.
             </p>
           </div>
 
@@ -123,7 +166,7 @@ export function AipConsole() {
             </Card>
           ) : null}
 
-          {diveError ? (
+          {diveError && !dive ? (
             <Card>
               <CardHeader>
                 <CardTitle>Deep dive failed</CardTitle>
@@ -137,7 +180,7 @@ export function AipConsole() {
             </Card>
           ) : null}
 
-          {dive ? <DiveReport dive={dive} /> : null}
+          {dive ? <DiveReport dive={dive} source={diveSource} /> : null}
         </section>
 
         <aside className="flex flex-col gap-4">
@@ -145,8 +188,8 @@ export function AipConsole() {
             <CardHeader>
               <CardTitle>On-demand scan</CardTitle>
               <CardDescription>
-                Claims not in the anchors list come back as review. This is the same scanner
-                local-v1 uses.
+                Claims not in the anchors list come back as review. Same scanner local-v1 uses —
+                works offline on static Pages.
               </CardDescription>
             </CardHeader>
             <CardContent className="flex flex-col gap-3">
@@ -166,12 +209,17 @@ export function AipConsole() {
                   value={anchors}
                   onChange={(event) => setAnchors(event.target.value)}
                   rows={4}
-                  placeholder="Miranda v. Arizona&#10;87%&#10;384 U.S. 436"
+                  placeholder={"Miranda v. Arizona\n87%\n384 U.S. 436"}
                 />
               </div>
               <Button type="button" onClick={() => void runScan()} disabled={scanBusy}>
                 {scanBusy ? "Scanning…" : "Scan"}
               </Button>
+              {scanSource ? (
+                <Badge variant="outline" className="w-fit text-[10px]">
+                  scan={scanSource}
+                </Badge>
+              ) : null}
               {scanError ? <p className="text-sm text-destructive">{scanError}</p> : null}
               {scan ? <ScanResult scan={scan} /> : null}
             </CardContent>
@@ -182,7 +230,7 @@ export function AipConsole() {
   );
 }
 
-function DiveReport({ dive }: { dive: AipDeepDive }) {
+function DiveReport({ dive, source }: { dive: AipDeepDive; source: "api" | "in-browser" | null }) {
   return (
     <div className="flex flex-col gap-4">
       <Card>
@@ -199,9 +247,8 @@ function DiveReport({ dive }: { dive: AipDeepDive }) {
               </CardTitle>
               <CardDescription>
                 {dive.fixtureResults.filter((f) => f.ok).length}/{dive.fixtureCount} fixtures ·{" "}
-                {dive.elapsedMs} ms · simulated={String(dive.simulated)} · Cloudflare live deploy={
-                  String(dive.cloudflareLiveDeploy)
-                }
+                {dive.elapsedMs} ms · simulated={String(dive.simulated)} · source={source ?? "in-process"}{" "}
+                · Cloudflare live deploy={String(dive.cloudflareLiveDeploy)}
               </CardDescription>
             </div>
             <Badge variant={dive.ok ? "secondary" : "destructive"}>

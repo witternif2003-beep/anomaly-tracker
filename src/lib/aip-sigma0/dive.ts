@@ -1,4 +1,4 @@
-import { createHash } from "node:crypto";
+import { sha256Hex } from "@/lib/crypto-sha256";
 import { optimize } from "../optimize/engine";
 import { aipReceipt, AIP_SIGMA0_ID, AIP_SPECTRUM } from "./protocol";
 import { scanText, type AipFlagKind, type AipScan } from "./scanner";
@@ -181,7 +181,8 @@ export async function runAipDeepDive() {
         break;
       case "S6-api":
         ok = true;
-        proof = "GET /v1/aip, POST /v1/aip/scan, GET /v1/aip/dive plus Next /api/aip*.";
+        proof =
+          "Express /v1/aip* when local API is up; on GitHub Pages /aip runs the same dive+scan in-browser.";
         break;
       case "S7-policy":
         ok = true;
@@ -193,7 +194,7 @@ export async function runAipDeepDive() {
         break;
       case "S9-studio":
         ok = Boolean(opt.aipSigma0?.briefScan && opt.aipSigma0.promptScan);
-        proof = "Studio /api/optimize returns briefScan + promptScan; /aip runs this dive live.";
+        proof = "Studio optimize() returns briefScan + promptScan; /aip runs this dive in-process.";
         break;
       case "S10-dive":
         ok = fixturesOk && Boolean(optimizerOk) && receiptOk;
@@ -211,7 +212,7 @@ export async function runAipDeepDive() {
     brief: briefScan?.verdict,
     prompt: promptScan?.verdict,
   };
-  const proofHash = createHash("sha256").update(JSON.stringify(payload)).digest("hex");
+  const proofHash = sha256Hex(JSON.stringify(payload));
   const bandsOk = bands.every((b) => b.ok);
   const ok = fixturesOk && bandsOk && Boolean(optimizerOk) && receiptOk;
 
@@ -223,6 +224,7 @@ export async function runAipDeepDive() {
     hardening: "active" as const,
     spectrum: "full" as const,
     cloudflareLiveDeploy: false as const,
+    source: "in-process" as const,
     ok,
     ranAt: new Date().toISOString(),
     elapsedMs: Date.now() - started,

@@ -1,4 +1,4 @@
-import { createHash } from "node:crypto";
+import { sha256Hex } from "@/lib/crypto-sha256";
 
 export const AIP_SIGMA0_ID = "AIP-Σ0" as const;
 export const AIP_SPECTRUM = [
@@ -24,7 +24,7 @@ export function aipReceipt(parts: Array<string | undefined>): {
   return {
     protocol: AIP_SIGMA0_ID,
     kind: "tool-receipt",
-    sha256: createHash("sha256").update(body).digest("hex"),
+    sha256: sha256Hex(body),
   };
 }
 
