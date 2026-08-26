@@ -6,8 +6,14 @@ root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$root"
 
 html="${TRACKER_HTML:-$root/out/tracker/index.html}"
+# Prefer built HTML; if missing, validate the source app route still does not SSR-inline the bake.
 if [[ ! -f "$html" ]]; then
-  echo "PIPELINE SKIP tracker-html-budget (no out/tracker/index.html yet)"
+  src="$root/src/app/tracker/page.tsx"
+  if [[ -f "$src" ]] && grep -q 'anomaly.json' "$src" && grep -q 'readFileSync\|import anomaly' "$src"; then
+    echo "PIPELINE FAIL tracker-html-budget: tracker page appears to SSR-inline anomaly.json"
+    exit 1
+  fi
+  echo "PIPELINE OK tracker-html-budget (no out yet; source page does not inline bake)"
   exit 0
 fi
 

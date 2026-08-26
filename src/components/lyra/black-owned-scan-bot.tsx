@@ -227,6 +227,7 @@ export function BlackOwnedScanBot({ bot }: { bot: BlackOwnedScanBotPayload }) {
   const streamRef = useRef(stream);
   const discoveryPoolRef = useRef(discoveryPool);
   const channelsRef = useRef(bot.discoveryChannels);
+  const admittedKeysRef = useRef<Set<string>>(new Set());
   streamRef.current = stream;
   discoveryPoolRef.current = discoveryPool;
   channelsRef.current = bot.discoveryChannels;
@@ -234,6 +235,9 @@ export function BlackOwnedScanBot({ bot }: { bot: BlackOwnedScanBotPayload }) {
   useEffect(() => {
     setLiveQueue(seedQueue);
     setAutoQueuedCount(seedQueue.length);
+    admittedKeysRef.current = new Set(
+      seedQueue.flatMap((t) => [t.id, t.fingerprint].filter(Boolean) as string[]),
+    );
   }, [seedQueue]);
 
   useEffect(() => {
@@ -281,6 +285,13 @@ export function BlackOwnedScanBot({ bot }: { bot: BlackOwnedScanBotPayload }) {
       poolCursorRef.current = next;
       setPoolCursor(next);
 
+      const admitKey = candidate.fingerprint || candidate.id;
+      if (admittedKeysRef.current.has(candidate.id) || admittedKeysRef.current.has(admitKey)) {
+        return;
+      }
+      admittedKeysRef.current.add(candidate.id);
+      if (candidate.fingerprint) admittedKeysRef.current.add(candidate.fingerprint);
+
       const admittedAt = new Date().toISOString();
       const channel =
         channelsRef.current?.find((c) => c.id === candidate.channelId)?.label ??
@@ -292,7 +303,7 @@ export function BlackOwnedScanBot({ bot }: { bot: BlackOwnedScanBotPayload }) {
           if (prev.some((p) => p.id === candidate.id || p.fingerprint === candidate.fingerprint)) {
             return prev;
           }
-          const admitted: QueueRow = {
+          const nextRow: QueueRow = {
             ...candidate,
             kind: "new-to-scan",
             ownershipVerification: "pending-scan",
@@ -303,7 +314,7 @@ export function BlackOwnedScanBot({ bot }: { bot: BlackOwnedScanBotPayload }) {
             autoQueued: true,
             discoveryChannel: channel,
           };
-          return sortByPriority([admitted, ...prev]);
+          return sortByPriority([nextRow, ...prev]);
         });
         setAutoQueuedCount((n) => n + 1);
         setDiscoveryLog((prev) =>

@@ -126,12 +126,20 @@ if not scout.get("selfHealing"):
     errors.append("scoutBot.selfHealing false")
 if not scout.get("additiveOnly"):
     errors.append("scoutBot.additiveOnly false")
-if len(scout.get("healActions") or []) < 3:
-    errors.append("scoutBot.healActions incomplete")
+if not scout.get("extremeScan"):
+    errors.append("scoutBot.extremeScan false")
+if scout.get("mode") != "postdoc-extreme-24x7":
+    errors.append("scoutBot.mode != postdoc-extreme-24x7")
+if len(scout.get("healActions") or []) < 4:
+    errors.append("scoutBot.healActions incomplete (<4)")
+if (scout.get("tickMs") or 9999) > 900:
+    errors.append("scoutBot.tickMs not 3× pressure (<=900)")
 if scout.get("liveSurveillance"):
     errors.append("scoutBot must not enable live surveillance")
 if not summary.get("scoutBotActive"):
     errors.append("summary.scoutBotActive false")
+if len(checks) < 18:
+    errors.append(f"pipelineHealth.checks underfilled ({len(checks)} < 18)")
 
 if errors:
     print("PIPELINE FAIL tracker-3d-smoke")

@@ -1,17 +1,22 @@
 {
   "object": "lyra.scout-bot",
   "title": "Error scout bot",
-  "mode": "fixture-clock-24x7",
-  "tickMs": 1800,
+  "mode": "postdoc-extreme-24x7",
+  "tickMs": 600,
   "active": true,
   "selfHealing": true,
   "additiveOnly": true,
-  "note": "24/7 fixture scout watches tracker integrity and auto-heals payload/state faults. Never removes features — only restores from static bake or resets orphaned selection. Not live mass surveillance.",
+  "extremeScan": true,
+  "postdocExtreme": true,
+  "gateTarget": 45,
+  "note": "24/7 postdoc-extreme scout: deep-dives all 12 pipelines + payload/chamber/crime/credentials gates (~3× prior coverage). Auto-heals without removing features. Not live mass surveillance.",
   "healActions": [
     "reload-static",
     "reset-selected-anomaly",
     "reset-selected-entity",
-    "attach-scout-marker"
+    "attach-scout-marker",
+    "revalidate-pipelines",
+    "revalidate-credentials"
   ],
   "baselines": {
     "minNodes": 15,
@@ -19,7 +24,26 @@
     "crimeCategories": 52,
     "crimeCases": 60,
     "mayPackets": 15,
-    "postdoc": 500
+    "postdoc": 500,
+    "envPlaceholders": 18,
+    "envFreeResolved": 16,
+    "pipelineScripts": 12,
+    "boHardeningScore": 95,
+    "improvementsGenerated": 10080
   },
+  "pipelineIds": [
+    "aip-static-smoke",
+    "business-crime-audit",
+    "cloudflare-ci",
+    "cloudflare-p1-health",
+    "env-placeholders",
+    "local-api-smoke",
+    "no-github-actions",
+    "p1-catalog-audit",
+    "policy-guard",
+    "skill-agent-roster",
+    "tracker-3d-smoke",
+    "tracker-html-budget"
+  ],
   "liveSurveillance": false
 }

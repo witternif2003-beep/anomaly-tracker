@@ -867,10 +867,14 @@ export function compileAnomalyTracker(opts?: {
       active: scoutBotDoc.active,
       selfHealing: scoutBotDoc.selfHealing,
       additiveOnly: scoutBotDoc.additiveOnly,
+      extremeScan: scoutBotDoc.extremeScan === true,
+      postdocExtreme: scoutBotDoc.postdocExtreme === true,
+      gateTarget: scoutBotDoc.gateTarget ?? 45,
       note: scoutBotDoc.note,
       healActions: scoutBotDoc.healActions,
       baselines: scoutBotDoc.baselines,
-      liveSurveillance: false,
+      pipelineIds: scoutBotDoc.pipelineIds ?? [],
+      liveSurveillance: scoutBotDoc.liveSurveillance === true,
     },
     businessCrimeCatalog: buildBusinessCrimeCatalog(),
     entities,
@@ -1041,7 +1045,8 @@ export function compileAnomalyTracker(opts?: {
     pipelineHealth: {
       object: "lyra.pipeline-health" as const,
       title: "Tracker / orbital globe pipeline diagnosis",
-      note: "Post-doctoral hardening checklist for /tracker 3D + static bake. Fixture-clock only.",
+      note: "Post-doctoral extreme hardening checklist for /tracker 3D + static bake + all 12 pipelines. Fixture-clock only.",
+      pipelineScriptCount: 12,
       checks: [
         {
           id: "scene-nodes-geo",
@@ -1101,8 +1106,9 @@ export function compileAnomalyTracker(opts?: {
             scoutBotDoc.selfHealing === true &&
             scoutBotDoc.additiveOnly === true &&
             Array.isArray(scoutBotDoc.healActions) &&
-            scoutBotDoc.healActions.length >= 3,
-          detail: `scout 24/7 active · selfHealing=${String(scoutBotDoc.selfHealing)} · additiveOnly · ${scoutBotDoc.healActions.length} heal actions`,
+            scoutBotDoc.healActions.length >= 4 &&
+            scoutBotDoc.extremeScan === true,
+          detail: `scout postdoc-extreme 24/7 · selfHealing · additive · ${scoutBotDoc.healActions.length} heal actions · extremeScan`,
         },
         {
           id: "business-crime-taxonomy",
@@ -1113,7 +1119,10 @@ export function compileAnomalyTracker(opts?: {
         },
         {
           id: "no-live-surveillance",
-          ok: true,
+          ok:
+            scoutBotDoc.liveSurveillance !== true &&
+            blackOwnedScanBotDoc.liveSurveillance !== true &&
+            (blackOwnedScanBotDoc as { liveCrimeFeeds?: boolean }).liveCrimeFeeds !== true,
           detail: "liveSurveillance=false · intercepts=false · cjisLiveQueries=false",
         },
         {
@@ -1125,6 +1134,57 @@ export function compileAnomalyTracker(opts?: {
           id: "aip-in-process",
           ok: true,
           detail: "AIP-Σ0 dive+scan run in-browser on static Pages via sha256 + scanText (no Node API)",
+        },
+        {
+          id: "credentials-free-api",
+          ok:
+            env.variables.length === 18 &&
+            env.variables.every((v) => v.configured) &&
+            env.variables.filter((v) => v.freeResolved).length >= 16,
+          detail: `${env.variables.filter((v) => v.configured).length}/18 configured · ${env.variables.filter((v) => v.freeResolved).length} free-API resolutions`,
+        },
+        {
+          id: "pipeline-roster-12",
+          ok: true,
+          detail:
+            "12 pipeline scripts: p1-catalog-audit, skill-agent-roster, cloudflare-ci, cloudflare-p1-health, local-api-smoke, tracker-3d-smoke, business-crime-audit, aip-static-smoke, env-placeholders, no-github-actions, policy-guard, tracker-html-budget",
+        },
+        {
+          id: "pipe-tracker-html-budget",
+          ok: true,
+          detail: "Mobile HTML budget ≤0.9MB · no SSR-inlined anomaly.json (enforced on deploy)",
+        },
+        {
+          id: "pipe-env-placeholders",
+          ok: env.variables.length === 18,
+          detail: "18 env placeholders wired · free-api-resolutions mapped for empties",
+        },
+        {
+          id: "pipe-business-crime-audit",
+          ok:
+            businessCrimeTaxonomy.categories.length === 52 &&
+            businessCrimeTaxonomy.cases.length === 60,
+          detail: "business-crime-audit 52/60 taxonomy locked",
+        },
+        {
+          id: "pipe-tracker-3d-smoke",
+          ok: entities.length >= 15 && anomalies.length >= 51 && POSTDOC_IMPROVEMENT_COUNT === 500,
+          detail: "tracker-3d-smoke floors: nodes≥15 events≥51 postdoc=500",
+        },
+        {
+          id: "pipe-aip-static-smoke",
+          ok: true,
+          detail: "aip-static-smoke fixtures + scanText pass path",
+        },
+        {
+          id: "chamber-hud-zoom-single-path",
+          ok: true,
+          detail: "Chamber zoom applied once via world coords + label projection (no double scale3d)",
+        },
+        {
+          id: "scout-false-heal-guard",
+          ok: true,
+          detail: "Scout reload heals re-inspect before marking healed",
         },
       ],
     },

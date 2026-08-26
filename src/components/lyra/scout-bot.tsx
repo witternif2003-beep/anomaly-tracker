@@ -21,9 +21,13 @@ export type ScoutBotPayload = {
   active?: boolean;
   selfHealing?: boolean;
   additiveOnly?: boolean;
+  extremeScan?: boolean;
+  postdocExtreme?: boolean;
+  gateTarget?: number;
   note?: string;
   healActions?: string[];
   baselines?: Record<string, number>;
+  pipelineIds?: string[];
   liveSurveillance?: boolean;
 };
 
@@ -180,7 +184,7 @@ export function ScoutBotPanel({
     }
 
     const remaining = result.findings.filter((f) => f.healable && !f.healed);
-    setStatus(remaining.length ? "degraded" : result.healedCount ? "healthy" : "degraded");
+    setStatus(remaining.length ? (result.healedCount ? "healing" : "degraded") : "healthy");
   }, []);
 
   useEffect(() => {
@@ -221,9 +225,13 @@ export function ScoutBotPanel({
           </div>
           <div className="flex flex-wrap gap-2">
             <Badge className="bg-sky-500/20 text-sky-100">ACTIVE 24/7</Badge>
+            {meta?.extremeScan || meta?.mode === "postdoc-extreme-24x7" ? (
+              <Badge className="bg-violet-500/20 text-violet-100">POSTDOC EXTREME</Badge>
+            ) : null}
             <Badge variant="outline">{status}</Badge>
             <Badge variant="outline">cycle {cycle}</Badge>
             <Badge variant="secondary">healed={healedTotal}</Badge>
+            <Badge variant="outline">gates≥{meta?.gateTarget ?? lastSnapshot?.gateCount ?? 45}</Badge>
             {meta?.additiveOnly ? <Badge variant="outline">additive only</Badge> : null}
           </div>
         </div>
@@ -259,6 +267,10 @@ export function ScoutBotPanel({
             {baselines.minEvents ?? baselines.events ?? 51} · crime{" "}
             {baselines.crimeCategories}/{baselines.crimeCases} · may packets{" "}
             {baselines.mayPackets} · postdoc {baselines.postdoc}
+            {baselines.envPlaceholders ? ` · env ${baselines.envPlaceholders}` : ""}
+            {baselines.pipelineScripts ? ` · pipelines ${baselines.pipelineScripts}` : ""}
+            {" · tick "}
+            {meta?.tickMs ?? 600}ms (3× scan pressure)
           </div>
           {findings.length ? (
             <ul className="space-y-1.5">

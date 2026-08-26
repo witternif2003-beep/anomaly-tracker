@@ -483,8 +483,7 @@ export default function BusinessGlobe({ initialData }: { initialData?: GlobePayl
       try {
         const response = await fetch(withBasePath("/static/anomaly.json"), { cache: "no-store" });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const type = response.headers.get("content-type") ?? "";
-        if (!type.includes("json")) throw new Error("not-json");
+        // Pages may omit Content-Type — parse JSON regardless.
         const data = (await response.json()) as GlobePayload;
         if (!cancelled) {
           setPayload(data);
@@ -537,7 +536,11 @@ export default function BusinessGlobe({ initialData }: { initialData?: GlobePayl
   const p1Events = useMemo(() => filteredEvents.filter((e) => e.priority === "P1"), [filteredEvents]);
 
   useEffect(() => {
-    if (!p1Events.length) return;
+    if (!p1Events.length) {
+      setHotEventIndex(0);
+      return;
+    }
+    setHotEventIndex((i) => i % p1Events.length);
     const id = window.setInterval(() => {
       setHotEventIndex((i) => (i + 1) % p1Events.length);
     }, 1400);

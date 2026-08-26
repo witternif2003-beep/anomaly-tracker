@@ -24,8 +24,10 @@ export function withBasePath(path: string): string {
 }
 
 function looksLikeJson(response: Response): boolean {
-  const type = response.headers.get("content-type") ?? "";
-  return type.includes("application/json") || type.includes("+json");
+  const type = (response.headers.get("content-type") ?? "").trim();
+  // GitHub Pages often omits Content-Type for static JSON — treat empty as OK.
+  if (!type) return true;
+  return type.includes("application/json") || type.includes("+json") || type.includes("json");
 }
 
 /**

@@ -457,7 +457,7 @@ export function OrbitalChamber({
       </div>
 
       {/* 3D scene: glass + orbs only — no text under perspective (prevents raster blur). */}
-      <div className="chamber-zoom-rig" style={{ transform: `scale3d(${zoom}, ${zoom}, ${zoom})` }}>
+      <div className="chamber-zoom-rig">
         <div
           ref={stageRef}
           className="chamber-stage chamber-stage--js"
@@ -490,7 +490,7 @@ export function OrbitalChamber({
                   priorityClass(node.priority),
                   selectedEntityId === node.id && "chamber-entity--selected",
                 )}
-                style={{ transform: `translate3d(${x}px, ${y}px, ${z}px)` }}
+                style={{ transform: `translate3d(${x * zoom}px, ${y * zoom}px, ${z * zoom}px)` }}
                 onClick={() => onSelectEntity(node.id)}
                 aria-label={node.label}
               >
@@ -512,7 +512,7 @@ export function OrbitalChamber({
                   priorityClass(event.priority),
                   hotEventId === event.id && "chamber-anomaly--hot",
                 )}
-                style={{ transform: `translate3d(${x}px, ${y}px, ${z}px) scale(${scale})` }}
+                style={{ transform: `translate3d(${x * zoom}px, ${y * zoom}px, ${z * zoom}px) scale(${scale})` }}
                 onClick={() => onSelectEvent?.(event.id)}
                 aria-label={event.title}
               >
