@@ -60,14 +60,34 @@ fi
 echo "==> push source main"
 git push -u anomaly-tracker HEAD:main
 
-echo "==> publish ./out to gh-pages (dotfiles + .nojekyll required so Jekyll keeps _next/)"
+echo "==> publish ./out to gh-pages as a CLEAN orphan tree (no leftover .cursor / source pollution)"
 touch out/.nojekyll
-# Clean publish: only the static export, include dotfiles, disable Jekyll.
-npx --yes gh-pages@6.2.0 -d out -b gh-pages \
-  -r "$remote_url" \
-  --dotfiles \
-  --nojekyll \
-  -m "deploy: static anomaly-tracker $(date -u +%Y-%m-%dT%H:%MZ)"
+# Strip Next.js RSC debug text dumps that can confuse Pages builders.
+find out -maxdepth 1 -type f -name '__next.*.txt' -delete || true
+EXPECTED_POSTDOC=$(python3 - <<'PY'
+import json
+print(json.load(open("public/static/anomaly.json"))["postdocCatalog"]["total"])
+PY
+)
+publish_dir="$(mktemp -d /tmp/lyra-gh-pages-XXXXXX)"
+# Copy export only (no repo dotfiles leaking in).
+cp -a out/. "$publish_dir/"
+touch "$publish_dir/.nojekyll"
+# Guard: polluted publish must never ship agent config.
+if [[ -e "$publish_dir/.cursor" || -e "$publish_dir/package.json" || -e "$publish_dir/src" ]]; then
+  echo "Refusing polluted Pages publish tree" >&2
+  exit 1
+fi
+(
+  cd "$publish_dir"
+  git init -q
+  git checkout -q -b gh-pages
+  git add -A
+  git -c user.name="lyra-pages" -c user.email="lyra-pages@local" commit -qm \
+    "deploy: static anomaly-tracker $(date -u +%Y-%m-%dT%H:%MZ) postdoc=${EXPECTED_POSTDOC}"
+  git push -qf "$remote_url" gh-pages:gh-pages
+)
+rm -rf "$publish_dir"
 
 echo "==> point Pages at gh-pages /"
 curl -sS -X POST \
@@ -84,21 +104,31 @@ curl -sS -X PUT \
 URL="https://${GITHUB_USERNAME}.github.io/${REPO_NAME}/"
 CODE=000
 CHUNK_CODE=000
-for i in $(seq 1 36); do
+LIVE_POSTDOC=0
+PAGES_STATUS="unknown"
+for i in $(seq 1 45); do
   CODE=$(curl -sS -o /dev/null -w "%{http_code}" --max-time 20 "${URL}tracker/" || true)
-  # Probe a real hashed chunk from the freshly built HTML (Jekyll regression guard).
   html=$(curl -fsS --max-time 20 "${URL}tracker/" || true)
   chunk=$(printf '%s' "$html" | python3 -c "import re,sys; m=re.findall(r'/anomaly-tracker(/_next/static/chunks/[^\" ]+\.js)', sys.stdin.read()); print(m[0] if m else '')")
   if [[ -n "$chunk" ]]; then
-    CHUNK_CODE=$(curl -sS -o /dev/null -w "%{http_code}" --max-time 20 "https://witternif2003-beep.github.io/anomaly-tracker${chunk}" || true)
+    CHUNK_CODE=$(curl -sS -o /dev/null -w "%{http_code}" --max-time 20 "https://${GITHUB_USERNAME}.github.io/${REPO_NAME}${chunk}" || true)
   fi
   nojekyll=$(curl -sS -o /dev/null -w "%{http_code}" --max-time 20 "${URL}.nojekyll" || true)
-  echo "waiting… ($i/36, tracker=$CODE chunk=$CHUNK_CODE nojekyll=$nojekyll)"
-  if [[ "$CODE" == "200" && "$CHUNK_CODE" == "200" ]]; then
+  LIVE_POSTDOC=$(curl -fsS --max-time 60 -H 'Cache-Control: no-cache' "${URL}static/anomaly.json" \
+    | python3 -c "import sys,json; print(json.load(sys.stdin).get('postdocCatalog',{}).get('total',0))" 2>/dev/null || echo 0)
+  PAGES_STATUS=$(curl -fsS -H "Authorization: Bearer ${GITHUB_TOKEN}" -H "Accept: application/vnd.github+json" \
+    "https://api.github.com/repos/${GITHUB_USERNAME}/${REPO_NAME}/pages" \
+    | python3 -c "import sys,json; print(json.load(sys.stdin).get('status',''))" 2>/dev/null || echo unknown)
+  echo "waiting… ($i/45, tracker=$CODE chunk=$CHUNK_CODE nojekyll=$nojekyll pages=$PAGES_STATUS postdoc=$LIVE_POSTDOC want=$EXPECTED_POSTDOC)"
+  if [[ "$CODE" == "200" && "$CHUNK_CODE" == "200" && "$LIVE_POSTDOC" == "$EXPECTED_POSTDOC" && "$PAGES_STATUS" == "built" ]]; then
     break
   fi
   sleep 8
 done
+
+if [[ "$LIVE_POSTDOC" != "$EXPECTED_POSTDOC" || "$PAGES_STATUS" != "built" ]]; then
+  echo "DEPLOY WARN: live postdoc=$LIVE_POSTDOC pages=$PAGES_STATUS (expected postdoc=$EXPECTED_POSTDOC pages=built)" >&2
+fi
 
 git remote set-url anomaly-tracker "https://github.com/${GITHUB_USERNAME}/${REPO_NAME}.git"
 
@@ -106,5 +136,5 @@ echo "════════════════════════�
 echo "LIVE: ${URL}"
 echo "TRACKER: ${URL}tracker/"
 echo "CORPORATE: ${URL}corporate/"
-echo "HTTP tracker=$CODE chunk=$CHUNK_CODE"
+echo "HTTP tracker=$CODE chunk=$CHUNK_CODE pages=$PAGES_STATUS postdoc=$LIVE_POSTDOC"
 echo "═══════════════════════════════════════"

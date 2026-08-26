@@ -421,7 +421,7 @@ export function inspectTrackerBook(
   if ((postdoc.total ?? 0) !== EXPECTED.postdoc) {
     push(findings, {
       id: "postdoc-905500",
-      severity: "P2",
+      severity: "P1",
       title: "Post-doc forensic catalog not at 905500",
       detail: `total=${postdoc.total ?? 0}`,
       healable: true,
@@ -435,7 +435,7 @@ export function inspectTrackerBook(
     if (!virtual && postdocDataLen > 0 && postdocDataLen !== EXPECTED.postdoc) {
       push(findings, {
         id: "postdoc-data-length",
-        severity: "P2",
+        severity: "P1",
         title: "Post-doc data array length ≠ 905500",
         detail: `data.length=${postdocDataLen}`,
         healable: true,
@@ -446,7 +446,7 @@ export function inspectTrackerBook(
     if (virtual && (postdocDataLen < 500 || !postdoc.expandSeed)) {
       push(findings, {
         id: "postdoc-virtual-seed",
-        severity: "P2",
+        severity: "P1",
         title: "Virtual postdoc expand missing TOP500 window or expandSeed",
         detail: `data=${postdocDataLen} expandSeed=${Boolean(postdoc.expandSeed)}`,
         healable: true,
@@ -474,7 +474,7 @@ export function inspectTrackerBook(
     if ((summary.postdocImprovements ?? 0) !== EXPECTED.postdoc) {
       push(findings, {
         id: "postdoc-summary-parity",
-        severity: "P2",
+        severity: "P1",
         title: "Summary postdocImprovements ≠ 905500",
         detail: `summary=${summary.postdocImprovements ?? 0}`,
         healable: true,
@@ -961,7 +961,7 @@ export function inspectTrackerBook(
     if (missingBake.length) {
       push(findings, {
         id: "pipeline-roster-coverage",
-        severity: "P2",
+        severity: missingBake.some((id) => id.startsWith("postdoc-")) ? "P1" : "P2",
         title: "pipelineHealth missing expanded checks",
         detail: `missing=${missingBake.join(",")}`,
         healable: true,
@@ -1011,7 +1011,11 @@ export function countScoutGates(book?: any): number {
 
 export async function fetchStaticAnomalyBook(): Promise<unknown | null> {
   try {
-    const res = await fetch(withBasePath("/static/anomaly.json"), { cache: "no-store" });
+    // Cache-bust GitHub Pages edges that stick to stale anomaly.json after failed builds.
+    const bust = `v=${Date.now()}`;
+    const res = await fetch(`${withBasePath("/static/anomaly.json")}?${bust}`, {
+      cache: "no-store",
+    });
     if (!res.ok) return null;
     // GitHub Pages often omits Content-Type — parse anyway.
     return await res.json();

@@ -45,7 +45,7 @@ export async function fetchJsonWithStaticFallback<T>(
       (typeof window !== "undefined" && window.location.hostname.endsWith("github.io")));
 
   const loadStatic = async (): Promise<{ data: T; source: "static" }> => {
-    const staticUrl = withBasePath(staticPath);
+    const staticUrl = `${withBasePath(staticPath)}${staticPath.includes("?") ? "&" : "?"}v=${Date.now()}`;
     const response = await fetch(staticUrl, { cache: "no-store" });
     if (!response.ok || !looksLikeJson(response)) {
       throw new Error(`Failed to load ${staticUrl} (${response.status})`);

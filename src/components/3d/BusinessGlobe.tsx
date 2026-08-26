@@ -481,7 +481,9 @@ export default function BusinessGlobe({ initialData }: { initialData?: GlobePayl
     let cancelled = false;
     (async () => {
       try {
-        const response = await fetch(withBasePath("/static/anomaly.json"), { cache: "no-store" });
+        const response = await fetch(`${withBasePath("/static/anomaly.json")}?v=${Date.now()}`, {
+          cache: "no-store",
+        });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         // Pages may omit Content-Type — parse JSON regardless.
         const data = (await response.json()) as GlobePayload;
