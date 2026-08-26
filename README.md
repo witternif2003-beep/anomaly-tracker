@@ -21,7 +21,7 @@ npm install
 npm run dev
 ```
 
-Open [http://localhost:43127](http://localhost:43127) for the studio, or [http://localhost:43127/aip](http://localhost:43127/aip) for the AIP-Σ0 live deep dive.
+Open [http://localhost:43127](http://localhost:43127) for the studio, [http://localhost:43127/aip](http://localhost:43127/aip) for AIP-Σ0, or [http://localhost:43127/inventory](http://localhost:43127/inventory) for the live install notebook.
 
 ```bash
 npm run build
@@ -48,7 +48,7 @@ npm run local-api
 | `/v1/compliance/cjis` | GET | CJIS/NCIC placeholder status (never values) | None |
 | `/v1/p1` | GET | 11,280 P1 slots (`q`, `limit`, `offset`) — 1,280 core + 10,000 Tier-1 | None |
 | `/v1/inventory` | GET | Requested packages vs closest installs | None |
-| `/v1/install` | GET | One-shot sequence: requested vs installed | None |
+| `/v1/notebook` | GET | Live install inventory + expansion plan (not classified) | None |
 | `/v1/mode` | GET | GHOST-HAND detailed mode status (default on) | None |
 | `/v1/aip` | GET | AIP-Σ0 full-spectrum status (real, not simulated) | None |
 | `/v1/aip/scan` | POST | Scan text for unsourced citations, percents, URLs, case names | None |

@@ -125,6 +125,10 @@ export function Studio() {
                 <Link href="/aip" className="underline-offset-4 hover:underline">
                   AIP-Σ0
                 </Link>
+                {" · "}
+                <Link href="/inventory" className="underline-offset-4 hover:underline">
+                  Inventory
+                </Link>
               </p>
             </div>
           </div>

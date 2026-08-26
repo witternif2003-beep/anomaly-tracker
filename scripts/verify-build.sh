@@ -173,6 +173,8 @@ if curl -fsS -o /dev/null --max-time 3 "${base}/"; then
   echo "${dbody}" | python3 -c "import json,sys; d=json.load(sys.stdin); assert d.get('status')=='complete'; gh=d.get('ghostHand',{}); assert gh.get('active') is True; assert gh.get('protocol')=='GHOST-HAND'; assert gh.get('engine')=='lyra-2'; assert gh.get('hyperDimensional') is True; assert gh.get('lattice',{}).get('axisCount',0)>=13; assert 'GHOST-HAND / Anchors' in d.get('optimizedPrompt',''); assert 'Lyra-2 / Dimensional lattice' in d.get('optimizedPrompt',''); assert 'AIP-Σ0' in d.get('optimizedPrompt',''); assert d.get('aipSigma0',{}).get('simulated') is False; assert d['aipSigma0']['promptScan']['verdict'] in ('pass','review'); print('VERIFY OK: GHOST-HAND Lyra-2', gh['engine'], gh['lattice']['axisCount'], 'axes', len(d['optimizedPrompt']), 'chars')"
   dip="$(curl -fsS --max-time 15 "${base}/api/aip/dive")"
   echo "${dip}" | python3 -c "import json,sys; d=json.load(sys.stdin); assert d.get('ok') is True and d.get('simulated') is False; assert d.get('fixturesOk') is True; print('VERIFY OK: AIP-Σ0 deep dive', d['proofHash'][:12], d['elapsedMs'], 'ms')"
+  nb="$(curl -fsS --max-time 15 "${base}/api/notebook")"
+  echo "${nb}" | python3 -c "import json,sys; d=json.load(sys.stdin); assert d.get('classified') is False; assert d.get('summary',{}).get('p1Slots',0)>=11000; print('VERIFY OK: inventory notebook', d['summary']['p1Slots'], 'p1 slots')"
 else
   echo "VERIFY WARN: ${base} is not up; skipped live API check"
 fi
@@ -190,6 +192,11 @@ assert p1["totalSlots"] >= 11000, p1["totalSlots"]
 mode = json.load(urllib.request.urlopen(base + "/v1/mode", timeout=8))
 assert mode["engine"] == "lyra-2" and mode["hyperDimensional"] is True, mode
 assert mode["lattice"]["axisCount"] >= 13, mode["lattice"]
+nb = json.load(urllib.request.urlopen(base + "/v1/notebook", timeout=12))
+assert nb["classified"] is False and nb["governmentProgram"] is False, nb
+assert nb["summary"]["p1Slots"] >= 11000, nb["summary"]
+assert nb["summary"]["cuckooLiveSandbox"] is False
+assert nb["oneShot"]["stepCount"] >= 20
 inv = json.load(urllib.request.urlopen(base + "/v1/inventory", timeout=8))
 assert inv["additionalSlots"] == 10000, inv["additionalSlots"]
 assert len(inv["assets"]) >= 20, len(inv["assets"])

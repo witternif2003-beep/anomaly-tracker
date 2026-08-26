@@ -14,6 +14,7 @@ import {
 } from "./local-models";
 import { inventoryStatus } from "./inventory";
 import { oneShotStatus } from "./install-status";
+import { installNotebook } from "./notebook";
 import { listP1Slots } from "./p1-catalog";
 import { ghostHandStatus } from "../src/lib/optimize/ghost-hand";
 import { aipSigma0Status } from "../src/lib/aip-sigma0/protocol";
@@ -72,6 +73,10 @@ app.get("/v1/inventory", (_req, res) => {
 
 app.get("/v1/install", (_req, res) => {
   res.json(oneShotStatus());
+});
+
+app.get("/v1/notebook", (_req, res) => {
+  res.json(installNotebook());
 });
 
 app.get("/v1/mode", (_req, res) => {

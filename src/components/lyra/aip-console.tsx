@@ -102,6 +102,12 @@ export function AipConsole() {
             >
               Back to studio
             </Link>
+            <Link
+              href="/inventory"
+              className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}
+            >
+              Inventory
+            </Link>
             <Button size="sm" variant="ghost" onClick={() => void loadDive()} disabled={diveBusy}>
               Re-run dive
             </Button>
