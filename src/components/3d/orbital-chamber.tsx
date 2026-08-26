@@ -34,9 +34,10 @@ export type ChamberEvent = {
 const ZOOM_MIN = 0.55;
 const ZOOM_MAX = 2.35;
 const ZOOM_STEP = 0.12;
-/** Post-doc verified: keep card density readable (~Fibonacci + LOD). */
-const MAX_LABELED_ANOMALIES = 12;
-const MAX_LABELED_ENTITIES = 8;
+const TILT = (16 * Math.PI) / 180;
+const PERSPECTIVE = 1280;
+const LABEL_W = 168;
+const LABEL_H = 52;
 
 function priorityClass(priority: string) {
   if (priority === "P1") return "chamber-orb--p1";
@@ -44,15 +45,9 @@ function priorityClass(priority: string) {
   return "chamber-orb--p3";
 }
 
-function priorityRank(priority: string) {
-  if (priority === "P1") return 0;
-  if (priority === "P2") return 1;
-  return 2;
-}
-
 /**
- * Fibonacci / golden-angle lattice on a sphere.
- * Radius scales with √n so nearest-neighbor spacing stays usable as density rises.
+ * Fibonacci / golden-angle lattice.
+ * Radius scales with √n for usable nearest-neighbor spacing.
  */
 function spherePoint(index: number, total: number, baseRadius: number, phase = 0) {
   const n = Math.max(total, 1);
@@ -65,18 +60,7 @@ function spherePoint(index: number, total: number, baseRadius: number, phase = 0
     x: Math.cos(theta) * r * radius,
     y: y * radius,
     z: Math.sin(theta) * r * radius,
-    radius,
   };
-}
-
-/** Rotate Y then read camera-facing depth (positive z toward viewer at angle 0). */
-function depthAfterYaw(x: number, z: number, yaw: number) {
-  return x * Math.sin(yaw) + z * Math.cos(yaw);
-}
-
-function shortTitle(title: string, max = 42) {
-  if (title.length <= max) return title;
-  return `${title.slice(0, max - 1)}…`;
 }
 
 function clampZoom(value: number) {
@@ -102,9 +86,74 @@ function starField(count: number) {
   return stars;
 }
 
-function cardAnchor(index: number): "ne" | "nw" | "se" | "sw" {
-  const modes = ["ne", "nw", "se", "sw"] as const;
-  return modes[index % 4];
+/** Match CSS `rotateX(tilt) rotateY(yaw)` (applied right-to-left). */
+function projectPoint(
+  x: number,
+  y: number,
+  z: number,
+  yaw: number,
+  zoom: number,
+  cx: number,
+  cy: number,
+) {
+  const cosY = Math.cos(yaw);
+  const sinY = Math.sin(yaw);
+  const x1 = x * cosY + z * sinY;
+  const y1 = y;
+  const z1 = -x * sinY + z * cosY;
+
+  const cosX = Math.cos(TILT);
+  const sinX = Math.sin(TILT);
+  const x2 = x1 * zoom;
+  const y2 = (y1 * cosX - z1 * sinX) * zoom;
+  const z2 = (y1 * sinX + z1 * cosX) * zoom;
+
+  const denom = Math.max(40, PERSPECTIVE - z2);
+  const scale = PERSPECTIVE / denom;
+  return {
+    sx: cx + x2 * scale,
+    sy: cy + y2 * scale,
+    depth: z2,
+    scale,
+  };
+}
+
+type OverlayLabel = {
+  id: string;
+  kind: "entity" | "anomaly";
+  priority: string;
+  title: string;
+  meta?: string;
+  x: number;
+  y: number;
+  depth: number;
+  selected?: boolean;
+  hot?: boolean;
+};
+
+/** Push overlapping screen-space labels apart (post-doc collision pass). */
+function resolveCollisions(labels: OverlayLabel[], width: number, height: number) {
+  const out = labels.map((l) => ({ ...l }));
+  out.sort((a, b) => b.depth - a.depth);
+  for (let pass = 0; pass < 4; pass += 1) {
+    for (let i = 0; i < out.length; i += 1) {
+      for (let j = i + 1; j < out.length; j += 1) {
+        const a = out[i];
+        const b = out[j];
+        const dx = b.x - a.x;
+        const dy = b.y - a.y;
+        const minX = LABEL_W * 0.72;
+        const minY = LABEL_H * 0.85;
+        if (Math.abs(dx) < minX && Math.abs(dy) < minY) {
+          const pushX = (minX - Math.abs(dx)) * 0.55 * (dx === 0 ? (j % 2 === 0 ? 1 : -1) : Math.sign(dx) || 1);
+          const pushY = (minY - Math.abs(dy)) * 0.55 * (dy === 0 ? 1 : Math.sign(dy) || 1);
+          b.x = Math.min(width - 8, Math.max(8, b.x + pushX));
+          b.y = Math.min(height - 8, Math.max(48, b.y + pushY));
+        }
+      }
+    }
+  }
+  return out.sort((a, b) => a.depth - b.depth);
 }
 
 export function OrbitalChamber({
@@ -127,15 +176,28 @@ export function OrbitalChamber({
   const [paused, setPaused] = useState(false);
   const [zoom, setZoom] = useState(1);
   const [yaw, setYaw] = useState(0);
+  const [size, setSize] = useState({ w: 800, h: 560 });
   const viewportRef = useRef<HTMLDivElement>(null);
+  const stageRef = useRef<HTMLDivElement>(null);
   const pausedRef = useRef(paused);
-  const stars = useMemo(() => starField(64), []);
+  const stars = useMemo(() => starField(48), []);
 
   useEffect(() => {
     pausedRef.current = paused;
   }, [paused]);
 
-  /** Corrected rotation: JS yaw only (fixed X tilt on rig) — counter-billboard uses same yaw. */
+  useEffect(() => {
+    const el = viewportRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(([entry]) => {
+      const { width, height } = entry.contentRect;
+      setSize({ w: Math.max(320, width), h: Math.max(320, height) });
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  /** Slow continuous yaw — labels stay in flat overlay (never perspective-blurred). */
   useEffect(() => {
     let frame = 0;
     let last = performance.now();
@@ -143,7 +205,7 @@ export function OrbitalChamber({
       const dt = Math.min(0.05, (now - last) / 1000);
       last = now;
       if (!pausedRef.current) {
-        setYaw((y) => (y + dt * 0.22) % (Math.PI * 2));
+        setYaw((y) => (y + dt * 0.16) % (Math.PI * 2));
       }
       frame = requestAnimationFrame(tick);
     };
@@ -162,62 +224,61 @@ export function OrbitalChamber({
     return events.filter((e) => ids.has(e.entityId));
   }, [events, blackOwnedOnly, visibleNodes]);
 
-  const labeledEntityIds = useMemo(() => {
-    const ranked = [...visibleNodes].sort(
-      (a, b) =>
-        priorityRank(a.priority) - priorityRank(b.priority) ||
-        b.anomalyCount - a.anomalyCount,
-    );
-    const ids = new Set<string>();
-    for (const n of ranked) {
-      if (ids.size >= MAX_LABELED_ENTITIES) break;
-      ids.add(n.id);
-    }
-    if (selectedEntityId) ids.add(selectedEntityId);
-    return ids;
-  }, [visibleNodes, selectedEntityId]);
-
-  const labeledEventIds = useMemo(() => {
-    const ranked = [...visibleEvents].sort(
-      (a, b) =>
-        priorityRank(a.priority) - priorityRank(b.priority) ||
-        a.title.localeCompare(b.title),
-    );
-    const ids = new Set<string>();
-    for (const e of visibleEvents) {
-      if (e.priority === "P1") ids.add(e.id);
-    }
-    for (const e of ranked) {
-      if (ids.size >= MAX_LABELED_ANOMALIES) break;
-      ids.add(e.id);
-    }
-    if (hotEventId) ids.add(hotEventId);
-    return ids;
-  }, [visibleEvents, hotEventId]);
-
   const entityOrbs = useMemo(
     () =>
-      visibleNodes.map((node, i) => {
-        const pt = spherePoint(i, Math.max(visibleNodes.length, 1), 150, 0.15);
-        return { node, ...pt, anchor: cardAnchor(i) };
-      }),
+      visibleNodes.map((node, i) => ({
+        node,
+        ...spherePoint(i, Math.max(visibleNodes.length, 1), 150, 0.15),
+      })),
     [visibleNodes],
   );
 
   const anomalyOrbs = useMemo(
     () =>
-      visibleEvents.map((event, i) => {
-        // Phase offset keeps anomaly lattice from stacking on entity lattice.
-        const pt = spherePoint(i, Math.max(visibleEvents.length, 1), 268, 1.1);
-        return {
-          event,
-          ...pt,
-          anchor: cardAnchor(i + 1),
-          scale: event.priority === "P1" ? 1.12 : event.priority === "P2" ? 1.02 : 0.92,
-        };
-      }),
+      visibleEvents.map((event, i) => ({
+        event,
+        ...spherePoint(i, Math.max(visibleEvents.length, 1), 268, 1.1),
+        scale: event.priority === "P1" ? 1.12 : event.priority === "P2" ? 1.02 : 0.92,
+      })),
     [visibleEvents],
   );
+
+  const cx = size.w / 2;
+  const cy = size.h * 0.48;
+
+  const overlayLabels = useMemo(() => {
+    const raw: OverlayLabel[] = [];
+    for (const { node, x, y, z } of entityOrbs) {
+      const p = projectPoint(x, y, z, yaw, zoom, cx, cy);
+      raw.push({
+        id: node.id,
+        kind: "entity",
+        priority: node.priority,
+        title: `${node.label}${node.blackOwned ? " · BO" : ""}`,
+        meta: `${node.city} · ${node.anomalyCount} anomalies`,
+        x: p.sx,
+        y: p.sy - 18,
+        depth: p.depth,
+        selected: selectedEntityId === node.id,
+      });
+    }
+    for (const { event, x, y, z } of anomalyOrbs) {
+      const p = projectPoint(x, y, z, yaw, zoom, cx, cy);
+      raw.push({
+        id: event.id,
+        kind: "anomaly",
+        priority: event.priority,
+        title: event.title,
+        meta: event.artifact ?? event.entityName ?? undefined,
+        x: p.sx,
+        y: p.sy - 22,
+        depth: p.depth,
+        hot: hotEventId === event.id,
+        selected: selectedEntityId === event.entityId,
+      });
+    }
+    return resolveCollisions(raw, size.w, size.h);
+  }, [entityOrbs, anomalyOrbs, yaw, zoom, cx, cy, size.w, size.h, selectedEntityId, hotEventId]);
 
   const bumpZoom = useCallback((delta: number) => {
     setZoom((z) => clampZoom(z + delta));
@@ -280,7 +341,7 @@ export function OrbitalChamber({
       </div>
 
       <div className="chamber-hud-top">
-        <span className="chamber-hud-title">3D anomaly chamber · corrected spacing</span>
+        <span className="chamber-hud-title">3D anomaly chamber · crisp labels</span>
         <div className="chamber-hud-controls">
           <button type="button" className="chamber-pause" onClick={() => bumpZoom(-ZOOM_STEP)} aria-label="Zoom out">
             − Zoom
@@ -297,8 +358,10 @@ export function OrbitalChamber({
         </div>
       </div>
 
+      {/* 3D scene: glass + orbs only — no text under perspective (prevents raster blur). */}
       <div className="chamber-zoom-rig" style={{ transform: `scale3d(${zoom}, ${zoom}, ${zoom})` }}>
         <div
+          ref={stageRef}
           className="chamber-stage chamber-stage--js"
           style={{ transform: `rotateX(16deg) rotateY(${yaw}rad)` }}
         >
@@ -313,7 +376,6 @@ export function OrbitalChamber({
             <span className="chamber-edge chamber-edge--y" />
             <span className="chamber-edge chamber-edge--z" />
           </div>
-
           <div className="chamber-core" aria-hidden />
           <div className="chamber-ring chamber-ring--a" aria-hidden />
           <div className="chamber-ring chamber-ring--b" aria-hidden />
@@ -321,103 +383,131 @@ export function OrbitalChamber({
           <div className="chamber-ring chamber-ring--d" aria-hidden />
 
           <div className="chamber-world">
-            {entityOrbs.map(({ node, x, y, z, anchor }) => {
-              const depth = depthAfterYaw(x, z, yaw);
-              const facing = depth > -40;
-              const showLabel = facing && labeledEntityIds.has(node.id);
-              const zIndex = Math.round(200 + depth);
-              return (
-                <button
-                  key={node.id}
-                  type="button"
-                  className={cn(
-                    "chamber-entity",
-                    priorityClass(node.priority),
-                    selectedEntityId === node.id && "chamber-entity--selected",
-                    node.blackOwned && "chamber-entity--owned",
-                    !facing && "chamber-orb--occluded",
-                  )}
-                  style={{
-                    transform: `translate3d(${x}px, ${y}px, ${z}px)`,
-                    zIndex,
-                  }}
-                  onClick={() => onSelectEntity(node.id)}
-                  title={`${node.label} · ${node.city}${node.blackOwned ? " · Black-owned (fixture)" : ""}`}
-                >
-                  <span
-                    className="chamber-billboard chamber-billboard--js"
-                    style={{ transform: `rotateY(${-yaw}rad)` }}
-                  >
-                    <span className="chamber-entity-dot" />
-                    <span className="chamber-entity-ring" aria-hidden />
-                    {showLabel ? (
-                      <span className={cn("chamber-entity-label", `chamber-card--${anchor}`)}>
-                        {node.label}
-                        {node.blackOwned ? <em> · BO</em> : null}
-                      </span>
-                    ) : null}
-                    {node.anomalyCount > 0 ? (
-                      <span className="chamber-entity-count">{node.anomalyCount}</span>
-                    ) : null}
-                  </span>
-                </button>
-              );
-            })}
-
-            {anomalyOrbs.map(({ event, x, y, z, scale, anchor }) => {
-              const depth = depthAfterYaw(x, z, yaw);
-              const facing = depth > -55;
-              const showCard =
-                facing &&
-                (labeledEventIds.has(event.id) ||
-                  event.id === hotEventId ||
-                  selectedEntityId === event.entityId);
-              const zIndex = Math.round(220 + depth);
-              return (
-                <button
-                  key={event.id}
-                  type="button"
-                  className={cn(
-                    "chamber-anomaly",
-                    priorityClass(event.priority),
-                    hotEventId === event.id && "chamber-anomaly--hot",
-                    !facing && "chamber-orb--occluded",
-                  )}
-                  style={{
-                    transform: `translate3d(${x}px, ${y}px, ${z}px) scale(${scale})`,
-                    zIndex,
-                  }}
-                  onClick={() => onSelectEvent?.(event.id)}
-                  title={`${event.priority} · ${event.title}`}
-                >
-                  <span
-                    className="chamber-billboard chamber-billboard--js"
-                    style={{ transform: `rotateY(${-yaw}rad)` }}
-                  >
-                    <span className="chamber-anomaly-core" />
-                    <span className="chamber-anomaly-halo" />
-                    <span className="chamber-anomaly-spine" aria-hidden />
-                    {showCard ? (
-                      <span className={cn("chamber-anomaly-card", `chamber-card--${anchor}`)}>
-                        <span className="chamber-anomaly-pri">{event.priority}</span>
-                        <span className="chamber-anomaly-title">{shortTitle(event.title)}</span>
-                        {event.artifact ? (
-                          <span className="chamber-anomaly-meta">{shortTitle(event.artifact, 36)}</span>
-                        ) : null}
-                      </span>
-                    ) : null}
-                  </span>
-                </button>
-              );
-            })}
+            {entityOrbs.map(({ node, x, y, z }) => (
+              <button
+                key={node.id}
+                type="button"
+                className={cn(
+                  "chamber-entity",
+                  priorityClass(node.priority),
+                  selectedEntityId === node.id && "chamber-entity--selected",
+                )}
+                style={{ transform: `translate3d(${x}px, ${y}px, ${z}px)` }}
+                onClick={() => onSelectEntity(node.id)}
+                aria-label={node.label}
+              >
+                <span className="chamber-orb-mark">
+                  <span className="chamber-entity-dot" />
+                  <span className="chamber-entity-ring" aria-hidden />
+                  {node.anomalyCount > 0 ? (
+                    <span className="chamber-entity-count">{node.anomalyCount}</span>
+                  ) : null}
+                </span>
+              </button>
+            ))}
+            {anomalyOrbs.map(({ event, x, y, z, scale }) => (
+              <button
+                key={event.id}
+                type="button"
+                className={cn(
+                  "chamber-anomaly",
+                  priorityClass(event.priority),
+                  hotEventId === event.id && "chamber-anomaly--hot",
+                )}
+                style={{ transform: `translate3d(${x}px, ${y}px, ${z}px) scale(${scale})` }}
+                onClick={() => onSelectEvent?.(event.id)}
+                aria-label={event.title}
+              >
+                <span className="chamber-orb-mark">
+                  <span className="chamber-anomaly-core" />
+                  <span className="chamber-anomaly-halo" />
+                </span>
+              </button>
+            ))}
           </div>
         </div>
       </div>
 
+      {/* Flat screen-space labels: translate only, no rotate/perspective, no backdrop-filter. */}
+      <div className="chamber-label-layer" aria-live="polite">
+        {overlayLabels.map((label) => (
+          <button
+            key={`label-${label.kind}-${label.id}`}
+            type="button"
+            className={cn(
+              "chamber-flat-label",
+              priorityClass(label.priority),
+              label.kind === "entity" && "chamber-flat-label--entity",
+              label.kind === "anomaly" && "chamber-flat-label--anomaly",
+              label.selected && "chamber-flat-label--selected",
+              label.hot && "chamber-flat-label--hot",
+            )}
+            style={{
+              transform: `translate3d(${label.x}px, ${label.y}px, 0) translate(-50%, -100%)`,
+              zIndex: Math.round(400 + label.depth),
+            }}
+            onClick={() => {
+              if (label.kind === "entity") onSelectEntity(label.id);
+              else onSelectEvent?.(label.id);
+            }}
+            title={label.title}
+          >
+            <span className="chamber-flat-pri">{label.priority}</span>
+            <span className="chamber-flat-title">{label.title}</span>
+            {label.meta ? <span className="chamber-flat-meta">{label.meta}</span> : null}
+          </button>
+        ))}
+      </div>
+
+      <div className="chamber-roster" aria-label="Complete readable chamber roster">
+        <div className="chamber-roster-head">
+          All entries · {visibleNodes.length} entities · {visibleEvents.length} anomalies · always crisp
+        </div>
+        <ul className="chamber-roster-list">
+          {visibleNodes.map((node) => (
+            <li key={`roster-n-${node.id}`}>
+              <button
+                type="button"
+                className={cn(
+                  "chamber-roster-item",
+                  priorityClass(node.priority),
+                  selectedEntityId === node.id && "chamber-roster-item--active",
+                )}
+                onClick={() => onSelectEntity(node.id)}
+              >
+                <span className="chamber-roster-pri">{node.priority}</span>
+                <span className="chamber-roster-text">
+                  {node.label}
+                  {node.blackOwned ? " · BO" : ""} · {node.city}
+                </span>
+              </button>
+            </li>
+          ))}
+          {visibleEvents.map((event) => (
+            <li key={`roster-e-${event.id}`}>
+              <button
+                type="button"
+                className={cn(
+                  "chamber-roster-item",
+                  priorityClass(event.priority),
+                  hotEventId === event.id && "chamber-roster-item--active",
+                )}
+                onClick={() => onSelectEvent?.(event.id)}
+              >
+                <span className="chamber-roster-pri">{event.priority}</span>
+                <span className="chamber-roster-text">
+                  {event.title}
+                  {event.artifact ? ` · ${event.artifact}` : ""}
+                </span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      </div>
+
       <div className="chamber-hud-bottom">
         <span>
-          {visibleNodes.length} entities · {visibleEvents.length} anomalies · Fibonacci √n spacing ·
-          depth-culled labels · zoom {zoomPct}%
+          Screen-space labels · no 3D text blur · Fibonacci orbs · zoom {zoomPct}%
         </span>
         {blackOwnedOnly ? <span className="chamber-owned-pill">Black-owned verify only</span> : null}
       </div>

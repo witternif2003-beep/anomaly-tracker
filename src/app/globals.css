@@ -523,7 +523,7 @@
 /* ─── Rotating 3D anomaly chamber (works without WebGL) ─── */
 .chamber-viewport {
   position: relative;
-  height: min(78vh, 680px);
+  height: min(88vh, 820px);
   width: 100%;
   overflow: hidden;
   border-radius: calc(var(--radius) + 6px);
@@ -683,7 +683,7 @@
 
 .chamber-zoom-rig {
   position: absolute;
-  inset: 8% 5% 12%;
+  inset: 8% 5% 28%;
   transform-style: preserve-3d;
   transform-origin: 50% 48%;
   transition: transform 140ms ease-out;
@@ -881,34 +881,180 @@
   z-index: 2;
 }
 
-.chamber-billboard {
+.chamber-orb-mark {
   position: relative;
   display: block;
-  width: 40px;
-  height: 40px;
-  margin: -20px 0 0 -20px;
-  transform-style: preserve-3d;
-  animation: chamber-counter-spin 28s linear infinite;
+  width: 28px;
+  height: 28px;
+  margin: -14px 0 0 -14px;
+}
+
+.chamber-label-layer {
+  position: absolute;
+  inset: 0 0 26% 0;
+  z-index: 6;
+  pointer-events: none;
+  overflow: hidden;
+  /* Critical: no perspective / filter on this layer — keeps text razor-sharp. */
+  transform: none;
+  filter: none;
+  perspective: none;
+}
+
+.chamber-flat-label {
+  position: absolute;
+  left: 0;
+  top: 0;
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.12rem;
+  width: max-content;
+  max-width: 180px;
+  min-width: 120px;
+  padding: 0.4rem 0.55rem;
+  border-radius: 0.45rem;
+  border: 1px solid oklch(0.85 0.04 200 / 45%);
+  background: oklch(0.11 0.03 220 / 96%);
+  color: oklch(0.96 0.02 95);
+  text-align: left;
+  cursor: pointer;
+  /* No backdrop-filter, no 3D transform inheritance — eliminates blur. */
+  backdrop-filter: none;
+  filter: none;
+  transform-style: flat;
+  box-shadow: 0 6px 18px oklch(0.05 0.02 220 / 45%);
   transition: none;
 }
 
-.chamber-billboard--js {
-  animation: none;
-  will-change: transform;
+.chamber-flat-label--entity {
+  border-color: oklch(0.78 0.1 155 / 45%);
 }
 
-.chamber-stage--paused .chamber-billboard {
-  animation-play-state: paused;
+.chamber-flat-label--selected,
+.chamber-flat-label--hot {
+  border-color: oklch(0.86 0.11 92 / 70%);
+  box-shadow: 0 0 0 1px oklch(0.86 0.11 92 / 35%), 0 8px 20px oklch(0.05 0.02 220 / 50%);
 }
 
-.chamber-orb--occluded {
-  opacity: 0.28;
-  pointer-events: none;
+.chamber-orb--p1.chamber-flat-label,
+.chamber-flat-label.chamber-orb--p1 {
+  border-color: oklch(0.7 0.18 25 / 55%);
 }
 
-.chamber-orb--occluded .chamber-entity-label,
-.chamber-orb--occluded .chamber-anomaly-card {
-  display: none;
+.chamber-orb--p2.chamber-flat-label,
+.chamber-flat-label.chamber-orb--p2 {
+  border-color: oklch(0.86 0.12 92 / 55%);
+}
+
+.chamber-flat-pri {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.55rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: oklch(0.86 0.11 92);
+}
+
+.chamber-orb--p1 .chamber-flat-pri {
+  color: oklch(0.78 0.18 25);
+}
+
+.chamber-flat-title {
+  font-size: 0.7rem;
+  line-height: 1.3;
+  font-weight: 560;
+  color: oklch(0.97 0.01 95);
+  white-space: normal;
+  word-break: break-word;
+}
+
+.chamber-flat-meta {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.55rem;
+  line-height: 1.3;
+  color: oklch(0.78 0.04 200);
+  white-space: normal;
+  word-break: break-word;
+}
+
+.chamber-roster {
+  position: absolute;
+  z-index: 7;
+  left: 0.75rem;
+  right: 0.75rem;
+  bottom: 2.4rem;
+  max-height: 22%;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid oklch(0.85 0.04 200 / 28%);
+  border-radius: 0.55rem;
+  background: oklch(0.09 0.025 220 / 96%);
+  backdrop-filter: none;
+  filter: none;
+  overflow: hidden;
+}
+
+.chamber-roster-head {
+  flex: 0 0 auto;
+  padding: 0.35rem 0.65rem;
+  border-bottom: 1px solid oklch(0.85 0.04 200 / 18%);
+  font-size: 0.55rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: oklch(0.8 0.04 95 / 90%);
+}
+
+.chamber-roster-list {
+  margin: 0;
+  padding: 0.25rem;
+  list-style: none;
+  overflow: auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 0.2rem;
+}
+
+.chamber-roster-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+  width: 100%;
+  padding: 0.3rem 0.45rem;
+  border-radius: 0.35rem;
+  border: 1px solid transparent;
+  background: oklch(0.14 0.03 220 / 70%);
+  color: oklch(0.95 0.02 95);
+  text-align: left;
+  cursor: pointer;
+}
+
+.chamber-roster-item--active {
+  border-color: oklch(0.86 0.11 92 / 45%);
+  background: oklch(0.2 0.04 210 / 75%);
+}
+
+.chamber-roster-pri {
+  flex: 0 0 auto;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.55rem;
+  letter-spacing: 0.12em;
+  color: oklch(0.86 0.11 92);
+}
+
+.chamber-orb--p1 .chamber-roster-pri {
+  color: oklch(0.78 0.18 25);
+}
+
+.chamber-roster-text {
+  font-size: 0.65rem;
+  line-height: 1.3;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.chamber-hud-bottom {
+  bottom: 0;
+  background: linear-gradient(transparent, oklch(0.08 0.03 220 / 85%));
 }
 
 .chamber-entity-dot {
