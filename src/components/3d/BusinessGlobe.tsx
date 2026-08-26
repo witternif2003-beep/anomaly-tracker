@@ -678,7 +678,7 @@ export default function BusinessGlobe({ initialData }: { initialData?: GlobePayl
         label={
           useWebgl
             ? "Orbital globe · drag to inspect"
-            : "3D anomaly chamber · distinct rotating anomalies"
+            : "Post-doc live · glass chamber · zoom scroll"
         }
         className="globe-stage"
       >
