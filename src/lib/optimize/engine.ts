@@ -131,16 +131,48 @@ function wordCount(text: string): number {
   return text.trim().split(/\s+/).filter(Boolean).length;
 }
 
+const ENTITY_STOP = new Set([
+  "i",
+  "a",
+  "an",
+  "the",
+  "this",
+  "that",
+  "we",
+  "my",
+  "our",
+  "your",
+  "please",
+  "can",
+  "could",
+  "need",
+  "needs",
+  "make",
+  "made",
+  "want",
+  "tell",
+  "if",
+  "it",
+  "is",
+  "good",
+  "help",
+]);
+
 function extractEntities(text: string): string[] {
   const entities = new Set<string>();
   const quoted = text.match(/["“]([^"”]{2,60})["”]/g) ?? [];
   for (const q of quoted) entities.add(q.replace(/["“”]/g, "").trim());
 
+  const firstWord = (text.trim().split(/\s+/)[0] ?? "").replace(/[^a-zA-Z0-9]/g, "");
   const proper = text.match(
     /\b[A-Z][a-zA-Z0-9]+(?:\s+[A-Z][a-zA-Z0-9]+){0,3}\b/g,
   );
   for (const p of proper ?? []) {
-    if (!["I", "A", "The", "This", "We", "My"].includes(p)) entities.add(p);
+    const lower = p.toLowerCase();
+    if (ENTITY_STOP.has(lower)) continue;
+    if (ACTION_VERBS.includes(lower)) continue;
+    if (p === firstWord) continue;
+    entities.add(p);
   }
 
   const tech =
@@ -149,7 +181,10 @@ function extractEntities(text: string): string[] {
     ) ?? [];
   for (const t of tech) entities.add(t);
 
-  return [...entities].slice(0, 8);
+  const list = [...entities];
+  return list
+    .filter((e) => !list.some((other) => other !== e && other.toLowerCase().includes(e.toLowerCase())))
+    .slice(0, 8);
 }
 
 function extractConstraints(text: string): string[] {
@@ -223,10 +258,7 @@ function deconstruct(text: string, type: RequestType): DeconstructResult {
     missing.push("success criteria");
   }
 
-  const intent =
-    verb === "complete"
-      ? `Produce a high-quality response for: ${text.trim().slice(0, 140)}`
-      : `${capitalize(verb)} ${subject || "the requested deliverable"} with enough specificity that another model could execute it without guessing.`;
+  const intent = `Carry out this task as a specialist: ${text.trim().replace(/[.?!]+$/, "")}. Do not guess unstated requirements — label every assumption.`;
 
   return {
     intent,
@@ -282,7 +314,7 @@ function diagnose(text: string, d: DeconstructResult): DiagnoseResult {
   if (d.missing.length <= 1 && d.provided.length >= 3) completeness = "high";
 
   const complexity: DiagnoseResult["complexity"] =
-    wc > 70 || d.missing.length >= 4
+    wc > 70 || (d.missing.length >= 4 && wc >= 40)
       ? "complex"
       : wc < 20
         ? "simple"
@@ -628,10 +660,6 @@ function buildQuestions(d: DeconstructResult, type: RequestType): ClarifyingQues
   }
 
   return pool.slice(0, 3);
-}
-
-function capitalize(s: string): string {
-  return s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
 }
 
 function escapeRe(s: string): string {

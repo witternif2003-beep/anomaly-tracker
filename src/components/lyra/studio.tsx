@@ -275,7 +275,7 @@ export function Studio() {
               result={result}
               answers={answers}
               onChange={(id, value) => setAnswers((prev) => ({ ...prev, [id]: value }))}
-              onContinue={() => run({ nextAnswers: answers })}
+              onContinue={() => run({ nextAnswers: answers, skipQuestions: true })}
               onSkip={() => run({ skipQuestions: true })}
               busy={busy}
             />
