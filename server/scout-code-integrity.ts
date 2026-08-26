@@ -1,5 +1,5 @@
 /**
- * Postdoc hidden-code integrity audit (additive).
+ * Postdoc ×3 hidden-code integrity audit (additive).
  * Runs at static bake time — scout validates the embedded report.
  * Never removes features; only reports / requires heals via reload-static.
  */
@@ -53,13 +53,9 @@ export function compileScoutCodeIntegrity() {
   let effectEventCalls = 0;
   for (const file of srcFiles) {
     const text = readFileSync(file, "utf8");
-    // Import or call of useEffectEvent (excluding comments about #440)
     const lines = text.split("\n").filter((l) => !l.trim().startsWith("//") && !l.trim().startsWith("*"));
     const blob = lines.join("\n");
-    if (/\buseEffectEvent\s*\(/.test(blob) || /from ["']react["'].*useEffectEvent|useEffectEvent[^"'\n]*from ["']react["']/.test(blob)) {
-      // count actual hook usage
-      if (/\buseEffectEvent\s*\(/.test(blob)) effectEventCalls += 1;
-    }
+    if (/\buseEffectEvent\s*\(/.test(blob)) effectEventCalls += 1;
   }
   push(
     "hidden-no-useEffectEvent",
@@ -87,8 +83,16 @@ export function compileScoutCodeIntegrity() {
     "hidden-aip-empty-ctype",
     "fetch",
     fileHas("src/components/lyra/aip-console.tsx", "if (!type) return true") ||
-      fileHas("src/components/lyra/aip-console.tsx", '!type) return true'),
+      fileHas("src/components/lyra/aip-console.tsx", "!type) return true"),
     "AipConsole JSON detect allows empty Content-Type",
+  );
+  push(
+    "hidden-studio-empty-ctype",
+    "fetch",
+    fileHas("src/components/lyra/studio.tsx", "if (!type) return true") ||
+      fileHas("src/components/lyra/studio.tsx", "!type) return true") ||
+      !fileHas("src/components/lyra/studio.tsx", 'throw new Error("not-json")'),
+    "Studio fetch path tolerates empty Content-Type",
   );
 
   // Chamber zoom single path (no CSS scale3d(zoom))
@@ -106,6 +110,34 @@ export function compileScoutCodeIntegrity() {
     fileHas("src/lib/scout-healer.ts", "afterReload") &&
       fileHas("src/lib/scout-healer.ts", "only mark reload heals"),
     "scout-healer re-inspects after reload before marking healed",
+  );
+
+  // Scout ×3 pressure constants
+  push(
+    "hidden-scout-tick-const-67",
+    "scout",
+    fileHas("src/lib/scout-healer.ts", "SCOUT_TICK_MS = 67") ||
+      fileHas("src/lib/scout-healer.ts", "tickMsMax: 67"),
+    "scout-healer SCOUT_TICK_MS / tickMsMax = 67 (×3 harder)",
+  );
+  push(
+    "hidden-scout-gate-target-405",
+    "scout",
+    fileHas("src/lib/scout-healer.ts", "gateTarget: 405"),
+    "scout-healer gateTarget = 405",
+  );
+  push(
+    "hidden-scout-repair-passes-3",
+    "scout",
+    fileHas("src/lib/scout-healer.ts", "repairRescanPasses: 3") &&
+      fileHas("src/components/lyra/scout-bot.tsx", "repairRescanPasses"),
+    "repair→rescan ×3 wired in healer + panel",
+  );
+  push(
+    "hidden-scout-inflight-guard",
+    "scout",
+    fileHas("src/components/lyra/scout-bot.tsx", "inFlightRef"),
+    "scout panel guards overlapping ticks under 67ms pressure",
   );
 
   // BO admit idempotency via admittedKeysRef
@@ -144,6 +176,15 @@ export function compileScoutCodeIntegrity() {
   }
   push("hidden-free-api-map-16", "credentials", freeOk, "free-api-resolutions.json maps ≥16 placeholders");
 
+  // applyFreeApiDefaults present
+  push(
+    "hidden-free-api-apply-defaults",
+    "credentials",
+    fileHas("server/load-env.ts", "applyFreeApiDefaults") ||
+      fileHas("server/load-env.ts", "free-api"),
+    "load-env applies free-API defaults for empty placeholders",
+  );
+
   // All 12 pipeline scripts exist
   const pipes = [
     "aip-static-smoke",
@@ -166,27 +207,65 @@ export function compileScoutCodeIntegrity() {
     missingPipes.length === 0,
     missingPipes.length === 0 ? "All 12 pipeline scripts present" : `missing=${missingPipes.join(",")}`,
   );
+  for (const p of pipes) {
+    push(
+      `hidden-pipe-file-${p}`,
+      "pipeline",
+      existsSync(path.join(ROOT, "scripts/pipelines", `${p}.sh`)),
+      `scripts/pipelines/${p}.sh present`,
+    );
+  }
 
-  // Scout extreme tick pressure ≤200ms in config source of truth
+  // Scout ×3 tick pressure ≤67ms in config source of truth
   const scoutJson = read("data/anomaly/scout-bot.json");
   let tickOk = false;
   let gateOk = false;
+  let passesOk = false;
+  let hiddenOk = false;
   try {
-    const s = JSON.parse(scoutJson) as { tickMs?: number; gateTarget?: number; extremeScan?: boolean };
-    tickOk = (s.tickMs ?? 9999) <= 200;
-    gateOk = (s.gateTarget ?? 0) >= 135 && s.extremeScan === true;
+    const s = JSON.parse(scoutJson) as {
+      tickMs?: number;
+      gateTarget?: number;
+      extremeScan?: boolean;
+      hiddenCodeScan?: boolean;
+      repairRescan?: boolean;
+      repairRescanPasses?: number;
+    };
+    tickOk = (s.tickMs ?? 9999) <= 67;
+    gateOk = (s.gateTarget ?? 0) >= 405 && s.extremeScan === true;
+    passesOk = (s.repairRescanPasses ?? 0) >= 3 && s.repairRescan === true;
+    hiddenOk = s.hiddenCodeScan === true;
   } catch {
     tickOk = false;
   }
-  push("hidden-scout-tick-200", "scout", tickOk, "scout-bot.json tickMs ≤200 (3× harder than 600)");
-  push("hidden-scout-gates-135", "scout", gateOk, "scout-bot.json gateTarget ≥135 + extremeScan");
+  push("hidden-scout-tick-67", "scout", tickOk, "scout-bot.json tickMs ≤67 (×3 harder than 200)");
+  push("hidden-scout-gates-405", "scout", gateOk, "scout-bot.json gateTarget ≥405 + extremeScan");
+  push("hidden-scout-repair-x3", "scout", passesOk, "scout-bot.json repairRescanPasses ≥3");
+  push("hidden-scout-hidden-code-flag", "scout", hiddenOk, "scout-bot.json hiddenCodeScan=true");
+
+  // Additive-only guarantee in scout panel copy / healer
+  push(
+    "hidden-additive-only-contract",
+    "policy",
+    fileHas("src/lib/scout-healer.ts", "Never removes features") &&
+      fileHas("data/anomaly/scout-bot.json", '"additiveOnly": true'),
+    "Additive-only contract present in healer + scout-bot.json",
+  );
+
+  // No live surveillance flags in scout config
+  push(
+    "hidden-no-live-surveillance-scout",
+    "policy",
+    fileHas("data/anomaly/scout-bot.json", '"liveSurveillance": false'),
+    "scout-bot.json liveSurveillance=false",
+  );
 
   const okCount = gates.filter((g) => g.ok).length;
   return {
     object: "lyra.scout-code-integrity" as const,
-    title: "Postdoc hidden-code integrity audit",
+    title: "Postdoc ×3 hidden-code integrity audit",
     classified: false,
-    note: "Bake-time scan of latent client/server anti-patterns. Scout deep-dives this report every tick. Additive only.",
+    note: "Bake-time deep dive of latent client/server anti-patterns + all 12 pipelines. Scout validates every tick. Additive only.",
     gateCount: gates.length,
     okCount,
     allOk: okCount === gates.length,

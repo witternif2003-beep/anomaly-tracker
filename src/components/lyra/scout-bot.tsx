@@ -25,6 +25,7 @@ export type ScoutBotPayload = {
   postdocExtreme?: boolean;
   hiddenCodeScan?: boolean;
   repairRescan?: boolean;
+  repairRescanPasses?: number;
   gateTarget?: number;
   note?: string;
   healActions?: string[];
@@ -71,6 +72,7 @@ export function ScoutBotPanel({
   const onHealedBookRef = useRef(onHealedBook);
   const onHealSelectionRef = useRef(onHealSelection);
   const lastAllClearRef = useRef(0);
+  const inFlightRef = useRef(false);
 
   bookRef.current = book;
   selectedAnomalyRef.current = selectedAnomalyId;
@@ -92,6 +94,9 @@ export function ScoutBotPanel({
   );
 
   const scoutOnce = useCallback(async () => {
+    if (inFlightRef.current) return;
+    inFlightRef.current = true;
+    try {
     const currentBook = bookRef.current;
     const selA = selectedAnomalyRef.current ?? null;
     const selE = selectedEntityRef.current ?? null;
@@ -153,30 +158,33 @@ export function ScoutBotPanel({
     totalHealed += lastResult.healedCount;
     if (lastResult.bookPatch) workingBook = lastResult.bookPatch;
 
-    // Repair → rescan loop (additive): after heal, immediately re-inspect and heal again once if needed.
-    if (currentBook?.scoutBot?.repairRescan !== false) {
+    // Repair → rescan loop (additive): after each heal, re-inspect and heal again up to ×3.
+    const maxPasses =
+      currentBook?.scoutBot?.repairRescan === false
+        ? 0
+        : Math.max(1, currentBook?.scoutBot?.repairRescanPasses ?? 3);
+    for (let pass = 1; pass < maxPasses; pass += 1) {
       const stillOpen = inspectTrackerBook(workingBook, {
         selectedAnomalyId: lastResult.selectedAnomalyId ?? selA,
         selectedEntityId: lastResult.selectedEntityId ?? selE,
         extreme: true,
       }).filter((f) => f.healable);
-      if (stillOpen.length) {
-        const second = await runScoutHeal(workingBook, {
-          selectedAnomalyId: lastResult.selectedAnomalyId ?? selA,
-          selectedEntityId: lastResult.selectedEntityId ?? selE,
-        });
-        totalHealed += second.healedCount;
-        if (second.bookPatch) workingBook = second.bookPatch;
-        lastResult = {
-          ...second,
-          healedCount: totalHealed,
-          findings: [
-            ...lastResult.findings,
-            ...second.findings.filter((f) => !lastResult.findings.some((x) => x.id === f.id)),
-          ],
-          bookPatch: workingBook !== currentBook ? workingBook : undefined,
-        };
-      }
+      if (!stillOpen.length) break;
+      const next = await runScoutHeal(workingBook, {
+        selectedAnomalyId: lastResult.selectedAnomalyId ?? selA,
+        selectedEntityId: lastResult.selectedEntityId ?? selE,
+      });
+      totalHealed += next.healedCount;
+      if (next.bookPatch) workingBook = next.bookPatch;
+      lastResult = {
+        ...next,
+        healedCount: totalHealed,
+        findings: [
+          ...lastResult.findings,
+          ...next.findings.filter((f) => !lastResult.findings.some((x) => x.id === f.id)),
+        ],
+        bookPatch: workingBook !== currentBook ? workingBook : undefined,
+      };
     }
 
     setFindings(lastResult.findings);
@@ -217,6 +225,9 @@ export function ScoutBotPanel({
 
     const remaining = lastResult.findings.filter((f) => f.healable && !f.healed);
     setStatus(remaining.length ? (totalHealed ? "healing" : "degraded") : "healthy");
+    } finally {
+      inFlightRef.current = false;
+    }
   }, []);
 
   useEffect(() => {
@@ -257,20 +268,24 @@ export function ScoutBotPanel({
           </div>
           <div className="flex flex-wrap gap-2">
             <Badge className="bg-sky-500/20 text-sky-100">ACTIVE 24/7</Badge>
-            {meta?.extremeScan || meta?.mode === "postdoc-extreme-24x7" ? (
-              <Badge className="bg-violet-500/20 text-violet-100">POSTDOC EXTREME</Badge>
+            {meta?.extremeScan ||
+            meta?.mode === "postdoc-extreme-24x7" ||
+            meta?.mode === "postdoc-x3-extreme-24x7" ? (
+              <Badge className="bg-violet-500/20 text-violet-100">POSTDOC ×3 EXTREME</Badge>
             ) : null}
             {meta?.hiddenCodeScan ? (
               <Badge className="bg-amber-500/20 text-amber-100">HIDDEN-CODE</Badge>
             ) : null}
             {meta?.repairRescan ? (
-              <Badge className="bg-emerald-500/20 text-emerald-100">REPAIR→RESCAN</Badge>
+              <Badge className="bg-emerald-500/20 text-emerald-100">
+                REPAIR→RESCAN ×{meta?.repairRescanPasses ?? 3}
+              </Badge>
             ) : null}
             <Badge variant="outline">{status}</Badge>
             <Badge variant="outline">cycle {cycle}</Badge>
             <Badge variant="secondary">healed={healedTotal}</Badge>
-            <Badge variant="outline">gates≥{meta?.gateTarget ?? lastSnapshot?.gateCount ?? 135}</Badge>
-            <Badge variant="outline">{meta?.tickMs ?? 200}ms</Badge>
+            <Badge variant="outline">gates≥{meta?.gateTarget ?? lastSnapshot?.gateCount ?? 405}</Badge>
+            <Badge variant="outline">{meta?.tickMs ?? 67}ms</Badge>
             {meta?.additiveOnly ? <Badge variant="outline">additive only</Badge> : null}
           </div>
         </div>
@@ -309,9 +324,11 @@ export function ScoutBotPanel({
             {baselines.envPlaceholders ? ` · env ${baselines.envPlaceholders}` : ""}
             {baselines.pipelineScripts ? ` · pipelines ${baselines.pipelineScripts}` : ""}
             {" · tick "}
-            {meta?.tickMs ?? 200}ms (3× harder) · gates≥{meta?.gateTarget ?? 135}
+            {meta?.tickMs ?? 67}ms (×3 harder) · gates≥{meta?.gateTarget ?? 405}
             {meta?.hiddenCodeScan ? " · hidden-code" : ""}
-            {meta?.repairRescan ? " · repair→rescan" : ""}
+            {meta?.repairRescan
+              ? ` · repair→rescan ×${meta?.repairRescanPasses ?? 3}`
+              : ""}
           </div>
           {findings.length ? (
             <ul className="space-y-1.5">

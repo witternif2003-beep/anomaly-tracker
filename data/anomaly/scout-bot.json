@@ -1,8 +1,8 @@
 {
   "object": "lyra.scout-bot",
   "title": "Error scout bot",
-  "mode": "postdoc-extreme-24x7",
-  "tickMs": 200,
+  "mode": "postdoc-x3-extreme-24x7",
+  "tickMs": 67,
   "active": true,
   "selfHealing": true,
   "additiveOnly": true,
@@ -10,8 +10,9 @@
   "postdocExtreme": true,
   "hiddenCodeScan": true,
   "repairRescan": true,
-  "gateTarget": 135,
-  "note": "24/7 postdoc-extreme scout · 200ms tick (3× harder) · hidden-code + all 12 pipelines · repair then rescan. Never removes features — only restores and adds coverage. Not live mass surveillance.",
+  "repairRescanPasses": 3,
+  "gateTarget": 405,
+  "note": "24/7 postdoc ×3 extreme scout · 67ms tick (3× harder than 200ms) · hidden-code deep dive · all 12 pipelines · repair each error then rescan ×3. Never removes features — only restores and adds coverage. Not live mass surveillance.",
   "healActions": [
     "reload-static",
     "reset-selected-anomaly",
@@ -34,8 +35,10 @@
     "pipelineScripts": 12,
     "boHardeningScore": 95,
     "improvementsGenerated": 10080,
-    "gateTarget": 135,
-    "tickMs": 200
+    "gateTarget": 405,
+    "tickMs": 67,
+    "repairRescanPasses": 3,
+    "hiddenCodeGatesMin": 24
   },
   "pipelineIds": [
     "aip-static-smoke",

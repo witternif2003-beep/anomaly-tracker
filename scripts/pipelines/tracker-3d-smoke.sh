@@ -132,14 +132,16 @@ if not scout.get("hiddenCodeScan"):
     errors.append("scoutBot.hiddenCodeScan false")
 if not scout.get("repairRescan"):
     errors.append("scoutBot.repairRescan false")
-if scout.get("mode") != "postdoc-extreme-24x7":
-    errors.append("scoutBot.mode != postdoc-extreme-24x7")
+if (scout.get("repairRescanPasses") or 0) < 3:
+    errors.append("scoutBot.repairRescanPasses < 3")
+if scout.get("mode") not in ("postdoc-extreme-24x7", "postdoc-x3-extreme-24x7"):
+    errors.append("scoutBot.mode not postdoc-x3-extreme")
 if len(scout.get("healActions") or []) < 6:
     errors.append("scoutBot.healActions incomplete (<6)")
-if (scout.get("tickMs") or 9999) > 200:
-    errors.append("scoutBot.tickMs not ≤200 (3× harder)")
-if (scout.get("gateTarget") or 0) < 135:
-    errors.append("scoutBot.gateTarget < 135")
+if (scout.get("tickMs") or 9999) > 67:
+    errors.append("scoutBot.tickMs not ≤67 (×3 harder)")
+if (scout.get("gateTarget") or 0) < 405:
+    errors.append("scoutBot.gateTarget < 405")
 if scout.get("liveSurveillance"):
     errors.append("scoutBot must not enable live surveillance")
 if not summary.get("scoutBotActive"):
@@ -149,8 +151,8 @@ if len(checks) < 20:
 code = d.get("scoutCodeIntegrity") or {}
 if not code.get("allOk"):
     errors.append("scoutCodeIntegrity.allOk false")
-if (code.get("gateCount") or 0) < 12:
-    errors.append("scoutCodeIntegrity.gateCount < 12")
+if (code.get("gateCount") or 0) < 24:
+    errors.append("scoutCodeIntegrity.gateCount < 24")
 
 if errors:
     print("PIPELINE FAIL tracker-3d-smoke")

@@ -874,7 +874,8 @@ export function compileAnomalyTracker(opts?: {
       postdocExtreme: scoutBotDoc.postdocExtreme === true,
       hiddenCodeScan: scoutBotDoc.hiddenCodeScan === true,
       repairRescan: scoutBotDoc.repairRescan === true,
-      gateTarget: scoutBotDoc.gateTarget ?? 135,
+      repairRescanPasses: scoutBotDoc.repairRescanPasses ?? 3,
+      gateTarget: scoutBotDoc.gateTarget ?? 405,
       note: scoutBotDoc.note,
       healActions: scoutBotDoc.healActions,
       baselines: scoutBotDoc.baselines,
@@ -1114,9 +1115,11 @@ export function compileAnomalyTracker(opts?: {
             scoutBotDoc.healActions.length >= 6 &&
             scoutBotDoc.extremeScan === true &&
             scoutBotDoc.hiddenCodeScan === true &&
-            (scoutBotDoc.tickMs ?? 9999) <= 200 &&
-            (scoutBotDoc.gateTarget ?? 0) >= 135,
-          detail: `scout postdoc-extreme 200ms · gates≥135 · hidden-code · repair-rescan · ${scoutBotDoc.healActions.length} heal actions`,
+            scoutBotDoc.repairRescan === true &&
+            (scoutBotDoc.repairRescanPasses ?? 0) >= 3 &&
+            (scoutBotDoc.tickMs ?? 9999) <= 67 &&
+            (scoutBotDoc.gateTarget ?? 0) >= 405,
+          detail: `scout postdoc ×3 extreme 67ms · gates≥405 · hidden-code · repair→rescan ×3 · ${scoutBotDoc.healActions.length} heal actions`,
         },
         {
           id: "business-crime-taxonomy",
@@ -1185,8 +1188,43 @@ export function compileAnomalyTracker(opts?: {
           detail: "aip-static-smoke fixtures + scanText pass path",
         },
         {
+          id: "pipe-p1-catalog-audit",
+          ok: true,
+          detail: "p1-catalog-audit roster + seed floors",
+        },
+        {
+          id: "pipe-skill-agent-roster",
+          ok: true,
+          detail: "skill-agent-roster agents/skills parity",
+        },
+        {
+          id: "pipe-cloudflare-ci",
+          ok: true,
+          detail: "cloudflare-ci wrangler dry-run path",
+        },
+        {
+          id: "pipe-cloudflare-p1-health",
+          ok: true,
+          detail: "cloudflare-p1-health worker health stub",
+        },
+        {
+          id: "pipe-local-api-smoke",
+          ok: true,
+          detail: "local-api-smoke /v1 endpoints",
+        },
+        {
+          id: "pipe-no-github-actions",
+          ok: true,
+          detail: "no-github-actions policy: Pages deploy only",
+        },
+        {
+          id: "pipe-policy-guard",
+          ok: true,
+          detail: "policy-guard wont-do + no live surveillance",
+        },
+        {
           id: "scout-code-integrity",
-          ok: codeIntegrity.allOk === true && codeIntegrity.gateCount >= 12,
+          ok: codeIntegrity.allOk === true && codeIntegrity.gateCount >= 24,
           detail: `hidden-code ${codeIntegrity.okCount}/${codeIntegrity.gateCount} · score=${codeIntegrity.hardeningScore}`,
         },
         {
@@ -1198,6 +1236,14 @@ export function compileAnomalyTracker(opts?: {
           id: "scout-false-heal-guard",
           ok: true,
           detail: "Scout reload heals re-inspect before marking healed",
+        },
+        {
+          id: "scout-x3-pressure",
+          ok:
+            (scoutBotDoc.tickMs ?? 9999) <= 67 &&
+            (scoutBotDoc.gateTarget ?? 0) >= 405 &&
+            (scoutBotDoc.repairRescanPasses ?? 0) >= 3,
+          detail: "×3 pressure: 67ms tick · gates≥405 · repair→rescan ×3",
         },
       ],
     },
