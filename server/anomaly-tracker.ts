@@ -840,8 +840,8 @@ export function compileAnomalyTracker(opts?: {
       postdocExtreme: scoutBotDoc.postdocExtreme === true,
       hiddenCodeScan: scoutBotDoc.hiddenCodeScan === true,
       repairRescan: scoutBotDoc.repairRescan === true,
-      repairRescanPasses: scoutBotDoc.repairRescanPasses ?? 3,
-      gateTarget: scoutBotDoc.gateTarget ?? 405,
+      repairRescanPasses: scoutBotDoc.repairRescanPasses ?? 9,
+      gateTarget: scoutBotDoc.gateTarget ?? 1215,
       note: scoutBotDoc.note,
       healActions: scoutBotDoc.healActions,
       baselines: scoutBotDoc.baselines,
@@ -1099,14 +1099,15 @@ export function compileAnomalyTracker(opts?: {
             scoutBotDoc.selfHealing === true &&
             scoutBotDoc.additiveOnly === true &&
             Array.isArray(scoutBotDoc.healActions) &&
-            scoutBotDoc.healActions.length >= 6 &&
+            scoutBotDoc.healActions.length >= 8 &&
             scoutBotDoc.extremeScan === true &&
             scoutBotDoc.hiddenCodeScan === true &&
             scoutBotDoc.repairRescan === true &&
-            (scoutBotDoc.repairRescanPasses ?? 0) >= 3 &&
-            (scoutBotDoc.tickMs ?? 9999) <= 67 &&
-            (scoutBotDoc.gateTarget ?? 0) >= 405,
-          detail: `scout postdoc ×3 extreme 67ms · gates≥405 · hidden-code · repair→rescan ×3 · ${scoutBotDoc.healActions.length} heal actions`,
+            (scoutBotDoc.repairRescanPasses ?? 0) >= 9 &&
+            (scoutBotDoc.tickMs ?? 9999) <= 22 &&
+            (scoutBotDoc.gateTarget ?? 0) >= 1215 &&
+            scoutBotDoc.mode === "postdoc-x9-extreme-24x7",
+          detail: `scout postdoc ×9 extreme 22ms · gates≥1215 · hidden-code deep · repair→rescan ×9 · ${scoutBotDoc.healActions.length} heal actions`,
         },
         {
           id: "business-crime-taxonomy",
@@ -1225,12 +1226,13 @@ export function compileAnomalyTracker(opts?: {
           detail: "Scout reload heals re-inspect before marking healed",
         },
         {
-          id: "scout-x3-pressure",
+          id: "scout-x9-pressure",
           ok:
-            (scoutBotDoc.tickMs ?? 9999) <= 67 &&
-            (scoutBotDoc.gateTarget ?? 0) >= 405 &&
-            (scoutBotDoc.repairRescanPasses ?? 0) >= 3,
-          detail: "×3 pressure: 67ms tick · gates≥405 · repair→rescan ×3",
+            (scoutBotDoc.tickMs ?? 9999) <= 22 &&
+            (scoutBotDoc.gateTarget ?? 0) >= 1215 &&
+            (scoutBotDoc.repairRescanPasses ?? 0) >= 9 &&
+            scoutBotDoc.mode === "postdoc-x9-extreme-24x7",
+          detail: "×9 pressure: 22ms tick · gates≥1215 · repair→rescan ×9 · hidden-code deep dive",
         },
       ],
     },
