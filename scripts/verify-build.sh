@@ -7,14 +7,61 @@ cd "$root"
 fail() { echo "VERIFY FAIL: $*" >&2; exit 1; }
 ok() { echo "VERIFY OK: $*"; }
 
+expect() {
+  local label="$1" actual="$2" wanted="$3"
+  [[ "$actual" == "$wanted" ]] || fail "${label} is ${actual}, expected ${wanted}"
+  ok "${label} ${actual}"
+}
+
 test -f package.json || fail "missing package.json"
 test -f package-lock.json || fail "missing package-lock.json"
-test -d node_modules || fail "missing node_modules; run npm ci"
+test -d node_modules || fail "missing node_modules; run npm ci or bash scripts/install-toolchain.sh"
 command -v node >/dev/null || fail "node is not on PATH"
 command -v npm >/dev/null || fail "npm is not on PATH"
 
 ok "repository files and lockfile present"
-ok "node $(node -v) npm $(npm -v)"
+
+expect "node" "$(node -v)" "v22.14.0"
+expect "npm" "$(npm -v)" "10.9.7"
+
+next_ver="$(node -p "require('next/package.json').version")"
+react_ver="$(node -p "require('react/package.json').version")"
+react_dom_ver="$(node -p "require('react-dom/package.json').version")"
+lucide_ver="$(node -p "require('lucide-react/package.json').version")"
+types_node_ver="$(node -p "require('@types/node/package.json').version")"
+eslint_pkg_ver="$(node -p "require('eslint/package.json').version")"
+playwright_pkg_ver="$(node -p "require('playwright/package.json').version")"
+ts_ver="$(node -p "require('typescript/package.json').version")"
+ts6_ver="$(node -p "require('@typescript/typescript6/package.json').version")"
+
+expect "next" "$next_ver" "16.3.2"
+expect "react" "$react_ver" "19.2.8"
+expect "react-dom" "$react_dom_ver" "19.2.8"
+expect "lucide-react" "$lucide_ver" "1.34.0"
+expect "@types/node" "$types_node_ver" "22.20.1"
+expect "eslint" "$eslint_pkg_ver" "10.9.0"
+expect "playwright" "$playwright_pkg_ver" "1.62.1"
+expect "typescript" "$ts_ver" "7.0.2"
+expect "@typescript/typescript6" "$ts6_ver" "6.0.2"
+
+tsc_out="$(node ./node_modules/typescript/lib/tsc.js --version)"
+[[ "$tsc_out" == *"7.0.2"* ]] || fail "tsc version is ${tsc_out}, expected 7.0.2"
+ok "tsc ${tsc_out}"
+
+command -v folio-mcp >/dev/null || fail "folio-mcp is not on PATH (npm i -g folio-mcp@0.4.1)"
+ok "folio-mcp $(command -v folio-mcp)"
+
+command -v wrangler >/dev/null || fail "wrangler is not on PATH (npm i -g wrangler@4)"
+wrangler_ver="$(wrangler --version 2>/dev/null | head -n 1)"
+[[ "$wrangler_ver" == 4.* || "$wrangler_ver" == *"4."* ]] || fail "wrangler version is ${wrangler_ver}, expected 4.x"
+ok "wrangler ${wrangler_ver} (dry-run only; no deploy)"
+
+chromium_dir="${PLAYWRIGHT_BROWSERS_PATH:-$HOME/.cache/ms-playwright}"
+if compgen -G "${chromium_dir}/chromium-*" >/dev/null; then
+  ok "Playwright Chromium present under ${chromium_dir}"
+else
+  fail "Playwright Chromium missing; run npx playwright install chromium"
+fi
 
 required_names=( )
 optional_names=(
@@ -42,10 +89,10 @@ if [[ "${VERIFY_OPTIONAL_MCP:-0}" == "1" ]]; then
   done
 fi
 
-npx --no-install tsc --noEmit
-ok "typescript"
+node ./node_modules/typescript/lib/tsc.js --noEmit
+ok "typescript --noEmit"
 
-npx --no-install eslint src --max-warnings=0
+bash scripts/eslint.sh src --max-warnings=0
 ok "eslint"
 
 base="${VERIFY_BASE_URL:-http://127.0.0.1:43127}"
