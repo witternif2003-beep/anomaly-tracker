@@ -20,33 +20,27 @@ export GITHUB_TOKEN GH_TOKEN="$GITHUB_TOKEN"
 echo "==> generate static JSON"
 npx --no-install tsx scripts/generate-static-site-data.ts
 
-echo "==> static export build (API routes parked)"
-api_backup=""
+echo "==> static export build"
 if [[ -d src/app/api ]]; then
-  api_backup="src/app/_api_parked_for_static_export"
-  rm -rf "$api_backup"
-  mv src/app/api "$api_backup"
+  echo "Moving leftover src/app/api -> server/next-api-routes"
+  rm -rf server/next-api-routes
+  mv src/app/api server/next-api-routes
 fi
-cleanup() {
-  if [[ -n "$api_backup" && -d "$api_backup" ]]; then
-    rm -rf src/app/api
-    mv "$api_backup" src/app/api
-  fi
-}
-trap cleanup EXIT
 
 rm -rf out
 rm -rf .next || true
-# If a prior crash left a sticky turbopack dir, force it once more.
 if [[ -d .next ]]; then
   chmod -R u+w .next 2>/dev/null || true
   rm -rf .next || true
 fi
-STATIC_EXPORT=1 NEXT_PUBLIC_BASE_PATH=/anomaly-tracker npm run build
+npm run build
 test -d out
 # GitHub Pages Jekyll must not process the export (keeps _next/).
 touch out/.nojekyll
 test -f out/tracker/index.html -o -f out/tracker.html -o -d out/tracker
+test -f out/corporate/index.html -o -d out/corporate
+# Asset prefix sanity on corporate page
+grep -q '/anomaly-tracker/_next' out/corporate/index.html
 
 echo "==> ensure GitHub repo exists"
 if ! gh repo view "${GITHUB_USERNAME}/${REPO_NAME}" >/dev/null 2>&1; then
