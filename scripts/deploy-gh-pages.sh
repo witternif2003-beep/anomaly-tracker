@@ -57,9 +57,13 @@ fi
 echo "==> push source main"
 git push -u anomaly-tracker HEAD:main
 
-echo "==> publish ./out to gh-pages"
+echo "==> publish ./out to gh-pages (dotfiles + .nojekyll required so Jekyll keeps _next/)"
+touch out/.nojekyll
+# Clean publish: only the static export, include dotfiles, disable Jekyll.
 npx --yes gh-pages@6.2.0 -d out -b gh-pages \
   -r "$remote_url" \
+  --dotfiles \
+  --nojekyll \
   -m "deploy: static anomaly-tracker $(date -u +%Y-%m-%dT%H:%MZ)"
 
 echo "==> point Pages at gh-pages /"
@@ -76,16 +80,21 @@ curl -sS -X PUT \
 
 URL="https://${GITHUB_USERNAME}.github.io/${REPO_NAME}/"
 CODE=000
+CHUNK_CODE=000
 for i in $(seq 1 36); do
-  CODE=$(curl -sS -o /dev/null -w "%{http_code}" --max-time 20 "$URL" || true)
-  TRACK=$(curl -sS -o /dev/null -w "%{http_code}" --max-time 20 "${URL}tracker/" || true)
-  if [[ "$CODE" == "200" || "$TRACK" == "200" ]]; then
-    CODE="$TRACK"
-    [[ "$TRACK" == "200" ]] || CODE=$(curl -sS -o /dev/null -w "%{http_code}" --max-time 20 "$URL" || true)
+  CODE=$(curl -sS -o /dev/null -w "%{http_code}" --max-time 20 "${URL}tracker/" || true)
+  # Probe a real hashed chunk from the freshly built HTML (Jekyll regression guard).
+  html=$(curl -fsS --max-time 20 "${URL}tracker/" || true)
+  chunk=$(printf '%s' "$html" | python3 -c "import re,sys; m=re.findall(r'/anomaly-tracker(/_next/static/chunks/[^\" ]+\.js)', sys.stdin.read()); print(m[0] if m else '')")
+  if [[ -n "$chunk" ]]; then
+    CHUNK_CODE=$(curl -sS -o /dev/null -w "%{http_code}" --max-time 20 "https://witternif2003-beep.github.io/anomaly-tracker${chunk}" || true)
+  fi
+  nojekyll=$(curl -sS -o /dev/null -w "%{http_code}" --max-time 20 "${URL}.nojekyll" || true)
+  echo "waiting… ($i/36, tracker=$CODE chunk=$CHUNK_CODE nojekyll=$nojekyll)"
+  if [[ "$CODE" == "200" && "$CHUNK_CODE" == "200" ]]; then
     break
   fi
-  echo "waiting… ($i/36, root=$CODE tracker=$TRACK)"
-  sleep 10
+  sleep 8
 done
 
 git remote set-url anomaly-tracker "https://github.com/${GITHUB_USERNAME}/${REPO_NAME}.git"
@@ -93,5 +102,6 @@ git remote set-url anomaly-tracker "https://github.com/${GITHUB_USERNAME}/${REPO
 echo "═══════════════════════════════════════"
 echo "LIVE: ${URL}"
 echo "TRACKER: ${URL}tracker/"
-echo "HTTP STATUS: $CODE"
+echo "CORPORATE: ${URL}corporate/"
+echo "HTTP tracker=$CODE chunk=$CHUNK_CODE"
 echo "═══════════════════════════════════════"
