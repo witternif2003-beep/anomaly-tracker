@@ -11,7 +11,7 @@ cd "$root"
 sample_cap="${TELEMETRY_SAMPLE_CAP:-500}"
 when="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 where="${root}"
-why="${TELEMETRY_WHY:-next-build-prep-web}"
+why="${TELEMETRY_WHY:-next-build-prep-install-only}"
 sha="$(git rev-parse HEAD)"
 branch="$(git rev-parse --abbrev-ref HEAD)"
 tracked="$(git ls-files | wc -l | tr -d ' ')"
@@ -27,6 +27,13 @@ lock = json.loads(Path("package-lock.json").read_text())
 names = sorted(k for k in (lock.get("packages") or {}) if k)
 pkg_count = len(lock.get("packages") or {})
 mcp_path = Path(".cursor/mcp.json")
+mcp_cfg = json.loads(mcp_path.read_text()) if mcp_path.exists() else {}
+servers = mcp_cfg.get("mcpServers") or {}
+mcp_keys = []
+for sname, sdef in servers.items():
+    mcp_keys.append(sname)
+    env = (sdef or {}).get("env") or {}
+    mcp_keys.extend(f"{sname}.{k}" for k in env)
 cred_names = [
     "CONVERSATION_PROJECT_ID",
     "CONVERSATION_KEY_ID",
@@ -34,6 +41,7 @@ cred_names = [
     "CONVERSATION_REGION",
     "CONVERSATION_APP_ID",
 ]
+cred_present = [n for n in cred_names if os.environ.get(n)]
 record = {
     "temporal": {"when": when},
     "spatial": {"where": where, "branch": branch, "sha": sha, "trackedFiles": int(tracked)},
@@ -50,9 +58,17 @@ record = {
     "mcp": {
         "configFile": str(mcp_path) if mcp_path.exists() else None,
         "inGit": mcp_path.exists(),
+        "serverCount": len(servers),
+        "sampleCap": sample_cap,
+        "sample": mcp_keys[:sample_cap],
+        "fabricated": False,
     },
     "credentials": {
-        name: {"set": bool(os.environ.get(name)), "source": "environment"} for name in cred_names
+        "hardcodedInGit": False,
+        "sampleCap": sample_cap,
+        "named": cred_names[:sample_cap],
+        "setCount": len(cred_present),
+        "set": {n: {"set": n in cred_present, "source": "environment"} for n in cred_names[:sample_cap]},
     },
     "runtime": {
         "nodeModules": Path("node_modules").is_dir(),
