@@ -44,6 +44,8 @@ if [[ -d .next ]]; then
 fi
 STATIC_EXPORT=1 NEXT_PUBLIC_BASE_PATH=/anomaly-tracker npm run build
 test -d out
+# GitHub Pages Jekyll must not process the export (keeps _next/).
+touch out/.nojekyll
 test -f out/tracker/index.html -o -f out/tracker.html -o -d out/tracker
 
 echo "==> ensure GitHub repo exists"
