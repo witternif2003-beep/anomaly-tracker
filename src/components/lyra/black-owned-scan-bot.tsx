@@ -5,6 +5,7 @@ import {
   useEffect,
   useEffectEvent,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { Badge } from "@/components/ui/badge";
@@ -222,6 +223,8 @@ export function BlackOwnedScanBot({ bot }: { bot: BlackOwnedScanBotPayload }) {
   const [newCount, setNewCount] = useState(0);
   const [docCount, setDocCount] = useState(0);
   const [discoverCount, setDiscoverCount] = useState(0);
+  const cursorRef = useRef(0);
+  const poolCursorRef = useRef(0);
 
   useEffect(() => {
     setLiveQueue(seedQueue);
@@ -306,6 +309,7 @@ export function BlackOwnedScanBot({ bot }: { bot: BlackOwnedScanBotPayload }) {
     if (!stream.length) return;
     const tickMs = Math.max(400, bot.tickMs || 900);
     const first = stream[0];
+    cursorRef.current = 0;
     setLog([{ ...first, renderKey: `${first.id}-boot-${Date.now()}` }]);
     setCursor(0);
     setNewCount(first?.status === "logged-new" || first?.status === "auto-queued" ? 1 : 0);
@@ -313,11 +317,11 @@ export function BlackOwnedScanBot({ bot }: { bot: BlackOwnedScanBotPayload }) {
     setDiscoverCount(first?.status === "discovered" ? 1 : 0);
     setClock(new Date().toISOString());
     const id = window.setInterval(() => {
-      setCursor((c) => {
-        const next = (c + 1) % stream.length;
-        onScanTick(stream[next]);
-        return next;
-      });
+      // Never call useEffectEvent inside a setState updater — that runs during render (#440).
+      const next = (cursorRef.current + 1) % stream.length;
+      cursorRef.current = next;
+      setCursor(next);
+      onScanTick(stream[next]);
     }, tickMs);
     return () => window.clearInterval(id);
   }, [stream, bot.tickMs]);
@@ -326,13 +330,15 @@ export function BlackOwnedScanBot({ bot }: { bot: BlackOwnedScanBotPayload }) {
   useEffect(() => {
     if (!bot.autoQueueOnDiscover || !discoveryPool.length) return;
     const tickMs = Math.max(800, bot.discoveryTickMs || 2200);
+    poolCursorRef.current = 0;
     const id = window.setInterval(() => {
-      setPoolCursor((c) => {
-        const next = c % discoveryPool.length;
-        const candidate = discoveryPool[next];
-        onDiscoverAndAutoQueue(candidate);
-        return (next + 1) % discoveryPool.length;
-      });
+      // Never call useEffectEvent inside a setState updater — that runs during render (#440).
+      const idx = poolCursorRef.current % discoveryPool.length;
+      const candidate = discoveryPool[idx];
+      const next = (idx + 1) % discoveryPool.length;
+      poolCursorRef.current = next;
+      setPoolCursor(next);
+      onDiscoverAndAutoQueue(candidate);
     }, tickMs);
     return () => window.clearInterval(id);
   }, [bot.autoQueueOnDiscover, bot.discoveryTickMs, discoveryPool]);
