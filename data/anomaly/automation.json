@@ -1,0 +1,70 @@
+{
+  "title": "Command output & automation scripts (research note §6)",
+  "classified": false,
+  "note": "install-all.sh and scan-pipeline.sh are safe Lyra wrappers. The research-note scripts that scrape registries, invent unpublished packages, start Cuckoo live, or POST Slack webhooks are wont-do.",
+  "scripts": [
+    {
+      "id": "install-all",
+      "researchName": "install-all.sh",
+      "path": "scripts/install-all.sh",
+      "npm": "install:all-safe",
+      "status": "shipped",
+      "detail": "Wraps install-toolchain + deps:verify + mcp:audit. Closest installs only."
+    },
+    {
+      "id": "install-one-shot",
+      "researchName": "Post-Doctoral Full Install",
+      "path": "scripts/install-one-shot.sh",
+      "npm": "install:all",
+      "status": "shipped",
+      "detail": "Existing one-shot closest-install path for MCP, pip, git clones, extensions."
+    },
+    {
+      "id": "scan-pipeline",
+      "researchName": "scan-pipeline.sh",
+      "path": "scripts/scan-pipeline.sh",
+      "npm": "scan:pipeline",
+      "status": "shipped-fixture",
+      "detail": "Polls GET /v1/anomaly fixtures. No OpenStates scrape, FBI matcher, or Slack webhook."
+    }
+  ],
+  "rejectedResearchSteps": [
+    {
+      "id": "unpublished-npm-globals",
+      "title": "npm i -g @law-research/* / westlaw-mcp / …",
+      "reason": "Unpublished or contract-gated. Closest packages already mapped."
+    },
+    {
+      "id": "docker-cuckoo-live",
+      "title": "docker pull/start cuckoo/cuckoo",
+      "reason": "Source clone only; live sandbox never started."
+    },
+    {
+      "id": "clone-fbi-cyber-automate",
+      "title": "git clone fbi-cyber/automate",
+      "reason": "Maps to Aurora-Incident-Response closest clone."
+    },
+    {
+      "id": "live-registry-scrape",
+      "title": "curl OpenStates / national business registries in a loop",
+      "reason": "Mass surveillance wont-do. Fixture entities only."
+    },
+    {
+      "id": "fbi-indicator-matcher",
+      "title": "python fbi_indicator_matcher.py",
+      "reason": "Typology labels on fixtures only. No live FBI feed."
+    },
+    {
+      "id": "slack-webhook-alert",
+      "title": "POST api.slack.com/webhooks/xxx",
+      "reason": "No hardcoded webhooks. Slack MCP is optional company workspace token only."
+    }
+  ],
+  "commands": [
+    "bash scripts/install-all.sh",
+    "npm run install:all",
+    "bash scripts/scan-pipeline.sh",
+    "SCAN_LOOPS=2 SCAN_SLEEP_SECONDS=1 bash scripts/scan-pipeline.sh",
+    "bash scripts/pipelines/local-api-smoke.sh"
+  ]
+}

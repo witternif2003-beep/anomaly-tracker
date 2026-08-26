@@ -108,7 +108,15 @@ interface TrackerBook {
     liveInventory: { assets: number; ok: number; cuckooLiveSandbox: boolean };
   };
   wontDo: Array<{ id: string; title: string; reason: string }>;
-  automation: { commands: string[] };
+  automation: {
+    commands: string[];
+    title?: string;
+    note?: string;
+    liveSurveillance?: boolean;
+    slackWebhooks?: boolean;
+    scripts?: Array<{ id: string; path: string; status: string; detail: string }>;
+    rejectedResearchSteps?: Array<{ id: string; title: string; reason: string }>;
+  };
   dependencyStrategy: {
     lockfile: string;
     install: string;
@@ -621,6 +629,44 @@ export function AnomalyTracker() {
                 </CardContent>
               </Card>
             </div>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">6. Automation scripts</CardTitle>
+                <CardDescription>
+                  install-all + scan-pipeline · liveSurveillance=
+                  {String(book.automation.liveSurveillance ?? false)} · slackWebhooks=
+                  {String(book.automation.slackWebhooks ?? false)}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {book.automation.note ? (
+                  <p className="text-sm text-muted-foreground">{book.automation.note}</p>
+                ) : null}
+                {book.automation.scripts?.map((s) => (
+                  <div key={s.id}>
+                    <p className="text-sm font-medium">
+                      {s.path}{" "}
+                      <Badge variant="outline" className="text-[10px]">
+                        {s.status}
+                      </Badge>
+                    </p>
+                    <p className="text-xs text-muted-foreground">{s.detail}</p>
+                  </div>
+                ))}
+                {book.automation.rejectedResearchSteps?.map((r) => (
+                  <p key={r.id} className="text-xs text-muted-foreground">
+                    <span className="text-foreground">{r.title}: </span>
+                    {r.reason}
+                  </p>
+                ))}
+                <ul className="space-y-1 font-mono text-[11px] text-muted-foreground">
+                  {book.automation.commands.map((cmd) => (
+                    <li key={cmd}>{cmd}</li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
 
             <Card>
               <CardHeader>

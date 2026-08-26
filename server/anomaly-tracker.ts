@@ -6,6 +6,7 @@ import inventoryLedger from "../data/anomaly/inventory-ledger.json";
 import dependencyStrategyDoc from "../data/anomaly/dependency-strategy.json";
 import mcpAuditDoc from "../data/anomaly/mcp-audit.json";
 import credentialsFramework from "../data/anomaly/credentials-framework.json";
+import automationDoc from "../data/anomaly/automation.json";
 import taxonomy from "../data/legal/corporate-taxonomy.json";
 import { listP1Slots } from "./p1-catalog";
 import { inventoryStatus } from "./inventory";
@@ -446,14 +447,23 @@ export function compileAnomalyTracker(opts?: {
       })(),
     },
     automation: {
+      object: "lyra.automation" as const,
+      title: automationDoc.title,
+      classified: false,
+      note: automationDoc.note,
+      scripts: automationDoc.scripts,
+      rejectedResearchSteps: automationDoc.rejectedResearchSteps,
       commands: [
+        ...automationDoc.commands,
         "curl -fsS http://127.0.0.1:4040/v1/anomaly",
         "curl -fsS 'http://127.0.0.1:4040/v1/anomaly?priority=P1'",
         "curl -fsS 'http://127.0.0.1:4040/v1/anomaly/improvements?limit=20&categoryId=financial-records'",
         "curl -fsS http://127.0.0.1:4040/v1/corporate",
-        "curl -fsS -H 'Content-Type: application/json' -d '{\"query\":\"business records 803\",\"sources\":[\"fre\",\"glossary\",\"folio\"]}' http://127.0.0.1:4040/v1/legal/search",
         "bash scripts/pipelines/local-api-smoke.sh",
       ],
+      liveSurveillance: false,
+      slackWebhooks: false,
+      cuckooLiveSandbox: false,
     },
     policy: {
       corporateTaxonomy: policy.corporateTaxonomy,

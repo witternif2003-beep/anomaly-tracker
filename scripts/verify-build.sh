@@ -245,6 +245,9 @@ assert "westlaw-mcp" in anom["mcp"]["audit"]["wontAddToMcpJson"]
 assert anom.get("credentials", {}).get("vault", {}).get("status") == "wont-deploy"
 assert anom["credentials"]["cjis"]["liveQueries"] is False
 assert anom["credentials"]["secretsSkippedByOperator"] is True
+assert anom.get("automation", {}).get("liveSurveillance") is False
+assert anom["automation"].get("slackWebhooks") is False
+assert any(s.get("id") == "scan-pipeline" for s in anom["automation"].get("scripts", []))
 imps = json.load(urllib.request.urlopen(base + "/v1/anomaly/improvements?limit=3&categoryId=financial-records", timeout=12))
 assert imps["generated"] >= 10000 and len(imps["data"]) >= 1
 assert nb["summary"]["cuckooLiveSandbox"] is False
