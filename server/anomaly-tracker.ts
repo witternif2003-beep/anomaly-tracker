@@ -1038,7 +1038,7 @@ export function compileAnomalyTracker(opts?: {
     pipelineHealth: {
       object: "lyra.pipeline-health" as const,
       title: "Tracker / orbital globe pipeline diagnosis",
-      note: "Post-doctoral extreme hardening checklist for /tracker 3D + static bake + all 12 pipelines. Fixture-clock only.",
+      note: "Post-doctoral extreme hardening checklist for /tracker 3D + static bake + all 12 pipelines · SOTA Live P1 × orbital globe diagnosis. Fixture-clock only.",
       pipelineScriptCount: 12,
       checks: [
         {
@@ -1057,9 +1057,9 @@ export function compileAnomalyTracker(opts?: {
           detail: `${p1Events.length} P1 incidents in p1Queue`,
         },
         {
-          id: "postdoc-815500",
-          ok: POSTDOC_IMPROVEMENT_COUNT === 815500,
-          detail: `Post-doc forensic catalog locked at ${POSTDOC_IMPROVEMENT_COUNT} (+90,000) · TOP ${POSTDOC_TOP500} SOTA · tracker-tab + Live P1 + Digital Evidence / ESI virtual expand`,
+          id: "postdoc-905500",
+          ok: POSTDOC_IMPROVEMENT_COUNT === 905500,
+          detail: `Post-doc forensic catalog locked at ${POSTDOC_IMPROVEMENT_COUNT} (+90,000) · TOP ${POSTDOC_TOP500} SOTA · tracker-tab + Live P1 + orbital globe pipeline diagnosis virtual expand`,
         },
         {
           id: "telemetry-24x7",
@@ -1166,8 +1166,8 @@ export function compileAnomalyTracker(opts?: {
         },
         {
           id: "pipe-tracker-3d-smoke",
-          ok: entities.length >= 15 && anomalies.length >= 51 && POSTDOC_IMPROVEMENT_COUNT === 815500,
-          detail: "tracker-3d-smoke floors: nodes≥15 events≥51 postdoc=815500 top500-sota live-p1 esi-evidence virtual",
+          ok: entities.length >= 15 && anomalies.length >= 51 && POSTDOC_IMPROVEMENT_COUNT === 905500,
+          detail: "tracker-3d-smoke floors: nodes≥15 events≥51 postdoc=905500 top500-sota live-p1 globe-pipeline-diagnosis virtual",
         },
         {
           id: "pipe-aip-static-smoke",

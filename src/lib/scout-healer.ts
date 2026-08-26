@@ -53,7 +53,7 @@ export const EXPECTED = {
   minAnomalies: 12,
   crimeCategories: 52,
   crimeCases: 60,
-  postdoc: 815500,
+  postdoc: 905500,
   mayPackets: 15,
   mayCategories: 10,
   mayElements: 43,
@@ -420,9 +420,9 @@ export function inspectTrackerBook(
   // —— Postdoc / improvements ——
   if ((postdoc.total ?? 0) !== EXPECTED.postdoc) {
     push(findings, {
-      id: "postdoc-815500",
+      id: "postdoc-905500",
       severity: "P2",
-      title: "Post-doc forensic catalog not at 815500",
+      title: "Post-doc forensic catalog not at 905500",
       detail: `total=${postdoc.total ?? 0}`,
       healable: true,
       healAction: "reload-static",
@@ -436,7 +436,7 @@ export function inspectTrackerBook(
       push(findings, {
         id: "postdoc-data-length",
         severity: "P2",
-        title: "Post-doc data array length ≠ 815500",
+        title: "Post-doc data array length ≠ 905500",
         detail: `data.length=${postdocDataLen}`,
         healable: true,
         healAction: "reload-static",
@@ -475,7 +475,7 @@ export function inspectTrackerBook(
       push(findings, {
         id: "postdoc-summary-parity",
         severity: "P2",
-        title: "Summary postdocImprovements ≠ 815500",
+        title: "Summary postdocImprovements ≠ 905500",
         detail: `summary=${summary.postdocImprovements ?? 0}`,
         healable: true,
         healAction: "reload-static",
@@ -944,7 +944,7 @@ export function inspectTrackerBook(
     const requiredBakeChecks = [
       "scene-nodes-geo",
       "scene-events-populated",
-      "postdoc-815500",
+      "postdoc-905500",
       "telemetry-24x7",
       "error-scout-bot",
       "business-crime-taxonomy",

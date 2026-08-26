@@ -2,9 +2,9 @@
   "title": "Post-doctoral forensic query catalog (tracker §8.1)",
   "classified": false,
   "governmentProgram": false,
-  "total": 815500,
+  "total": 905500,
   "top500": 500,
-  "note": "815,500 unclassified post-doctoral forensic queries for /tracker (+90,000). TRACKER-TAB · Live P1 telemetry · Digital Evidence / ESI classes (FRCP 34/37(e), mobile MDM, removable media, financial/PAC, e-comms, geolocation fixtures, SIGINT typology-only, physical, documentary FRE 803(6), metadata FRE 901). TOP 500 SOTA grounded in 2026 legal-hold / ESI preservation research + prior DFIR / Live P1 axes. Virtual expand — bake ships TOP 500 + seed. Additive only. No live intercepts, SWIFT sessions, CJIS, or SIGINT collection.",
+  "note": "905,500 unclassified post-doctoral forensic queries for /tracker (+90,000). TRACKER-TAB · Live P1 telemetry · Tracker / orbital globe pipeline diagnosis (tracker-3d-smoke, scene nodes/events, R3F/CSS chamber fallback, HTML budget, 12-pipeline health). TOP 500 SOTA grounded in globe render-pipeline diagnosis + Live P1 research. Virtual expand — bake ships TOP 500 + seed. Additive only. No live intercepts, CJIS, or SIGINT collection.",
   "sotaSources": [
     {
       "id": "magnet-dfir-2026",
@@ -131,6 +131,30 @@
       "title": "Litigation hold complete 2026 guide",
       "url": "https://lawclaimcorner.com/litigation-hold/",
       "themes": ["FRCP 34 production", "Purview/Vault holds", "company-controlled ESI", "mail/chat under hold"]
+    },
+    {
+      "id": "globe-r3f-monitor",
+      "title": "r3f-monitor — R3F/WebGL performance & pipeline diagnosis",
+      "url": "https://github.com/anhldh/r3f-monitor/",
+      "themes": ["FPS/GPU/CPU diagnosis", "orbital globe pipeline", "VRAM estimate", "adaptive quality"]
+    },
+    {
+      "id": "globe-r3f-webgpu-perf",
+      "title": "r3f-webgpu-perf — WebGPU/WebGL render metrics for R3F",
+      "url": "https://github.com/ektogamat/r3f-webgpu-perf",
+      "themes": ["draw calls", "frame timing", "globe fallback diagnosis", "headless metrics"]
+    },
+    {
+      "id": "globe-trotter-pipeline",
+      "title": "Globe Trotter — GPU globe data pipeline architecture",
+      "url": "https://github.com/flexmon/globe-trotter",
+      "themes": ["geospatial bake pipeline", "client-side globe", "telemetry shards", "FPS budget"]
+    },
+    {
+      "id": "globe-worldmonitor-arch",
+      "title": "World Monitor architecture — globe.gl + deck.gl pipeline split",
+      "url": "https://starlog.is/articles/ai-agents/koala73-worldmonitor",
+      "themes": ["cinematic vs dense overlays", "renderer failover", "orbital dashboard diagnosis"]
     }
   ],
   "axes": [
@@ -596,6 +620,41 @@
       "prompt": "Which log-sequence + timestamp provenance patterns keep Metadata / Audit Trails FRE 901-ready when Live P1 auto-populates?",
       "sota": true,
       "sourceId": "esi-frcp-37e-spoliation"
+    },
+    {
+      "id": "sota-globe-pipeline-diagnosis",
+      "label": "SOTA tracker / orbital globe pipeline diagnosis",
+      "prompt": "Which pipelineHealth checks must tracker-3d-smoke assert so /tracker orbital globe bake (nodes≥15, events≥51, scene.populated) fails closed before Pages deploy?",
+      "sota": true,
+      "sourceId": "globe-r3f-monitor"
+    },
+    {
+      "id": "sota-globe-r3f-css-fallback",
+      "label": "SOTA R3F globe ↔ CSS chamber fallback diagnosis",
+      "prompt": "How should BusinessGlobe diagnose WebGL failure and fall back to the CSS 3D anomaly chamber without dropping Live P1 or CRISP labels?",
+      "sota": true,
+      "sourceId": "globe-r3f-webgpu-perf"
+    },
+    {
+      "id": "sota-globe-payload-floors",
+      "label": "SOTA globe payload floors (nodes/events/geo)",
+      "prompt": "What lat/lon + payload floors keep orbital scene diagnosis honest when fixture entities and anomalies are projected into the globe?",
+      "sota": true,
+      "sourceId": "globe-trotter-pipeline"
+    },
+    {
+      "id": "sota-globe-html-budget",
+      "label": "SOTA tracker HTML budget / mobile load diagnosis",
+      "prompt": "How should tracker-html-budget gate Pages payloads so orbital globe + Live P1 remain usable on mobile without cutting features?",
+      "sota": true,
+      "sourceId": "globe-worldmonitor-arch"
+    },
+    {
+      "id": "sota-globe-live-p1-coupling",
+      "label": "SOTA orbital globe × Live P1 diagnosis coupling",
+      "prompt": "How should Live P1 telemetry ticks and orbital globe pipeline diagnosis share fixture-clock epistemology so a green pipeline never implies live surveillance?",
+      "sota": true,
+      "sourceId": "globe-r3f-monitor"
     }
   ],
   "methods": [
@@ -640,7 +699,11 @@
     "SOTA MDM inventory vs IMEI triangulation boundary drill",
     "SOTA removable-media DLP + CoC bag protocol",
     "SOTA PAC/ERP export completeness (no SWIFT) scorecard",
-    "SOTA FRE 803(6)/901 documentary + metadata provenance lab"
+    "SOTA FRE 803(6)/901 documentary + metadata provenance lab",
+    "SOTA tracker-3d-smoke orbital globe diagnosis worksheet",
+    "SOTA R3F↔CSS chamber fallback red-team",
+    "SOTA tracker HTML budget / mobile load gate drill",
+    "SOTA Live P1 × globe pipelineHealth coupling check"
   ],
   "falsifiers": [
     "Score presented as courtroom opinion",

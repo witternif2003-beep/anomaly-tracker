@@ -4,7 +4,7 @@
  * Never removes features — additive only. No live intercepts/CJIS.
  */
 
-export const POSTDOC_TOTAL = 815_500;
+export const POSTDOC_TOTAL = 905_500;
 export const POSTDOC_TOP500 = 500;
 /** Baked window of non-SOTA samples for offline filter demos (beyond TOP 500). */
 export const POSTDOC_BAKE_SAMPLE = 200;
@@ -122,7 +122,7 @@ export function buildPostdocImprovement(
         : "P3";
 
   const pad = String(slot).padStart(5, "0");
-  const forensicQuery = `FQ-${pad} · TRACKER · Live-P1 · ESI-Evidence · ${axis.label} · ${entityType.label} · ${category.label} · artifact=${element.artifact}`;
+  const forensicQuery = `FQ-${pad} · TRACKER · Live-P1 · Globe-Pipeline · ${axis.label} · ${entityType.label} · ${category.label} · artifact=${element.artifact}`;
 
   return {
     id: `pd-${pad}`,
@@ -132,7 +132,7 @@ export function buildPostdocImprovement(
     title: inTop500
       ? `TOP ${slot} · ${axis.label} · ${entityType.label}`
       : `${axis.label} · ${entityType.label} · ${category.label}`,
-    question: `${axis.prompt} Apply on /tracker (Live P1 telemetry + Digital Evidence / ESI classes: FRCP 34/37(e), mobile MDM, removable media, financial/PAC, e-comms, geolocation fixtures, SIGINT typology-only, physical, documentary FRE 803(6), metadata FRE 901) to ${entityType.label} under ${category.label} with artifact lens "${element.artifact}".`,
+    question: `${axis.prompt} Apply on /tracker (Live P1 telemetry + Tracker / orbital globe pipeline diagnosis via tracker-3d-smoke + pipelineHealth) to ${entityType.label} under ${category.label} with artifact lens "${element.artifact}".`,
     method,
     falsifier,
     deliverable,
@@ -148,7 +148,7 @@ export function buildPostdocImprovement(
     status: constrained ? "constrained" : "open",
     wontDo,
     priority,
-    pipelineCheck: `tracker-tab · live-p1-telemetry · digital-evidence-esi · postdoc-${total} · top500-sota · telemetry-24x7 · falsifier=${falsifier}`,
+    pipelineCheck: `tracker-tab · live-p1-telemetry · orbital-globe-pipeline-diagnosis · postdoc-${total} · top500-sota · telemetry-24x7 · falsifier=${falsifier}`,
     sotaRank: inTop500 ? slot : null,
     sotaTier: inTop500 ? "top500-sota" : "catalog",
     sotaSourceId: axis.sourceId ?? null,

@@ -882,8 +882,16 @@ export function AnomalyTracker({ initialData }: { initialData?: TrackerBook }) {
             {book.pipelineHealth ? (
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-base">{book.pipelineHealth.title}</CardTitle>
-                  <CardDescription>{book.pipelineHealth.note}</CardDescription>
+                  <div className="flex flex-wrap items-start justify-between gap-2">
+                    <div>
+                      <CardTitle className="text-base">{book.pipelineHealth.title}</CardTitle>
+                      <CardDescription>{book.pipelineHealth.note}</CardDescription>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <Badge className="bg-amber-500/20 text-amber-100">SOTA · GLOBE PIPELINE</Badge>
+                      <Badge className="bg-sky-500/20 text-sky-100">Live P1</Badge>
+                    </div>
+                  </div>
                 </CardHeader>
                 <CardContent className="grid gap-2 sm:grid-cols-2">
                   {book.pipelineHealth.checks.map((check) => (
@@ -965,7 +973,7 @@ export function AnomalyTracker({ initialData }: { initialData?: TrackerBook }) {
                     {book.postdocCatalog.axisCount} axes · {book.postdocCatalog.sotaAxisCount ?? 0} SOTA ·
                     TOP {book.postdocCatalog.top500Count ?? 500} · tracker-tab
                     {book.postdocCatalog.virtualExpand
-                      ? " · virtual 815.5k · Live P1 · ESI Evidence"
+                      ? " · virtual 905.5k · Live P1 · Globe pipeline"
                       : ""}{" "}
                     · showing{" "}
                     {Math.min(postdocShow, filteredPostdoc.length)} of{" "}
@@ -984,12 +992,11 @@ export function AnomalyTracker({ initialData }: { initialData?: TrackerBook }) {
                         <Badge className="bg-amber-500/20 text-amber-100">{top500Rows.length} SOTA</Badge>
                       </div>
                       <p className="mb-2 text-xs text-muted-foreground">
-                        Ranked from 2025–2026 DFIR + TRACKER Live P1 + Digital Evidence / ESI research
-                        (FRCP 34/37(e) BMS·HMI·VPN·OT under hold, mobile MDM inventory, removable-media
-                        DLP+CoC, financial bank/ERP/PAC no SWIFT, e-comms under hold, facility
-                        geolocation fixtures, SIGINT typology-only, physical CoC, FRE 803(6)
-                        documentary, FRE 901 metadata). Fixture-clock only — no intercepts or live
-                        CJIS.
+                        Ranked from 2025–2026 DFIR + TRACKER Live P1 + Tracker / orbital globe
+                        pipeline diagnosis research (tracker-3d-smoke floors, R3F↔CSS chamber
+                        fallback, payload lat/lon floors, HTML budget, pipelineHealth coupling,
+                        r3f-monitor / WebGPU perf / Globe Trotter / World Monitor architecture).
+                        Fixture-clock only — no intercepts or live CJIS.
                       </p>
                       {book.postdocCatalog.sotaSources?.length ? (
                         <ul className="mb-3 flex flex-wrap gap-1.5 text-[10px] text-muted-foreground">
