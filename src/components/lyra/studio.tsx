@@ -24,6 +24,8 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { CopyButton } from "@/components/lyra/copy-button";
 import { FourDRail, type FourDPhase } from "@/components/lyra/four-d-rail";
+import { GlassPanel } from "@/components/lyra/glass-panel";
+import { HudFrame } from "@/components/lyra/hud-frame";
 import { LatticeRail } from "@/components/lyra/lattice-rail";
 import { SuggestionBot } from "@/components/lyra/suggestion-bot";
 import { idleLyra2Lattice } from "@/lib/optimize/lyra2";
@@ -186,18 +188,20 @@ export function Studio() {
 
       <main className="mx-auto grid w-full max-w-7xl flex-1 gap-6 px-4 py-6 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)] lg:gap-8 lg:px-6 lg:py-8">
         <section className="flex flex-col gap-4">
-          <div className="glass-panel p-5">
-            <h1 className="font-display text-3xl leading-tight text-balance sm:text-4xl">
-              Turn a rough ask into a prompt a model can actually execute.
-            </h1>
-            <p className="mt-2 text-sm leading-6 text-muted-foreground">
-              {mode === "postdoc"
-                ? "Post-doctoral mode is on. A hard-coded live bot scores the brief as you type — question, identification, corpus, falsifiers. It does not call a model."
-                : mode === "detail"
-                  ? "GHOST-HAND is on. Lyra-2 runs a 13-axis lattice — 4-D plus GHOST plus HAND — and writes tensions into the prompt so the model cannot ignore the conflicts."
-                  : "Basic mode rewrites immediately. The live bot still flags vague words and unsourced percents as you type."}
-            </p>
-          </div>
+          <GlassPanel tilt className="p-5" hover={false}>
+            <HudFrame label="Forge · local optimizer">
+              <h1 className="font-display pt-4 text-3xl leading-tight text-balance sm:text-4xl">
+                Turn a rough ask into a prompt a model can actually execute.
+              </h1>
+              <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                {mode === "postdoc"
+                  ? "Post-doctoral mode is on. A hard-coded live bot scores the brief as you type — question, identification, corpus, falsifiers. It does not call a model."
+                  : mode === "detail"
+                    ? "GHOST-HAND is on. Lyra-2 runs a 13-axis lattice — 4-D plus GHOST plus HAND — and writes tensions into the prompt so the model cannot ignore the conflicts."
+                    : "Basic mode rewrites immediately. The live bot still flags vague words and unsourced percents as you type."}
+              </p>
+            </HudFrame>
+          </GlassPanel>
 
           <div className="grid grid-cols-2 gap-3">
             <Field label="Request type">

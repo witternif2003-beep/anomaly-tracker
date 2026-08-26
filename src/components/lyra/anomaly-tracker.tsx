@@ -312,12 +312,13 @@ export function AnomalyTracker({ initialData }: { initialData?: TrackerBook }) {
       <header className="border-b border-border/40 bg-transparent">
         <div className="mx-auto flex w-full max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-5 sm:px-6">
           <div>
-            <p className="text-[10px] tracking-[0.22em] text-primary/80 uppercase">
+            <p className="flex items-center gap-2 text-[10px] tracking-[0.22em] text-primary/80 uppercase">
+              <span className="hud-beacon" aria-hidden />
               3D fixture map · taxonomy-bound · unclassified
             </p>
             <p className="font-display text-3xl leading-none tracking-tight">Anomaly tracker</p>
             <p className="mt-2 max-w-2xl text-xs text-muted-foreground">
-              Glass console over hard-coded fixtures. Not live device tracking, intercepts, or NCIC.
+              Futuristic glass HUD over hard-coded fixtures. Not live device tracking, intercepts, or NCIC.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">

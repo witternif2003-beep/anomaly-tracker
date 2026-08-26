@@ -21,9 +21,9 @@ const syne = Syne({
 });
 
 export const metadata: Metadata = {
-  title: "Lyra — Orbital glass console",
+  title: "Lyra — Futuristic glass command console",
   description:
-    "Futuristic Lyra dashboard: GHOST-HAND / Post-doc / anomaly tracker with glass UI and 3D motion.",
+    "Orbital ice HUD: glassmorphism dashboard, 3D globe, GHOST-HAND / Post-doc / anomaly tracker.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
+import { FloatingOrbs } from "@/components/lyra/floating-orbs";
 import { cn } from "@/lib/utils";
 
 const NAV = [
@@ -34,20 +35,24 @@ export function DashboardShell({
     <div className="lyra-shell relative flex min-h-full flex-1 flex-col overflow-hidden">
       <div aria-hidden className="lyra-orbit" />
       <div aria-hidden className="lyra-orbit lyra-orbit--slow" />
+      <div aria-hidden className="lyra-orbit lyra-orbit--tilt" />
       <div aria-hidden className="lyra-grid-floor" />
       <div aria-hidden className="lyra-haze" />
+      <FloatingOrbs />
 
       <header className="glass-nav sticky top-0 z-40 animate-rise">
         <div className="mx-auto flex w-full max-w-7xl flex-wrap items-center justify-between gap-4 px-4 py-3 sm:px-6">
           <Link href="/" className="group flex items-center gap-3">
-            <span className="glass-mark grid size-10 place-items-center font-display text-lg tracking-tight text-primary">
+            <span className="glass-mark relative grid size-11 place-items-center font-display text-lg tracking-tight text-primary">
+              <span aria-hidden className="glass-mark-pulse" />
               Λ
             </span>
             <span>
               <span className="block font-display text-xl leading-none tracking-tight text-foreground transition group-hover:text-primary">
                 {brand}
               </span>
-              <span className="mt-1 block text-[10px] tracking-[0.22em] text-muted-foreground uppercase">
+              <span className="mt-1 flex items-center gap-2 text-[10px] tracking-[0.22em] text-muted-foreground uppercase">
+                <span className="hud-beacon" aria-hidden />
                 {eyebrow}
               </span>
             </span>
@@ -65,18 +70,20 @@ export function DashboardShell({
                   key={item.href}
                   href={item.href}
                   className={cn(
-                    "rounded-lg px-3 py-1.5 text-xs tracking-[0.08em] uppercase transition",
+                    "relative rounded-lg px-3 py-1.5 text-xs tracking-[0.08em] uppercase transition",
                     active
                       ? "bg-primary/15 text-primary shadow-[inset_0_0_0_1px_oklch(0.84_0.12_88/35%)]"
                       : "text-muted-foreground hover:bg-white/5 hover:text-foreground",
                   )}
                 >
+                  {active ? <span aria-hidden className="nav-active-glow" /> : null}
                   {item.label}
                 </Link>
               );
             })}
           </nav>
         </div>
+        <div aria-hidden className="glass-nav-scan" />
       </header>
 
       <div className="relative z-10 flex flex-1 flex-col animate-rise-delayed">{children}</div>
