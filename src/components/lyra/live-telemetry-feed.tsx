@@ -125,7 +125,7 @@ export function LiveTelemetryFeed({
   }, [telemetry, entities, anomalies, preferP1]);
 
   const [cursor, setCursor] = useState(0);
-  const [clock, setClock] = useState(() => new Date().toISOString());
+  const [clock, setClock] = useState("");
   const [feed, setFeed] = useState<TelemetryTick[]>([]);
 
   useEffect(() => {
@@ -133,6 +133,7 @@ export function LiveTelemetryFeed({
     const tickMs = Math.max(400, telemetry.tickMs || 1200);
     setFeed([stream[0]]);
     setCursor(0);
+    setClock(new Date().toISOString());
     const id = window.setInterval(() => {
       setCursor((c) => {
         const next = (c + 1) % stream.length;

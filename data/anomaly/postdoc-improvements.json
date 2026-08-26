@@ -3,7 +3,7 @@
   "classified": false,
   "governmentProgram": false,
   "total": 500,
-  "note": "Five hundred unclassified post-doctoral improvements for /tracker. Extends research-agenda §8 without replacing the five core questions. Every item binds to corporate business-law taxonomy, fixture evidence, and Lyra runtime — no live intercepts, CJIS, or SIGINT collection.",
+  "note": "Five hundred unclassified post-doctoral improvements for /tracker. Extends research-agenda §8 without replacing the five core questions. Hardened against pipeline failures: every item binds taxonomy + evidence + falsifier + fixture-clock reproducibility. Orbital globe must populate entities+events with real lat/lon. No live intercepts, CJIS, or SIGINT collection.",
   "axes": [
     {
       "id": "daubert-admissibility",

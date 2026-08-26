@@ -1,10 +1,17 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  Component,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ErrorInfo,
+  type ReactNode,
+} from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { OrbitControls, Stars, Html, Line } from "@react-three/drei";
+import { OrbitControls, Stars, Html } from "@react-three/drei";
 import type { Group, Mesh } from "three";
-import { Color } from "three";
 import { HudFrame } from "@/components/lyra/hud-frame";
 import { withBasePath } from "@/lib/static-data";
 
@@ -15,12 +22,49 @@ type SceneNode = {
   priority: string;
   position: { x: number; y: number; z: number };
   city: string;
+  lat?: number;
+  lon?: number;
   anomalyCount: number;
 };
 
+type SceneEvent = {
+  id: string;
+  entityId: string;
+  priority: string;
+  title: string;
+  label?: string;
+  entityName?: string;
+  city?: string;
+  lat?: number;
+  lon?: number;
+  categoryId?: string;
+  fbiCategory?: string | null;
+  artifact?: string | null;
+  collectionStatus?: string;
+  position?: { x: number; y: number; z: number };
+};
+
 type GlobePayload = {
-  scene?: { nodes?: SceneNode[] };
-  summary?: { improvements?: number; entityTypes?: number; p1Events?: number };
+  scene?: {
+    nodes?: SceneNode[];
+    events?: SceneEvent[];
+    populated?: boolean;
+    nodeCount?: number;
+    eventCount?: number;
+    p1EventCount?: number;
+    realtime?: string;
+  };
+  summary?: {
+    improvements?: number;
+    entityTypes?: number;
+    p1Events?: number;
+    anomalies?: number;
+    postdocImprovements?: number;
+    telemetryTicks?: number;
+    entities?: number;
+  };
+  postdocCatalog?: { total?: number };
+  telemetry?: { active?: boolean; totalTicks?: number; mode?: string };
 };
 
 function priorityColor(priority: string) {
@@ -29,9 +73,22 @@ function priorityColor(priority: string) {
   return "#94a3b8";
 }
 
-function latLonFromFixture(node: SceneNode, index: number) {
+function nodeLatLon(node: SceneNode, index: number) {
+  if (typeof node.lat === "number" && typeof node.lon === "number") {
+    return { lat: node.lat, lon: node.lon };
+  }
+  // Legacy fallback from CSS scene projection
   const lat = ((node.position.z ?? 0) / 50) * 55;
   const lon = ((node.position.x ?? 0) / 50) * 110 + (index % 7) * 3;
+  return { lat, lon };
+}
+
+function eventLatLon(event: SceneEvent, index: number) {
+  if (typeof event.lat === "number" && typeof event.lon === "number") {
+    return { lat: event.lat, lon: event.lon };
+  }
+  const lat = ((event.position?.z ?? 0) / 50) * 55;
+  const lon = ((event.position?.x ?? 0) / 50) * 110 + (index % 9) * 2;
   return { lat, lon };
 }
 
@@ -48,7 +105,7 @@ function toVector(lat: number, lon: number, radius: number) {
 function greatArc(
   a: [number, number, number],
   b: [number, number, number],
-  segments = 28,
+  segments = 24,
 ): [number, number, number][] {
   const points: [number, number, number][] = [];
   for (let i = 0; i <= segments; i += 1) {
@@ -77,7 +134,7 @@ function EntityMarker({
 }) {
   const ref = useRef<Mesh>(null);
   const halo = useRef<Mesh>(null);
-  const { lat, lon } = latLonFromFixture(node, index);
+  const { lat, lon } = nodeLatLon(node, index);
   const position = toVector(lat, lon, 1.55);
   const color = priorityColor(node.priority);
 
@@ -94,30 +151,80 @@ function EntityMarker({
 
   return (
     <group position={position}>
-      <mesh ref={ref} onClick={onSelect}>
-        <sphereGeometry args={[0.042 + Math.min(node.anomalyCount, 4) * 0.01, 20, 20]} />
+      <mesh ref={ref} onClick={(e) => { e.stopPropagation(); onSelect(); }}>
+        <sphereGeometry args={[0.048 + Math.min(node.anomalyCount, 6) * 0.008, 20, 20]} />
         <meshStandardMaterial
           color={color}
           emissive={color}
-          emissiveIntensity={selected ? 1.1 : 0.45}
+          emissiveIntensity={selected ? 1.15 : 0.5}
           roughness={0.35}
           metalness={0.4}
         />
       </mesh>
       {node.priority === "P1" || selected ? (
         <mesh ref={halo}>
-          <ringGeometry args={[0.07, 0.095, 32]} />
-          <meshBasicMaterial color={color} transparent opacity={selected ? 0.85 : 0.4} />
+          <ringGeometry args={[0.08, 0.11, 32]} />
+          <meshBasicMaterial color={color} transparent opacity={selected ? 0.9 : 0.45} />
         </mesh>
       ) : null}
       {selected ? (
-        <Html distanceFactor={5.5} position={[0, 0.16, 0]} center>
+        <Html distanceFactor={5.5} position={[0, 0.18, 0]} center>
           <div className="rounded-md border border-primary/30 bg-background/90 px-2.5 py-1.5 text-[10px] whitespace-nowrap shadow-lg backdrop-blur-md">
             <span className="font-medium text-primary">{node.label}</span>
             <span className="text-muted-foreground">
               {" "}
-              · {node.priority} · {node.city}
+              · {node.priority} · {node.city} · {node.anomalyCount} events
             </span>
+          </div>
+        </Html>
+      ) : null}
+    </group>
+  );
+}
+
+function EventMarker({
+  event,
+  index,
+  selected,
+  hot,
+  onSelect,
+}: {
+  event: SceneEvent;
+  index: number;
+  selected: boolean;
+  hot: boolean;
+  onSelect: () => void;
+}) {
+  const ref = useRef<Mesh>(null);
+  const { lat, lon } = eventLatLon(event, index);
+  const position = toVector(lat, lon, 1.58);
+  const color = priorityColor(event.priority);
+
+  useFrame(({ clock }) => {
+    if (!ref.current) return;
+    const pulse = hot || event.priority === "P1" ? 1 + Math.sin(clock.elapsedTime * 4 + index) * 0.18 : 1;
+    ref.current.scale.setScalar((selected ? 1.5 : hot ? 1.35 : 1) * pulse);
+  });
+
+  return (
+    <group position={position}>
+      <mesh ref={ref} onClick={(e) => { e.stopPropagation(); onSelect(); }}>
+        <sphereGeometry args={[0.022 + (event.priority === "P1" ? 0.012 : 0.004), 12, 12]} />
+        <meshStandardMaterial
+          color={color}
+          emissive={color}
+          emissiveIntensity={selected || hot ? 1.2 : 0.35}
+          roughness={0.4}
+          metalness={0.35}
+        />
+      </mesh>
+      {selected ? (
+        <Html distanceFactor={5} position={[0, 0.12, 0]} center>
+          <div className="max-w-[220px] rounded-md border border-primary/30 bg-background/90 px-2 py-1.5 text-[10px] shadow-lg backdrop-blur-md">
+            <p className="font-medium text-primary">{event.title}</p>
+            {event.artifact ? (
+              <p className="mt-0.5 truncate font-mono text-[9px] text-muted-foreground">{event.artifact}</p>
+            ) : null}
           </div>
         </Html>
       ) : null}
@@ -159,32 +266,40 @@ function OrbitalRings() {
   );
 }
 
-function LinkArcs({ nodes }: { nodes: SceneNode[] }) {
+function LinkArcs({ events }: { events: SceneEvent[] }) {
   const arcs = useMemo(() => {
-    const p1 = nodes
-      .map((n, i) => ({ n, i }))
-      .filter(({ n }) => n.priority === "P1")
-      .slice(0, 6);
+    const p1 = events
+      .map((e, i) => ({ e, i }))
+      .filter(({ e }) => e.priority === "P1")
+      .slice(0, 8);
     const out: [number, number, number][][] = [];
     for (let i = 0; i < p1.length - 1; i += 1) {
-      const a = latLonFromFixture(p1[i].n, p1[i].i);
-      const b = latLonFromFixture(p1[i + 1].n, p1[i + 1].i);
-      out.push(greatArc(toVector(a.lat, a.lon, 1.55), toVector(b.lat, b.lon, 1.55)));
+      const a = eventLatLon(p1[i].e, p1[i].i);
+      const b = eventLatLon(p1[i + 1].e, p1[i + 1].i);
+      out.push(greatArc(toVector(a.lat, a.lon, 1.55), toVector(b.lat, b.lon, 1.55), 20));
     }
     return out;
-  }, [nodes]);
+  }, [events]);
 
   return (
     <>
       {arcs.map((pts, i) => (
-        <Line
-          key={i}
-          points={pts}
-          color={new Color("#fbbf24")}
-          lineWidth={1.2}
-          transparent
-          opacity={0.55}
-        />
+        <group key={`arc-${i}`}>
+          {pts.slice(0, -1).map((p, j) => {
+            const q = pts[j + 1];
+            const mid: [number, number, number] = [
+              (p[0] + q[0]) / 2,
+              (p[1] + q[1]) / 2,
+              (p[2] + q[2]) / 2,
+            ];
+            return (
+              <mesh key={j} position={mid}>
+                <sphereGeometry args={[0.008, 6, 6]} />
+                <meshBasicMaterial color="#fbbf24" transparent opacity={0.55} />
+              </mesh>
+            );
+          })}
+        </group>
       ))}
     </>
   );
@@ -192,16 +307,24 @@ function LinkArcs({ nodes }: { nodes: SceneNode[] }) {
 
 function GlobeScene({
   nodes,
-  selectedId,
-  onSelect,
+  events,
+  selectedEntityId,
+  selectedEventId,
+  hotEventId,
+  onSelectEntity,
+  onSelectEvent,
 }: {
   nodes: SceneNode[];
-  selectedId: string | null;
-  onSelect: (id: string) => void;
+  events: SceneEvent[];
+  selectedEntityId: string | null;
+  selectedEventId: string | null;
+  hotEventId: string | null;
+  onSelectEntity: (id: string) => void;
+  onSelectEvent: (id: string) => void;
 }) {
   const group = useRef<Group>(null);
   useFrame((_, delta) => {
-    if (group.current) group.current.rotation.y += delta * 0.07;
+    if (group.current) group.current.rotation.y += delta * 0.06;
   });
 
   return (
@@ -222,34 +345,122 @@ function GlobeScene({
       </mesh>
       <Atmosphere />
       <OrbitalRings />
-      <LinkArcs nodes={nodes} />
+      <LinkArcs events={events} />
       {nodes.map((node, index) => (
         <EntityMarker
           key={node.id}
           node={node}
           index={index}
-          selected={selectedId === node.id}
-          onSelect={() => onSelect(node.id)}
+          selected={selectedEntityId === node.id}
+          onSelect={() => onSelectEntity(node.id)}
         />
       ))}
-      <Stars radius={48} depth={36} count={1800} factor={3.2} saturation={0} fade speed={0.55} />
+      {events.map((event, index) => (
+        <EventMarker
+          key={event.id}
+          event={event}
+          index={index}
+          selected={selectedEventId === event.id}
+          hot={hotEventId === event.id}
+          onSelect={() => onSelectEvent(event.id)}
+        />
+      ))}
+      <Stars radius={48} depth={36} count={1600} factor={3.2} saturation={0} fade speed={0.55} />
       <ambientLight intensity={0.45} />
       <directionalLight position={[4, 3, 2]} intensity={1.25} color="#fef3c7" />
       <pointLight position={[-3, -1, -2]} intensity={0.55} color="#5eead4" />
-      <OrbitControls enablePan={false} minDistance={2.5} maxDistance={6.2} autoRotate={false} />
+      <OrbitControls enablePan={false} minDistance={2.5} maxDistance={6.2} enableDamping dampingFactor={0.08} />
     </group>
+  );
+}
+
+class GlobeErrorBoundary extends Component<
+  { children: ReactNode; fallback: ReactNode },
+  { error: string | null }
+> {
+  state = { error: null as string | null };
+  static getDerivedStateFromError(error: Error) {
+    return { error: error.message || "WebGL failed" };
+  }
+  componentDidCatch(error: Error, info: ErrorInfo) {
+    console.warn("Orbital globe error", error, info);
+  }
+  render() {
+    if (this.state.error) return this.props.fallback;
+    return this.props.children;
+  }
+}
+
+function CssFallbackGlobe({
+  nodes,
+  events,
+  selectedEntityId,
+  onSelectEntity,
+}: {
+  nodes: SceneNode[];
+  events: SceneEvent[];
+  selectedEntityId: string | null;
+  onSelectEntity: (id: string) => void;
+}) {
+  return (
+    <div className="tracker-stage relative h-[min(70vh,560px)] w-full overflow-hidden">
+      <div className="tracker-grid absolute inset-0" aria-hidden />
+      <div className="tracker-scene relative h-full w-full">
+        {nodes.map((node, i) => {
+          const left = 50 + (node.position?.x ?? 0) * 0.72;
+          const top = 52 - (node.position?.z ?? 0) * 0.55 - (node.position?.y ?? 0) * 0.35;
+          const isHot = node.priority === "P1" || selectedEntityId === node.id;
+          return (
+            <button
+              key={node.id}
+              type="button"
+              className={`tracker-node absolute -translate-x-1/2 -translate-y-1/2 rounded-full border px-2 py-1 text-left ${
+                isHot ? "tracker-pulse border-destructive/70 bg-destructive/20" : "border-border/70 bg-card/80"
+              }`}
+              style={{ left: `${left}%`, top: `${top}%`, zIndex: 20 + i }}
+              onClick={() => onSelectEntity(node.id)}
+            >
+              <span className="text-[10px] font-medium sm:text-xs">{node.label}</span>
+            </button>
+          );
+        })}
+      </div>
+      <p className="absolute bottom-3 left-3 text-[10px] tracking-[0.16em] text-muted-foreground uppercase">
+        CSS fallback · {nodes.length} nodes · {events.length} events · WebGL unavailable
+      </p>
+    </div>
   );
 }
 
 export default function BusinessGlobe({ initialData }: { initialData?: GlobePayload }) {
   const [payload, setPayload] = useState<GlobePayload | null>(initialData ?? null);
   const [error, setError] = useState<string | null>(null);
-  const [selectedId, setSelectedId] = useState<string | null>(
+  const [selectedEntityId, setSelectedEntityId] = useState<string | null>(
     initialData?.scene?.nodes?.[0]?.id ?? null,
   );
+  const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
+  const [hotEventIndex, setHotEventIndex] = useState(0);
+  const [webglOk, setWebglOk] = useState(true);
 
   useEffect(() => {
-    if (initialData?.scene?.nodes?.length) return;
+    try {
+      const canvas = document.createElement("canvas");
+      const gl =
+        canvas.getContext("webgl2") ||
+        canvas.getContext("webgl") ||
+        canvas.getContext("experimental-webgl");
+      setWebglOk(Boolean(gl));
+    } catch {
+      setWebglOk(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    const hasNodes = Boolean(initialData?.scene?.nodes?.length);
+    if (hasNodes) {
+      setPayload(initialData ?? null);
+      return;
+    }
     let cancelled = false;
     (async () => {
       try {
@@ -260,7 +471,7 @@ export default function BusinessGlobe({ initialData }: { initialData?: GlobePayl
         const data = (await response.json()) as GlobePayload;
         if (!cancelled) {
           setPayload(data);
-          setSelectedId(data.scene?.nodes?.[0]?.id ?? null);
+          setSelectedEntityId(data.scene?.nodes?.[0]?.id ?? null);
         }
       } catch {
         if (!cancelled && !initialData) setError("Could not load fixture globe data.");
@@ -272,13 +483,28 @@ export default function BusinessGlobe({ initialData }: { initialData?: GlobePayl
   }, [initialData]);
 
   const nodes = useMemo(() => payload?.scene?.nodes ?? [], [payload]);
-  const selected = nodes.find((n) => n.id === selectedId) ?? null;
+  const events = useMemo(() => payload?.scene?.events ?? [], [payload]);
+  const p1Events = useMemo(() => events.filter((e) => e.priority === "P1"), [events]);
+
+  useEffect(() => {
+    if (!p1Events.length) return;
+    const id = window.setInterval(() => {
+      setHotEventIndex((i) => (i + 1) % p1Events.length);
+    }, 1400);
+    return () => window.clearInterval(id);
+  }, [p1Events]);
+
+  const hotEventId = p1Events[hotEventIndex]?.id ?? null;
+  const selectedEntity = nodes.find((n) => n.id === selectedEntityId) ?? null;
+  const selectedEvent = events.find((e) => e.id === selectedEventId) ?? p1Events[hotEventIndex] ?? null;
+
+  const postdoc = payload?.summary?.postdocImprovements ?? payload?.postdocCatalog?.total ?? 0;
+  const anomalies = payload?.summary?.anomalies ?? events.length;
+  const telemetryTicks = payload?.summary?.telemetryTicks ?? payload?.telemetry?.totalTicks ?? 0;
 
   if (error) {
     return (
-      <div className="flex h-96 items-center justify-center text-sm text-muted-foreground">
-        {error}
-      </div>
+      <div className="flex h-96 items-center justify-center text-sm text-muted-foreground">{error}</div>
     );
   }
 
@@ -290,43 +516,119 @@ export default function BusinessGlobe({ initialData }: { initialData?: GlobePayl
     );
   }
 
+  if (!nodes.length) {
+    return (
+      <div className="flex h-96 items-center justify-center text-sm text-muted-foreground">
+        Globe payload empty — regenerate static anomaly.json
+      </div>
+    );
+  }
+
+  const fallback = (
+    <CssFallbackGlobe
+      nodes={nodes}
+      events={events}
+      selectedEntityId={selectedEntityId}
+      onSelectEntity={setSelectedEntityId}
+    />
+  );
+
   return (
     <div className="space-y-3">
-      <div className="grid grid-cols-3 gap-2 sm:gap-3">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
         <div className="hud-stat">
-          <span className="hud-stat-value">{payload.summary?.entityTypes ?? 0}</span>
-          <span className="hud-stat-label">Entity types</span>
+          <span className="hud-stat-value">{nodes.length}</span>
+          <span className="hud-stat-label">Entities</span>
         </div>
         <div className="hud-stat">
-          <span className="hud-stat-value">{payload.summary?.p1Events ?? 0}</span>
-          <span className="hud-stat-label">P1 events</span>
+          <span className="hud-stat-value">{events.length || anomalies}</span>
+          <span className="hud-stat-label">Events</span>
         </div>
         <div className="hud-stat">
-          <span className="hud-stat-value">
-            {(payload.summary?.improvements ?? 0).toLocaleString()}
-          </span>
+          <span className="hud-stat-value">{payload.summary?.p1Events ?? p1Events.length}</span>
+          <span className="hud-stat-label">P1 live</span>
+        </div>
+        <div className="hud-stat">
+          <span className="hud-stat-value">{postdoc || 500}</span>
+          <span className="hud-stat-label">Post-doc</span>
+        </div>
+        <div className="hud-stat">
+          <span className="hud-stat-value">{(payload.summary?.improvements ?? 0).toLocaleString()}</span>
           <span className="hud-stat-label">Improvements</span>
+        </div>
+        <div className="hud-stat">
+          <span className="hud-stat-value">{telemetryTicks.toLocaleString()}</span>
+          <span className="hud-stat-label">Telemetry</span>
         </div>
       </div>
 
       <HudFrame label="Orbital globe · drag to inspect" className="globe-stage">
         <div className="relative z-[2] h-[min(70vh,560px)] w-full">
-          <Canvas camera={{ position: [0, 0.35, 3.7], fov: 42 }} dpr={[1, 1.75]}>
-            <color attach="background" args={["#030a10"]} />
-            <fog attach="fog" args={["#030a10", 6, 16]} />
-            <GlobeScene nodes={nodes} selectedId={selectedId} onSelect={setSelectedId} />
-          </Canvas>
+          {webglOk ? (
+            <GlobeErrorBoundary fallback={fallback}>
+              <Canvas
+                camera={{ position: [0, 0.35, 3.7], fov: 42 }}
+                dpr={[1, 1.75]}
+                gl={{ antialias: true, alpha: false, powerPreference: "high-performance" }}
+                onCreated={({ gl }) => {
+                  gl.setClearColor("#030a10");
+                }}
+              >
+                <color attach="background" args={["#030a10"]} />
+                <fog attach="fog" args={["#030a10", 6, 16]} />
+                <GlobeScene
+                  nodes={nodes}
+                  events={events}
+                  selectedEntityId={selectedEntityId}
+                  selectedEventId={selectedEventId}
+                  hotEventId={hotEventId}
+                  onSelectEntity={(id) => {
+                    setSelectedEntityId(id);
+                    setSelectedEventId(null);
+                  }}
+                  onSelectEvent={(id) => {
+                    setSelectedEventId(id);
+                    const ev = events.find((e) => e.id === id);
+                    if (ev) setSelectedEntityId(ev.entityId);
+                  }}
+                />
+              </Canvas>
+            </GlobeErrorBoundary>
+          ) : (
+            fallback
+          )}
         </div>
       </HudFrame>
 
-      {selected ? (
+      <div className="flex flex-wrap items-center gap-2 px-1 text-xs text-muted-foreground">
+        <span className="hud-beacon" aria-hidden />
+        <span className="tracking-[0.14em] text-emerald-300/90 uppercase">3D populated</span>
+        <span>
+          {nodes.length} entities · {events.length} events · {p1Events.length} P1 arcs · fixture lat/lon
+        </span>
+      </div>
+
+      {selectedEntity || selectedEvent ? (
         <p className="px-1 text-sm">
-          <span className="font-medium text-primary">{selected.label}</span>
-          <span className="text-muted-foreground">
-            {" "}
-            · {selected.entityType} · {selected.city} · {selected.priority} ·{" "}
-            {selected.anomalyCount} anomalies
-          </span>
+          {selectedEvent ? (
+            <>
+              <span className="font-medium text-primary">{selectedEvent.title}</span>
+              <span className="text-muted-foreground">
+                {" "}
+                · {selectedEvent.entityName ?? selectedEntity?.label} · {selectedEvent.priority}
+                {selectedEvent.artifact ? ` · ${selectedEvent.artifact}` : ""}
+              </span>
+            </>
+          ) : selectedEntity ? (
+            <>
+              <span className="font-medium text-primary">{selectedEntity.label}</span>
+              <span className="text-muted-foreground">
+                {" "}
+                · {selectedEntity.entityType} · {selectedEntity.city} · {selectedEntity.priority} ·{" "}
+                {selectedEntity.anomalyCount} anomalies
+              </span>
+            </>
+          ) : null}
         </p>
       ) : null}
     </div>

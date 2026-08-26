@@ -172,6 +172,11 @@ interface TrackerBook {
       priority: string;
     }>;
   };
+  pipelineHealth?: {
+    title: string;
+    note: string;
+    checks: Array<{ id: string; ok: boolean; detail: string }>;
+  };
   priorityCounts: { P1: number; P2: number; P3: number };
   architecture: {
     title?: string;
@@ -674,6 +679,37 @@ export function AnomalyTracker({ initialData }: { initialData?: TrackerBook }) {
               </Card>
             </div>
 
+            {book.pipelineHealth ? (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">{book.pipelineHealth.title}</CardTitle>
+                  <CardDescription>{book.pipelineHealth.note}</CardDescription>
+                </CardHeader>
+                <CardContent className="grid gap-2 sm:grid-cols-2">
+                  {book.pipelineHealth.checks.map((check) => (
+                    <div
+                      key={check.id}
+                      className="rounded-lg border border-border/50 px-3 py-2 text-sm"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Badge
+                          className={
+                            check.ok
+                              ? "bg-emerald-500/20 text-emerald-200"
+                              : "bg-destructive/20 text-destructive"
+                          }
+                        >
+                          {check.ok ? "OK" : "FAIL"}
+                        </Badge>
+                        <span className="font-mono text-[11px] text-muted-foreground">{check.id}</span>
+                      </div>
+                      <p className="mt-1 text-xs text-muted-foreground">{check.detail}</p>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            ) : null}
+
             <Card>
               <CardHeader>
                 <CardTitle className="text-base">8. Post-doctoral research agenda</CardTitle>
@@ -1108,8 +1144,8 @@ export function AnomalyTracker({ initialData }: { initialData?: TrackerBook }) {
                   </p>
                 ))}
                 <ul className="space-y-1 font-mono text-[11px] text-muted-foreground">
-                  {book.automation.commands.map((cmd) => (
-                    <li key={cmd}>{cmd}</li>
+                  {book.automation.commands.map((cmd, i) => (
+                    <li key={`auto-cmd-${i}-${cmd}`}>{cmd}</li>
                   ))}
                 </ul>
               </CardContent>
@@ -1270,8 +1306,8 @@ export function AnomalyTracker({ initialData }: { initialData?: TrackerBook }) {
                 <p className="text-xs text-muted-foreground">{book.dependencyStrategy.install}</p>
                 <p className="text-xs text-muted-foreground">{book.dependencyStrategy.verify}</p>
                 <ul className="space-y-1 font-mono text-[11px] text-muted-foreground">
-                  {(book.dependencyStrategy.commands ?? book.automation.commands).map((cmd) => (
-                    <li key={cmd}>{cmd}</li>
+                  {(book.dependencyStrategy.commands ?? book.automation.commands).map((cmd, i) => (
+                    <li key={`dep-cmd-${i}-${cmd}`}>{cmd}</li>
                   ))}
                 </ul>
               </CardContent>

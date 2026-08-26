@@ -45,6 +45,7 @@ export type PostdocImprovement = {
   status: "open" | "constrained";
   wontDo: string | null;
   priority: "P1" | "P2" | "P3";
+  pipelineCheck: string;
 };
 
 function buildPostdocImprovement(index: number): PostdocImprovement {
@@ -74,12 +75,11 @@ function buildPostdocImprovement(index: number): PostdocImprovement {
     axis.id === "ethics-guardrails" ||
     axis.id === "cross-border-hold" ||
     rq.status === "constrained";
-  const wontDo =
-    constrained
-      ? ("wontDo" in element && typeof element.wontDo === "string"
-          ? element.wontDo
-          : rq.wontDo ?? "sigint-intercepts")
-      : null;
+  const wontDo = constrained
+    ? "wontDo" in element && typeof element.wontDo === "string"
+      ? element.wontDo
+      : (rq.wontDo ?? "sigint-intercepts")
+    : null;
 
   const priority: "P1" | "P2" | "P3" =
     index % 7 === 0 ? "P1" : index % 3 === 0 ? "P2" : "P3";
@@ -94,7 +94,7 @@ function buildPostdocImprovement(index: number): PostdocImprovement {
     method,
     falsifier,
     deliverable,
-    lyraBinding: `Anchor ${rq.id}. Bind ${map.fbiCategory} → ${category.id}. Fixture evidence ${element.id}. Method=${method}. Deliverable=${deliverable}.`,
+    lyraBinding: `Anchor ${rq.id}. Bind ${map.fbiCategory} → ${category.id}. Fixture evidence ${element.id}. Method=${method}. Deliverable=${deliverable}. Verify via bash scripts/pipelines/tracker-3d-smoke.sh.`,
     categoryId: category.id,
     categoryLabel: category.label,
     entityTypeId: entityType.id,
@@ -106,6 +106,7 @@ function buildPostdocImprovement(index: number): PostdocImprovement {
     status: constrained ? "constrained" : "open",
     wontDo,
     priority,
+    pipelineCheck: `scene.events+nodes lat/lon · postdoc-500 · telemetry-24x7 · falsifier=${falsifier}`,
   };
 }
 
@@ -690,6 +691,8 @@ export function compileAnomalyTracker(opts?: {
         priority: e.topPriority,
         position: e.position,
         city: e.city.label,
+        lat: e.city.lat,
+        lon: e.city.lon,
         anomalyCount: e.anomalyCount,
       })),
       events: anomalies.map((a) => ({
@@ -697,12 +700,21 @@ export function compileAnomalyTracker(opts?: {
         entityId: a.entityId,
         priority: a.priority,
         title: a.title,
+        label: a.title,
+        entityName: a.entityName,
         position: a.position,
+        lat: a.lat ?? a.city.lat,
+        lon: a.lon ?? a.city.lon,
+        city: a.city.label,
         categoryId: a.categoryId,
         fbiCategory: a.fbiCategory ?? null,
         artifact: a.artifact ?? null,
         collectionStatus: a.collectionStatus ?? "fixture",
       })),
+      populated: true,
+      nodeCount: entities.length,
+      eventCount: anomalies.length,
+      p1EventCount: p1Events.length,
     },
     telemetry,
     evidenceMap: {
@@ -863,16 +875,66 @@ export function compileAnomalyTracker(opts?: {
       scripts: automationDoc.scripts,
       rejectedResearchSteps: automationDoc.rejectedResearchSteps,
       commands: [
-        ...automationDoc.commands,
-        "curl -fsS http://127.0.0.1:4040/v1/anomaly",
-        "curl -fsS 'http://127.0.0.1:4040/v1/anomaly?priority=P1'",
-        "curl -fsS 'http://127.0.0.1:4040/v1/anomaly/improvements?limit=20&categoryId=financial-records'",
-        "curl -fsS http://127.0.0.1:4040/v1/corporate",
-        "bash scripts/pipelines/local-api-smoke.sh",
+        ...new Set([
+          ...automationDoc.commands,
+          "curl -fsS http://127.0.0.1:4040/v1/anomaly",
+          "curl -fsS 'http://127.0.0.1:4040/v1/anomaly?priority=P1'",
+          "curl -fsS 'http://127.0.0.1:4040/v1/anomaly/improvements?limit=20&categoryId=financial-records'",
+          "curl -fsS http://127.0.0.1:4040/v1/corporate",
+          "bash scripts/pipelines/local-api-smoke.sh",
+          "bash scripts/pipelines/tracker-3d-smoke.sh",
+        ]),
       ],
       liveSurveillance: false,
       slackWebhooks: false,
       cuckooLiveSandbox: false,
+    },
+    pipelineHealth: {
+      object: "lyra.pipeline-health" as const,
+      title: "Tracker / orbital globe pipeline diagnosis",
+      note: "Post-doctoral hardening checklist for /tracker 3D + static bake. Fixture-clock only.",
+      checks: [
+        {
+          id: "scene-nodes-geo",
+          ok: entities.every((e) => Number.isFinite(e.city.lat) && Number.isFinite(e.city.lon)),
+          detail: `${entities.length} entity nodes carry real city lat/lon`,
+        },
+        {
+          id: "scene-events-populated",
+          ok: anomalies.length > 0,
+          detail: `${anomalies.length} anomaly events projected into scene.events`,
+        },
+        {
+          id: "p1-queue-active",
+          ok: p1Events.length > 0,
+          detail: `${p1Events.length} P1 incidents in p1Queue`,
+        },
+        {
+          id: "postdoc-500",
+          ok: POSTDOC_IMPROVEMENT_COUNT === 500,
+          detail: `Post-doc catalog locked at ${POSTDOC_IMPROVEMENT_COUNT}`,
+        },
+        {
+          id: "telemetry-24x7",
+          ok: telemetry.active && telemetry.totalTicks === entities.length * anomalies.length,
+          detail: `${telemetry.totalTicks} fixture-clock ticks · mode=${telemetry.mode}`,
+        },
+        {
+          id: "evidence-corpus",
+          ok: evidenceCorpus.elements.length >= 30,
+          detail: `${evidenceCorpus.elements.length} FBI→corporate evidence elements`,
+        },
+        {
+          id: "no-live-surveillance",
+          ok: true,
+          detail: "liveSurveillance=false · intercepts=false · cjisLiveQueries=false",
+        },
+        {
+          id: "globe-payload",
+          ok: entities.length >= 15 && anomalies.length >= 12,
+          detail: "Globe payload requires entities+events with lat/lon for R3F markers",
+        },
+      ],
     },
     policy: {
       corporateTaxonomy: policy.corporateTaxonomy,
