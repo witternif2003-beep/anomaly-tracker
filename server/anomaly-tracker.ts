@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import fixtures from "../data/anomaly/fixtures.json";
 import evidenceCorpus from "../data/anomaly/evidence-corpus.json";
 import mayForensicPacket from "../data/anomaly/may-forensic-packet.json";
+import blackOwnedScanBotDoc from "../data/anomaly/black-owned-scan-bot.json";
 import inventoryLedger from "../data/anomaly/inventory-ledger.json";
 import dependencyStrategyDoc from "../data/anomaly/dependency-strategy.json";
 import mcpAuditDoc from "../data/anomaly/mcp-audit.json";
@@ -423,6 +424,123 @@ function buildTelemetryStream(
   };
 }
 
+function buildBlackOwnedScanBot(entities: ReturnType<typeof enrichEntity>[]) {
+  const verified = entities
+    .filter((e) => e.blackOwned)
+    .map((e) => ({
+      id: e.id,
+      name: e.name,
+      city: e.city.label,
+      sector: e.sector,
+      entityType: e.entityType,
+      kind: "verified-roster" as const,
+      blackOwned: true,
+      ownershipVerification: e.ownershipVerification,
+      signal: e.ownershipNote ?? "Fixture-verified Black-owned roster",
+      priority: e.topPriority === "ok" ? "P3" : e.topPriority,
+      scanAction: "revalidate-ownership-packet",
+      source: "fixture-roster",
+    }));
+
+  const candidates = blackOwnedScanBotDoc.newBusinessCandidates.map((c) => ({
+    id: c.id,
+    name: c.name,
+    city: c.city,
+    sector: c.sector,
+    entityType: c.entityType,
+    kind: "new-to-scan" as const,
+    blackOwned: true,
+    ownershipVerification: "pending-scan",
+    signal: c.signal,
+    priority: c.priority,
+    scanAction: "queue-new-business-scan",
+    source: "counsel-intake-queue",
+  }));
+
+  const targets = [...verified, ...candidates];
+  const actions = blackOwnedScanBotDoc.scanActions;
+  const sources = blackOwnedScanBotDoc.sources;
+  const stream: Array<{
+    id: string;
+    seq: number;
+    loggedAtOffsetMs: number;
+    status: "scanning" | "queued" | "logged-new" | "revalidated";
+    target: (typeof targets)[number];
+    message: string;
+  }> = [];
+
+  let seq = 0;
+  // 24/7 fixture clock: cycle verified roster + log every candidate as new-to-scan.
+  for (let cycle = 0; cycle < 3; cycle += 1) {
+    for (const target of verified) {
+      seq += 1;
+      const action = actions[seq % actions.length];
+      stream.push({
+        id: `bo-scan-${target.id}-${cycle}-${seq}`,
+        seq,
+        loggedAtOffsetMs: seq * blackOwnedScanBotDoc.tickMs,
+        status: "revalidated",
+        target: { ...target, scanAction: action, source: sources[seq % sources.length] },
+        message: `24/7 bot revalidated Black-owned fixture ${target.name} · ${action}`,
+      });
+    }
+    for (const target of candidates) {
+      seq += 1;
+      stream.push({
+        id: `bo-new-${target.id}-${cycle}-${seq}`,
+        seq,
+        loggedAtOffsetMs: seq * blackOwnedScanBotDoc.tickMs,
+        status: "logged-new",
+        target: {
+          ...target,
+          scanAction: actions[seq % actions.length],
+          source: sources[seq % sources.length],
+        },
+        message: `NEW BUSINESS LOGGED TO SCAN · ${target.name} · ${target.signal}`,
+      });
+      seq += 1;
+      stream.push({
+        id: `bo-queue-${target.id}-${cycle}-${seq}`,
+        seq,
+        loggedAtOffsetMs: seq * blackOwnedScanBotDoc.tickMs,
+        status: "queued",
+        target,
+        message: `Queued forensic + ownership scan for ${target.name} (${target.city})`,
+      });
+      seq += 1;
+      stream.push({
+        id: `bo-run-${target.id}-${cycle}-${seq}`,
+        seq,
+        loggedAtOffsetMs: seq * blackOwnedScanBotDoc.tickMs,
+        status: "scanning",
+        target: {
+          ...target,
+          scanAction: actions[seq % actions.length],
+        },
+        message: `Scanning ${target.name} against May forensic business-law packet (fixture)`,
+      });
+    }
+  }
+
+  return {
+    object: "lyra.black-owned-scan-bot" as const,
+    title: blackOwnedScanBotDoc.title,
+    mode: blackOwnedScanBotDoc.mode,
+    tickMs: blackOwnedScanBotDoc.tickMs,
+    active: true,
+    liveSurveillance: false,
+    liveCertQueries: false,
+    note: blackOwnedScanBotDoc.note,
+    verifiedCount: verified.length,
+    candidateCount: candidates.length,
+    queueLength: candidates.length,
+    scanActions: actions,
+    sources,
+    targets,
+    stream,
+  };
+}
+
 function cityById(id: string): City {
   const found = fixtures.cities.find((c) => c.id === id);
   if (!found) throw new Error(`Unknown city ${id}`);
@@ -745,6 +863,8 @@ export function compileAnomalyTracker(opts?: {
       mayForensicPackets: entities.length,
       mayForensicCategories: mayForensicPacket.categories.length,
       mayForensicElementsPerEntity: entities[0]?.mayForensicPacket.elementCount ?? 0,
+      blackOwnedScanBotActive: true,
+      blackOwnedScanCandidates: blackOwnedScanBotDoc.newBusinessCandidates.length,
       intercepts: false,
       cjisLiveQueries: false,
       cuckooLiveSandbox: false,
@@ -826,6 +946,7 @@ export function compileAnomalyTracker(opts?: {
     mayForensicPackets: Object.fromEntries(
       entities.map((e) => [e.id, e.mayForensicPacket]),
     ),
+    blackOwnedScanBot: buildBlackOwnedScanBot(entities),
     entities,
     anomalies,
     p1Queue: p1Events,
@@ -1033,6 +1154,13 @@ export function compileAnomalyTracker(opts?: {
                 e.mayForensicPacket.elementCount > 0,
             ),
           detail: `${entities.length} entities × ${mayForensicPacket.categories.length} May FBI→business-law categories`,
+        },
+        {
+          id: "black-owned-scan-bot",
+          ok:
+            entities.some((e) => e.blackOwned) &&
+            blackOwnedScanBotDoc.newBusinessCandidates.length >= 8,
+          detail: `${entities.filter((e) => e.blackOwned).length} verified BO · ${blackOwnedScanBotDoc.newBusinessCandidates.length} new-to-scan · 24/7 fixture bot`,
         },
         {
           id: "no-live-surveillance",

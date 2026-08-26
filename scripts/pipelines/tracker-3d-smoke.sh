@@ -70,6 +70,20 @@ may = (d.get("evidenceMap") or {}).get("mayPacket") or {}
 if not may.get("everyEntityHasFullPacket"):
     errors.append("evidenceMap.mayPacket.everyEntityHasFullPacket false")
 
+bot = d.get("blackOwnedScanBot") or {}
+if not bot.get("active"):
+    errors.append("blackOwnedScanBot.active false")
+if (bot.get("verifiedCount") or 0) < 1:
+    errors.append("blackOwnedScanBot.verifiedCount empty")
+if (bot.get("candidateCount") or 0) < 8:
+    errors.append("blackOwnedScanBot.candidateCount too low")
+if (bot.get("queueLength") or 0) < 1:
+    errors.append("blackOwnedScanBot.queueLength empty")
+if len(bot.get("stream") or []) < 10:
+    errors.append("blackOwnedScanBot.stream too short for 24/7 log")
+if bot.get("liveSurveillance") or bot.get("liveCertQueries"):
+    errors.append("blackOwnedScanBot must not enable live surveillance/CERT")
+
 if errors:
     print("PIPELINE FAIL tracker-3d-smoke")
     for e in errors:
@@ -81,5 +95,6 @@ print(
     f"nodes={len(nodes)} events={len(events)} postdoc=500",
     f"telemetryTicks={telemetry.get('totalTicks')} health={len(checks)}",
     f"mayPackets={len(packets)} mayCats={may.get('categoryCount')}",
+    f"boBot={bot.get('verifiedCount')}+{bot.get('candidateCount')} stream={len(bot.get('stream') or [])}",
 )
 PY
