@@ -128,6 +128,14 @@ assert Path("workers/ci-gate.js").is_file()
 print("VERIFY OK: P1 roster", len(skills), "skills", len(agents), "agents", len(pipelines), "pipelines")
 PY
 
+python3 - <<'PY'
+from pathlib import Path
+recs = (Path(".vscode/extensions.json").read_text())
+for ext in ("saoudrizwan.claude-dev", "RooVeterinaryInc.roo-cline", "Continue.continue"):
+    assert ext in recs, ext
+print("VERIFY OK: editor extension recommendations in .vscode/extensions.json")
+PY
+
 base="${VERIFY_BASE_URL:-http://127.0.0.1:43127}"
 if curl -fsS -o /dev/null --max-time 3 "${base}/"; then
   payload='{"input":"write a launch email for our headphones","mode":"basic","requestType":"auto","platform":"chatgpt"}'

@@ -139,3 +139,13 @@ npm run pipelines
 ```
 
 Named pipelines: `cloudflare-ci.sh` (Wrangler **dry-run only**), `cloudflare-p1-health.sh`.
+
+## Editor extensions
+
+Recommended for VS Code / Cursor. This cloud VM has no `code` CLI, so they were installed from Open VSX into `~/.cursor/extensions` and `~/.vscode/extensions`. Locally, run `bash scripts/install-extensions.sh` or `code --install-extension <id>`.
+
+| Extension | ID | Purpose | Installed |
+| --- | --- | --- | --- |
+| Cline | `saoudrizwan.claude-dev` | AI-assisted coding | 4.1.15 |
+| Roo Code | `RooVeterinaryInc.roo-cline` | AI agent | 3.54.0 |
+| Continue | `Continue.continue` | AI code completion | 2.1.0 (linux-x64) |
