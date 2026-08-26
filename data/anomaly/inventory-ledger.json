@@ -1,0 +1,401 @@
+{
+  "title": "P1 Tier-1 inventory ledger (research note §2)",
+  "classified": false,
+  "governmentProgram": false,
+  "note": "10,000 Tier-1 catalog slots rotate over closest public installs. Unpublished scoped packages are never invented. Cuckoo live sandbox stays off.",
+  "additionalSlots": 10000,
+  "coreRuntime": [
+    { "name": "Node.js", "version": "22.14.0", "purpose": "JavaScript runtime", "status": "installed" },
+    { "name": "npm", "version": "10.9.7", "purpose": "Package manager", "status": "installed" },
+    { "name": "Next.js", "version": "16.3.2", "purpose": "React framework", "status": "installed" },
+    { "name": "React", "version": "19.2.8", "purpose": "UI library", "status": "installed" },
+    { "name": "TypeScript", "version": "7.0.2", "purpose": "Type checking", "status": "installed" },
+    { "name": "Playwright", "version": "1.62.1", "purpose": "Browser automation", "status": "installed" },
+    { "name": "folio-mcp", "version": "0.4.1", "purpose": "Legal ontology MCP", "status": "installed" },
+    { "name": "Wrangler", "version": "4.x", "purpose": "Cloudflare Workers (dry-run only)", "status": "installed" }
+  ],
+  "sections": [
+    {
+      "id": "npm-expanded",
+      "title": "2.2 Expanded NPM packages",
+      "requestedCountNarrative": "5000+",
+      "items": [
+        {
+          "requested": "@law-research/opinion-parser",
+          "category": "Legal Research",
+          "assetId": "npm-opinion-parser",
+          "closest": "pdf-parse + citation-js + compromise",
+          "taxonomy": ["business-records", "technical-expert"]
+        },
+        {
+          "requested": "@forensic-tools/disk-imaging",
+          "category": "Forensic Tools",
+          "assetId": "npm-disk-imaging",
+          "closest": "hachoir + pefile",
+          "taxonomy": ["removable-media", "physical-evidence"]
+        },
+        {
+          "requested": "@financial-intel/sanctions-screen",
+          "category": "Financial Intelligence",
+          "assetId": "npm-sanctions",
+          "closest": "ofac",
+          "taxonomy": ["financial-records", "regulatory-compliance"]
+        },
+        {
+          "requested": "@osint-collector/social-media",
+          "category": "OSINT",
+          "assetId": "npm-osint-social",
+          "closest": "sherlock-project",
+          "taxonomy": ["electronic-communications", "third-party-records"]
+        },
+        {
+          "requested": "@geo-analytics/coordinates",
+          "category": "Geospatial",
+          "assetId": "npm-geospatial",
+          "closest": "@turf/turf + geojson + geolib",
+          "taxonomy": ["geolocation"]
+        },
+        {
+          "requested": "@evidence-chain/hash-verifier",
+          "category": "Evidence Chain",
+          "assetId": "npm-hash-verifier",
+          "closest": "hash-wasm + ssri + hasha + object-hash",
+          "taxonomy": ["metadata-audit", "business-records"]
+        }
+      ]
+    },
+    {
+      "id": "pypi-expanded",
+      "title": "2.3 Expanded Python packages",
+      "requestedCountNarrative": "3000+",
+      "items": [
+        {
+          "requested": "crimemapping",
+          "category": "Crime Analytics",
+          "assetId": "pip-crimemapping",
+          "closest": "folium",
+          "taxonomy": ["geolocation"]
+        },
+        {
+          "requested": "forensic-accounting",
+          "category": "Forensic Accounting",
+          "assetId": "pip-forensic-accounting",
+          "closest": "pyod",
+          "taxonomy": ["financial-records"]
+        },
+        {
+          "requested": "legal-ner",
+          "category": "Legal NLP",
+          "assetId": "pip-legal-ner",
+          "closest": "eyecite + reporters-db",
+          "taxonomy": ["business-records", "regulatory-compliance"]
+        },
+        {
+          "requested": "db-forensics",
+          "category": "Database Forensics",
+          "assetId": "pip-db-forensics",
+          "closest": "sqlite-utils",
+          "taxonomy": ["esi"]
+        },
+        {
+          "requested": "steganography-tools",
+          "category": "Steganography",
+          "assetId": "pip-stego",
+          "closest": "stegano + pillow",
+          "taxonomy": ["metadata-audit", "technical-expert"]
+        },
+        {
+          "requested": "sec-edgar",
+          "category": "Financial Data",
+          "assetId": "api-edgar",
+          "closest": "edgartools + sec-edgar-downloader",
+          "taxonomy": ["regulatory-compliance", "financial-records"]
+        }
+      ]
+    },
+    {
+      "id": "docker-expanded",
+      "title": "2.4 Expanded Docker containers",
+      "requestedCountNarrative": "1500+",
+      "items": [
+        {
+          "requested": "elastic/elasticsearch:8.12",
+          "category": "Search",
+          "assetId": "docker-elasticsearch",
+          "closest": "minisearch (in-process when Docker absent)",
+          "taxonomy": ["esi"]
+        },
+        {
+          "requested": "neo4j/neo4j:5.0",
+          "category": "Graph",
+          "assetId": "docker-neo4j",
+          "closest": "graphology",
+          "taxonomy": ["technical-expert"]
+        },
+        {
+          "requested": "osint-framework/alpine",
+          "category": "OSINT",
+          "assetId": "docker-osint",
+          "closest": "recon-ng + sherlock clones",
+          "taxonomy": ["third-party-records"]
+        },
+        {
+          "requested": "sherlock/sherlock",
+          "category": "Username search",
+          "assetId": "docker-sherlock",
+          "closest": "sherlock-project/sherlock",
+          "taxonomy": ["electronic-communications"]
+        },
+        {
+          "requested": "the-harvester/email-gatherer",
+          "category": "Email/domain recon",
+          "assetId": "docker-harvester",
+          "closest": "laramies/theHarvester",
+          "taxonomy": ["electronic-communications"]
+        },
+        {
+          "requested": "cuckoo/cuckoo",
+          "category": "Malware sandbox",
+          "assetId": "gh-cuckoo",
+          "closest": "source clone only + pefile (live sandbox never started)",
+          "taxonomy": ["technical-expert"],
+          "wontDo": "cuckoo-live"
+        },
+        {
+          "requested": "elastic/kibana:8.12",
+          "category": "Visualization",
+          "assetId": "docker-kibana",
+          "closest": "Lyra /tracker + inventory UI (no Kibana daemon)",
+          "taxonomy": ["metadata-audit"]
+        },
+        {
+          "requested": "prom/prometheus",
+          "category": "Metrics",
+          "assetId": "docker-prometheus",
+          "closest": "verify-build + local-api health endpoints",
+          "taxonomy": ["metadata-audit"]
+        },
+        {
+          "requested": "grafana/grafana",
+          "category": "Dashboarding",
+          "assetId": "docker-grafana",
+          "closest": "Lyra studio pages",
+          "taxonomy": ["metadata-audit"]
+        },
+        {
+          "requested": "jaegertracing/all-in-one",
+          "category": "Tracing",
+          "assetId": "docker-jaeger",
+          "closest": "AIP-Σ0 dive receipts (no Jaeger daemon)",
+          "taxonomy": ["metadata-audit"]
+        }
+      ]
+    },
+    {
+      "id": "github-expanded",
+      "title": "2.5 Expanded GitHub repositories",
+      "requestedCountNarrative": "500+",
+      "items": [
+        {
+          "requested": "Project-AUTOMATE / fbi-cyber/automate",
+          "category": "Incident response",
+          "assetId": "gh-automate",
+          "closest": "cyb3rfox/Aurora-Incident-Response",
+          "taxonomy": ["esi", "business-records"]
+        },
+        {
+          "requested": "FOCA",
+          "category": "Metadata extraction",
+          "assetId": "gh-foca",
+          "closest": "ElevenPaths/FOCA + exifread",
+          "taxonomy": ["metadata-audit"]
+        },
+        {
+          "requested": "Maltego",
+          "category": "Link analysis",
+          "assetId": "gh-maltego",
+          "closest": "graphology (Maltego CE not a public clone)",
+          "taxonomy": ["technical-expert"]
+        },
+        {
+          "requested": "Recon-ng",
+          "category": "Reconnaissance",
+          "assetId": "gh-recon-ng",
+          "closest": "lanmaster53/recon-ng",
+          "taxonomy": ["third-party-records"]
+        },
+        {
+          "requested": "Cuckoo",
+          "category": "Malware sandbox source",
+          "assetId": "gh-cuckoo",
+          "closest": "cuckoosandbox/cuckoo (source only)",
+          "taxonomy": ["technical-expert"],
+          "wontDo": "cuckoo-live"
+        },
+        {
+          "requested": "TheHive",
+          "category": "Incident response platform",
+          "assetId": "gh-thehive",
+          "closest": "Aurora-Incident-Response (IR closest; full TheHive stack not deployed)",
+          "taxonomy": ["esi"]
+        },
+        {
+          "requested": "OpenCTI",
+          "category": "Threat intelligence",
+          "assetId": "gh-opencti",
+          "closest": "graphology + OFAC/EDGAR stubs (OpenCTI platform not deployed)",
+          "taxonomy": ["third-party-records", "regulatory-compliance"]
+        },
+        {
+          "requested": "MISP",
+          "category": "Threat sharing",
+          "assetId": "gh-misp",
+          "closest": "OFAC SDN CSV + taxonomy enforcement map (MISP server not deployed)",
+          "taxonomy": ["third-party-records"]
+        }
+      ]
+    },
+    {
+      "id": "mcp-expanded",
+      "title": "2.6 Expanded MCP servers",
+      "requestedCountNarrative": "50+",
+      "items": [
+        {
+          "requested": "folio-mcp",
+          "closest": "folio-mcp@0.4.1",
+          "status": "installed",
+          "credentials": [],
+          "taxonomy": ["business-records"]
+        },
+        {
+          "requested": "firecrawl-mcp",
+          "closest": "firecrawl-mcp",
+          "status": "installed",
+          "credentials": ["FIRECRAWL_API_KEY"],
+          "taxonomy": ["esi"]
+        },
+        {
+          "requested": "context7-mcp",
+          "closest": "@upstash/context7-mcp",
+          "status": "installed",
+          "credentials": ["CONTEXT7_API_KEY"],
+          "taxonomy": ["esi"]
+        },
+        {
+          "requested": "sec-edgar-mcp / ofac-mcp / finra-mcp",
+          "closest": "server/inventory/public-apis.ts REST stubs",
+          "status": "closest",
+          "credentials": ["FINRA_API_KEY"],
+          "taxonomy": ["financial-records", "regulatory-compliance"]
+        },
+        {
+          "requested": "courtlistener-mcp",
+          "closest": "court-listener pip + public REST v4",
+          "status": "closest",
+          "credentials": [],
+          "taxonomy": ["business-records"]
+        },
+        {
+          "requested": "openlaws-mcp",
+          "closest": "OpenLaws REST stub",
+          "status": "closest",
+          "credentials": ["OPENLAWS_API_KEY"],
+          "taxonomy": ["regulatory-compliance"]
+        },
+        {
+          "requested": "pacer-mcp",
+          "closest": "PACER REST stub (no CM/ECF session)",
+          "status": "closest",
+          "credentials": ["PACER_USERNAME", "PACER_PASSWORD"],
+          "taxonomy": ["third-party-records"]
+        },
+        {
+          "requested": "westlaw-mcp / lexisnexis-mcp",
+          "closest": "blocked-contract stubs",
+          "status": "wont-do",
+          "credentials": ["WESTLAW_USERNAME", "WESTLAW_PASSWORD", "LEXISNEXIS_API_KEY"],
+          "taxonomy": ["business-records"],
+          "wontDo": "westlaw-lexis"
+        },
+        {
+          "requested": "oracle-mcp",
+          "closest": "postgres-mcp-pro placeholder (company DB URI)",
+          "status": "closest",
+          "credentials": ["DATABASE_URI"],
+          "taxonomy": ["esi"]
+        }
+      ]
+    },
+    {
+      "id": "legal-apis",
+      "title": "2.7 Legal & regulatory databases",
+      "requestedCountNarrative": "public APIs",
+      "items": [
+        {
+          "requested": "SEC EDGAR",
+          "assetId": "api-edgar",
+          "closest": "edgartools + EFTS REST",
+          "taxonomy": ["regulatory-compliance"]
+        },
+        {
+          "requested": "FINRA TRACE",
+          "assetId": "api-finra",
+          "closest": "api.finra.org REST",
+          "taxonomy": ["financial-records"]
+        },
+        {
+          "requested": "OFAC SDN List",
+          "assetId": "api-ofac",
+          "closest": "treasury.gov SDN CSV",
+          "taxonomy": ["financial-records"]
+        },
+        {
+          "requested": "USPTO",
+          "assetId": "api-uspto",
+          "closest": "developer.uspto.gov REST",
+          "taxonomy": ["regulatory-compliance"]
+        },
+        {
+          "requested": "PACER",
+          "assetId": "api-pacer",
+          "closest": "REST stub; no live CM/ECF",
+          "taxonomy": ["third-party-records"]
+        },
+        {
+          "requested": "Congress.gov",
+          "assetId": "api-congress",
+          "closest": "api.congress.gov REST (optional key)",
+          "taxonomy": ["regulatory-compliance"]
+        },
+        {
+          "requested": "GovInfo",
+          "assetId": "api-govinfo",
+          "closest": "api.govinfo.gov REST (optional key)",
+          "taxonomy": ["regulatory-compliance"]
+        }
+      ]
+    }
+  ],
+  "wontInstall": [
+    {
+      "id": "unpublished-npm-scopes",
+      "title": "Unpublished @law-research / @forensic-tools / @financial-intel scopes",
+      "reason": "Keep closest public packages already mapped in data/p1/inventory-manifest.json."
+    },
+    {
+      "id": "cuckoo-live",
+      "title": "Cuckoo live malware sandbox",
+      "reason": "Source may be cloned; live sandbox is never started."
+    },
+    {
+      "id": "westlaw-lexis",
+      "title": "Westlaw / LexisNexis MCP without contracts",
+      "reason": "REST stubs only. Do not scrape subscriber databases."
+    },
+    {
+      "id": "full-thehive-opencti-misp",
+      "title": "Full TheHive / OpenCTI / MISP platform deploy",
+      "reason": "Map to Aurora-IR, graphology, and OFAC stubs. Do not stand up multi-service stacks here."
+    }
+  ]
+}

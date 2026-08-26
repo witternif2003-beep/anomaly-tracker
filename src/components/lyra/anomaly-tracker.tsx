@@ -87,6 +87,26 @@ interface TrackerBook {
   anomalies: Anomaly[];
   p1Queue: Anomaly[];
   improvements: { total: number; generated: number; data: Improvement[] };
+  inventoryLedger?: {
+    title: string;
+    note: string;
+    additionalSlots: number;
+    coreRuntime: Array<{ name: string; version: string; purpose: string; status: string }>;
+    sections: Array<{
+      id: string;
+      title: string;
+      items: Array<{
+        requested: string;
+        closest?: string;
+        category?: string;
+        installOk?: boolean;
+        installDetail?: string | null;
+        status?: string;
+      }>;
+    }>;
+    wontInstall: Array<{ id: string; title: string; reason: string }>;
+    liveInventory: { assets: number; ok: number; cuckooLiveSandbox: boolean };
+  };
   wontDo: Array<{ id: string; title: string; reason: string }>;
   automation: { commands: string[] };
   dependencyStrategy: { lockfile: string; install: string; note: string; p1Slots: number };
@@ -401,6 +421,57 @@ export function AnomalyTracker() {
                     <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{imp.recommendation}</p>
                   </div>
                 ))}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">2. Inventory ledger</CardTitle>
+                <CardDescription>
+                  {book.inventoryLedger
+                    ? `${book.inventoryLedger.additionalSlots.toLocaleString()} Tier-1 slots · ${book.inventoryLedger.liveInventory.ok}/${book.inventoryLedger.liveInventory.assets} closest assets · cuckooLive=${String(book.inventoryLedger.liveInventory.cuckooLiveSandbox)}`
+                    : "P1 closest installs"}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {book.inventoryLedger ? (
+                  <>
+                    <p className="text-sm text-muted-foreground">{book.inventoryLedger.note}</p>
+                    <div className="flex flex-wrap gap-2">
+                      {book.inventoryLedger.coreRuntime.map((pkg) => (
+                        <Badge key={pkg.name} variant="outline">
+                          {pkg.name} {pkg.version}
+                        </Badge>
+                      ))}
+                    </div>
+                    {book.inventoryLedger.sections.map((section) => (
+                      <div key={section.id}>
+                        <p className="text-sm font-medium">{section.title}</p>
+                        <ul className="mt-2 space-y-1">
+                          {section.items.map((item) => (
+                            <li key={item.requested} className="text-xs text-muted-foreground">
+                              <span className="text-foreground">{item.requested}</span>
+                              {" → "}
+                              {item.closest ?? item.status ?? "mapped"}
+                              {item.installOk ? " · ok" : " · pending"}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                    <div className="space-y-2">
+                      <p className="text-sm font-medium">Won&apos;t install</p>
+                      {book.inventoryLedger.wontInstall.map((w) => (
+                        <p key={w.id} className="text-xs text-muted-foreground">
+                          <span className="text-foreground">{w.title}: </span>
+                          {w.reason}
+                        </p>
+                      ))}
+                    </div>
+                  </>
+                ) : (
+                  <p className="text-sm text-muted-foreground">Inventory ledger unavailable.</p>
+                )}
               </CardContent>
             </Card>
 

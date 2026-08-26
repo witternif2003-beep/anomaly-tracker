@@ -2,6 +2,7 @@ import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import fixtures from "../data/anomaly/fixtures.json";
+import inventoryLedger from "../data/anomaly/inventory-ledger.json";
 import taxonomy from "../data/legal/corporate-taxonomy.json";
 import { listP1Slots } from "./p1-catalog";
 import { inventoryStatus } from "./inventory";
@@ -258,6 +259,35 @@ export function compileAnomalyTracker(opts?: {
     P3: anomalies.filter((a) => a.priority === "P3").length,
   };
 
+  const installById = Object.fromEntries(
+    inventory.assets.map((a) => [a.id, a.install ?? { ok: false, detail: "missing" }]),
+  );
+
+  const ledgerSections = inventoryLedger.sections.map((section) => ({
+    ...section,
+    items: section.items.map((item) => {
+      const assetId =
+        "assetId" in item && typeof item.assetId === "string" ? item.assetId : undefined;
+      const status = "status" in item && typeof item.status === "string" ? item.status : undefined;
+      const closest =
+        "closest" in item && typeof item.closest === "string" ? item.closest : undefined;
+      const install = assetId ? installById[assetId] : undefined;
+      const installOk =
+        install?.ok === true || status === "installed" || status === "closest" || Boolean(closest);
+      return {
+        ...item,
+        installOk,
+        installDetail: install?.detail ?? closest ?? status ?? null,
+      };
+    }),
+  }));
+
+  const ledgerItemCount = ledgerSections.reduce((n, s) => n + s.items.length, 0);
+  const ledgerOkCount = ledgerSections.reduce(
+    (n, s) => n + s.items.filter((i) => i.installOk).length,
+    0,
+  );
+
   return {
     object: "lyra.anomaly-tracker" as const,
     title: fixtures.title,
@@ -285,6 +315,9 @@ export function compileAnomalyTracker(opts?: {
       dockerAvailable: install.dockerAvailable,
       blueprintLayers: fixtures.architecture.systemOverview?.length ?? fixtures.architecture.layers.length,
       dataFlowSteps: fixtures.architecture.dataFlow?.length ?? 0,
+      inventoryLedgerItems: ledgerItemCount,
+      inventoryLedgerOk: ledgerOkCount,
+      inventoryAssets: inventory.assets.length,
       intercepts: false,
       cjisLiveQueries: false,
       cuckooLiveSandbox: false,
@@ -316,6 +349,22 @@ export function compileAnomalyTracker(opts?: {
     anomalies,
     p1Queue: p1Events,
     improvements,
+    inventoryLedger: {
+      object: "lyra.anomaly-inventory-ledger" as const,
+      title: inventoryLedger.title,
+      classified: false,
+      note: inventoryLedger.note,
+      additionalSlots: inventoryLedger.additionalSlots,
+      coreRuntime: inventoryLedger.coreRuntime,
+      sections: ledgerSections,
+      wontInstall: inventoryLedger.wontInstall,
+      liveInventory: {
+        assets: inventory.assets.length,
+        ok: inventory.assets.filter((a) => a.install?.ok).length,
+        cuckooLiveSandbox: false,
+        cuckooSourceCloned: inventory.cuckooSourceCloned,
+      },
+    },
     credentials: {
       note: "Placeholders only unless the operator sets them in the environment. Never commit secrets.",
       variables: env.variables.map((v) => ({

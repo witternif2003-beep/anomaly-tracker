@@ -172,6 +172,62 @@
       "repo": "https://github.com/cuckoosandbox/cuckoo.git"
     },
     {
+      "id": "gh-thehive",
+      "family": "github",
+      "requested": "TheHive",
+      "closest": "cyb3rfox/Aurora-Incident-Response (IR closest; TheHive stack not deployed)",
+      "kind": "git",
+      "repo": "https://github.com/cyb3rfox/Aurora-Incident-Response.git"
+    },
+    {
+      "id": "gh-opencti",
+      "family": "github",
+      "requested": "OpenCTI",
+      "closest": "graphology + OFAC/EDGAR stubs (OpenCTI platform not deployed)",
+      "kind": "npm",
+      "packages": ["graphology"]
+    },
+    {
+      "id": "gh-misp",
+      "family": "github",
+      "requested": "MISP",
+      "closest": "OFAC SDN CSV + taxonomy map (MISP server not deployed)",
+      "kind": "rest",
+      "endpoint": "https://www.treasury.gov/ofac/downloads/sdn.csv"
+    },
+    {
+      "id": "docker-kibana",
+      "family": "docker",
+      "requested": "elastic/kibana:8.12",
+      "closest": "Lyra /tracker + inventory UI (no Kibana daemon)",
+      "kind": "rest",
+      "endpoint": "http://127.0.0.1:43127/tracker"
+    },
+    {
+      "id": "docker-prometheus",
+      "family": "docker",
+      "requested": "prom/prometheus",
+      "closest": "verify-build + /health endpoints",
+      "kind": "rest",
+      "endpoint": "http://127.0.0.1:4040/health"
+    },
+    {
+      "id": "docker-grafana",
+      "family": "docker",
+      "requested": "grafana/grafana",
+      "closest": "Lyra studio pages",
+      "kind": "rest",
+      "endpoint": "http://127.0.0.1:43127/"
+    },
+    {
+      "id": "docker-jaeger",
+      "family": "docker",
+      "requested": "jaegertracing/all-in-one",
+      "closest": "AIP-Σ0 dive receipts (no Jaeger daemon)",
+      "kind": "rest",
+      "endpoint": "http://127.0.0.1:4040/v1/aip/dive"
+    },
+    {
       "id": "api-edgar",
       "family": "legal-api",
       "requested": "sec-edgar",
@@ -210,6 +266,22 @@
       "closest": "pacer-tools (PyPI pacer-client is an unrelated NLR app)",
       "kind": "pip",
       "packages": ["pacer-tools"]
+    },
+    {
+      "id": "api-congress",
+      "family": "legal-api",
+      "requested": "Congress.gov",
+      "closest": "https://api.congress.gov (optional key)",
+      "kind": "rest",
+      "endpoint": "https://api.congress.gov"
+    },
+    {
+      "id": "api-govinfo",
+      "family": "legal-api",
+      "requested": "GovInfo",
+      "closest": "https://api.govinfo.gov (optional key)",
+      "kind": "rest",
+      "endpoint": "https://api.govinfo.gov"
     }
   ]
 }
