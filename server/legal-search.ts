@@ -1,24 +1,11 @@
+import { searchCongress, searchGovInfo, searchLexisNexis, searchOpenLaws, searchWestlaw, legalSourceStatus } from "./legal/clients";
+import { searchFre } from "./legal/fre";
+import type { LegalHit, LegalSearchResult, LegalSource } from "./legal/types";
 import { searchP1, type P1Slot } from "./p1-catalog";
 
-export interface LegalHit {
-  source: "folio" | "courtlistener" | "p1";
-  id: string;
-  title: string;
-  court?: string;
-  date?: string;
-  snippet: string;
-  url?: string;
-  citation?: string;
-}
+export type { LegalHit, LegalSearchResult, LegalSource };
 
-export interface LegalSearchResult {
-  object: "legal.search";
-  query: string;
-  sources: string[];
-  count: number;
-  results: LegalHit[];
-  warnings: string[];
-}
+const DEFAULT_SOURCES: LegalSource[] = ["folio", "courtlistener", "fre", "p1"];
 
 interface FolioDoc {
   id: string;
@@ -181,12 +168,15 @@ async function searchCourtListener(query: string, limit: number): Promise<{ hits
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 8000);
   try {
+    const headers: Record<string, string> = {
+      Accept: "application/json",
+      "User-Agent": "LyraLocal/0.1 (local legal search; public CourtListener)",
+    };
+    const token = process.env.COURTLISTENER_TOKEN?.trim();
+    if (token) headers.Authorization = `Token ${token}`;
     const res = await fetch(url, {
       signal: controller.signal,
-      headers: {
-        Accept: "application/json",
-        "User-Agent": "LyraLocal/0.1 (local legal search; public CourtListener; no API key)",
-      },
+      headers,
     });
     if (!res.ok) {
       return { hits: [], warning: `CourtListener HTTP ${res.status}` };
@@ -218,6 +208,45 @@ async function searchCourtListener(query: string, limit: number): Promise<{ hits
   }
 }
 
+function keyedSources(): LegalSource[] {
+  const extra: LegalSource[] = [];
+  if (process.env.OPENLAWS_API_KEY?.trim()) extra.push("openlaws");
+  if (
+    process.env.WESTLAW_USERNAME?.trim() ||
+    process.env.WESTLAW_PASSWORD?.trim() ||
+    process.env.WESTLAW_API_KEY?.trim() ||
+    process.env.WESTLAW_CLIENT_ID?.trim()
+  ) {
+    extra.push("westlaw");
+  }
+  if (process.env.LEXISNEXIS_API_KEY?.trim() || process.env.LEXISNEXIS_CLIENT_ID?.trim()) {
+    extra.push("lexisnexis");
+  }
+  return extra;
+}
+
+function normalizeSource(raw: string): LegalSource | "blacks" | null {
+  const s = raw.toLowerCase().trim();
+  if (s === "all") return null;
+  if (s === "lexis" || s === "lexis-nexis") return "lexisnexis";
+  if (s === "congress.gov" || s === "congressgov") return "congress";
+  if (s === "govinfo.gov") return "govinfo";
+  if (s === "open-laws") return "openlaws";
+  if (s === "blacks" || s === "black's" || s.includes("black's law")) return "blacks";
+  const known: LegalSource[] = [
+    "folio",
+    "courtlistener",
+    "fre",
+    "p1",
+    "openlaws",
+    "westlaw",
+    "lexisnexis",
+    "congress",
+    "govinfo",
+  ];
+  return known.includes(s as LegalSource) ? (s as LegalSource) : null;
+}
+
 export async function legalSearch(input: {
   query: string;
   sources?: string[];
@@ -225,11 +254,37 @@ export async function legalSearch(input: {
 }): Promise<LegalSearchResult> {
   const query = input.query.trim();
   const limit = Math.min(Math.max(input.limit ?? 8, 1), 25);
-  const requested = (input.sources?.length ? input.sources : ["folio", "courtlistener", "p1"]).map((s) =>
-    s.toLowerCase(),
-  );
   const warnings: string[] = [];
   const results: LegalHit[] = [];
+  const raw = (input.sources?.length ? input.sources : [...DEFAULT_SOURCES, ...keyedSources()]).map((s) =>
+    s.toLowerCase(),
+  );
+
+  const requested: LegalSource[] = [];
+  if (raw.includes("all")) {
+    requested.push(
+      "folio",
+      "courtlistener",
+      "fre",
+      "p1",
+      "openlaws",
+      "westlaw",
+      "lexisnexis",
+      "congress",
+      "govinfo",
+    );
+  }
+  for (const item of raw) {
+    if (item === "all") continue;
+    const mapped = normalizeSource(item);
+    if (mapped === "blacks") {
+      warnings.push("Black's Law Dictionary is excluded (copyright). Use FOLIO instead.");
+      if (!requested.includes("folio")) requested.push("folio");
+      continue;
+    }
+    if (mapped && !requested.includes(mapped)) requested.push(mapped);
+  }
+  if (requested.length === 0) requested.push(...DEFAULT_SOURCES);
 
   if (!query) {
     return {
@@ -242,17 +297,20 @@ export async function legalSearch(input: {
     };
   }
 
-  if (requested.includes("folio")) {
-    results.push(...searchFolio(query, limit));
-  }
-  if (requested.includes("p1")) {
-    results.push(...p1Hits(query, Math.min(limit, 6)));
-  }
-  if (requested.includes("courtlistener")) {
-    const { hits, warning } = await searchCourtListener(query, limit);
-    results.push(...hits);
-    if (warning) warnings.push(warning);
-  }
+  const pushRemote = (hitSet: { hits: LegalHit[]; warning?: string }) => {
+    results.push(...hitSet.hits);
+    if (hitSet.warning) warnings.push(hitSet.warning);
+  };
+
+  if (requested.includes("folio")) results.push(...searchFolio(query, limit));
+  if (requested.includes("p1")) results.push(...p1Hits(query, Math.min(limit, 6)));
+  if (requested.includes("fre")) results.push(...searchFre(query, limit));
+  if (requested.includes("courtlistener")) pushRemote(await searchCourtListener(query, limit));
+  if (requested.includes("openlaws")) pushRemote(await searchOpenLaws(query, limit));
+  if (requested.includes("westlaw")) pushRemote(await searchWestlaw(query, limit));
+  if (requested.includes("lexisnexis")) pushRemote(await searchLexisNexis(query, limit));
+  if (requested.includes("congress")) pushRemote(await searchCongress(query, limit));
+  if (requested.includes("govinfo")) pushRemote(await searchGovInfo(query, limit));
 
   return {
     object: "legal.search",
@@ -262,4 +320,8 @@ export async function legalSearch(input: {
     results,
     warnings,
   };
+}
+
+export function legalSearchStatus() {
+  return legalSourceStatus();
 }

@@ -43,3 +43,4 @@ command -v mcp-slack
 command -v context7-mcp
 command -v folio-mcp
 command -v mcp-remote
+command -v mcp-server-cloudflare

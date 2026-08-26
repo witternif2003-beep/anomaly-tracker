@@ -4,6 +4,8 @@
 set -euo pipefail
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$root"
+# shellcheck disable=SC1091
+. "$root/scripts/load-env.sh"
 
 if [[ "${START_NEXT:-1}" == "1" ]]; then
   npm run dev &

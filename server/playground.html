@@ -71,9 +71,13 @@
       <aside>
         <h2>Legal search</h2>
         <div class="card">
-          <input id="legal-q" type="search" placeholder="Search FOLIO / CourtListener" />
+          <input id="legal-q" type="search" placeholder="Search FOLIO / FRE / CourtListener" />
           <button type="button" id="legal-go">Search</button>
-          <div id="legal-out" class="muted" style="margin-top:0.6rem">Public CourtListener plus on-box FOLIO cards.</div>
+          <div id="legal-out" class="muted" style="margin-top:0.6rem">Public CourtListener plus on-box FOLIO and FRE excerpts.</div>
+        </div>
+        <h2>Env placeholders</h2>
+        <div class="card">
+          <div id="env-out" class="muted">Loading…</div>
         </div>
         <h2>P1 catalog</h2>
         <div class="card">
@@ -109,6 +113,13 @@
         } catch {
           status.textContent = "API unreachable";
         }
+        const env = await fetch("/v1/env").then((r) => r.json());
+        document.getElementById("env-out").innerHTML = (env.variables || [])
+          .map((v) => {
+            const mark = v.configured ? "<span class='ok'>set</span>" : "<span class='muted'>empty</span>";
+            return "<div><strong>" + v.name + "</strong> " + mark + "<div class='muted'>" + v.requiredFor + "</div></div>";
+          })
+          .join("");
         const p1 = await fetch("/v1/p1?limit=8").then((r) => r.json());
         document.getElementById("p1-meta").textContent = p1.totalSlots + " slots in catalog";
         document.getElementById("p1-out").innerHTML = (p1.data || [])
@@ -124,7 +135,7 @@
         const res = await fetch("/v1/legal/search", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ query, sources: ["folio", "courtlistener", "p1"], limit: 6 }),
+          body: JSON.stringify({ query, sources: ["folio", "courtlistener", "fre", "p1"], limit: 6 }),
         });
         const data = await res.json();
         if (!data.results || !data.results.length) {

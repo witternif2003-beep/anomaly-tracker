@@ -2,7 +2,8 @@ import cors from "cors";
 import express from "express";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { legalSearch } from "./legal-search";
+import { legalSearch, legalSearchStatus } from "./legal-search";
+import { envPlaceholderStatus, loadEnvFiles } from "./load-env";
 import {
   chunkText,
   completeChat,
@@ -11,6 +12,8 @@ import {
   type ChatMessage,
 } from "./local-models";
 import { listP1Slots } from "./p1-catalog";
+
+loadEnvFiles();
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const HOST = process.env.LOCAL_API_HOST ?? "0.0.0.0";
@@ -63,6 +66,14 @@ app.post("/v1/legal/search", async (req, res) => {
   const limit = typeof body.limit === "number" ? body.limit : undefined;
   const result = await legalSearch({ query, sources, limit });
   res.json(result);
+});
+
+app.get("/v1/legal/sources", (_req, res) => {
+  res.json({ object: "legal.sources", sources: legalSearchStatus() });
+});
+
+app.get("/v1/env", (_req, res) => {
+  res.json(envPlaceholderStatus());
 });
 
 function asMessages(raw: unknown): ChatMessage[] | null {

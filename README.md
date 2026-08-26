@@ -40,7 +40,9 @@ npm run local-api
 | --- | --- | --- | --- |
 | `/v1/chat/completions` | POST | OpenAI-compatible chat (optional `stream`) | Bearer ignored |
 | `/v1/models` | GET | Lists `local-v1` and `local-v1-concise` | None |
-| `/v1/legal/search` | POST | FOLIO cards + public CourtListener + P1 | None |
+| `/v1/legal/search` | POST | FOLIO, FRE, CourtListener, P1; OpenLaws/Westlaw/Lexis when keys are set | None |
+| `/v1/legal/sources` | GET | Install/credential status for legal research clients | None |
+| `/v1/env` | GET | Placeholder names and whether each is configured (never values) | None |
 | `/v1/p1` | GET | 1,280 P1 catalog slots (`q`, `limit`, `offset`) | None |
 | `/v1/playground` | GET | Streaming chat UI | None |
 
@@ -112,7 +114,7 @@ npm install -g wrangler@4
 | Figma | Design tokens | `@figma/mcp` | `figma-developer-mcp@0.13.2` | API key (OAuth is Figma's hosted MCP) |
 | Linear | Project management | `@linear/mcp` | `mcp-remote` → `https://mcp.linear.app/sse` plus `@tacticlaunch/mcp-linear` | OAuth |
 | Stripe | Payments | `@stripe/mcp` | `@stripe/mcp@0.3.3` | Restricted secret key |
-| Cloudflare Code Mode | Infrastructure | `@cloudflare/mcp` | `mcp-remote` → `https://mcp.cloudflare.com/mcp` plus `@cloudflare/mcp-server-cloudflare` | OAuth / API token |
+| Cloudflare | Infrastructure | `@cloudflare/mcp` | `@cloudflare/mcp-server-cloudflare@0.2.0` (token + account id) plus `mcp-remote` Code Mode | `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` |
 | Playwright | Browser automation | `@playwright/mcp` | `@playwright/mcp@0.0.79` | None (local) |
 | Firecrawl | Web scraping | `firecrawl-mcp` | `firecrawl-mcp@3.24.0` | API key |
 | Postgres MCP Pro | Database | `@postgres/mcp-pro` | PyPI `postgres-mcp==0.3.0` (Crystal DBA) plus npm `mcp-postgres` | `DATABASE_URI` |
@@ -138,7 +140,27 @@ Local P1 files. No extra packages.
 npm run pipelines
 ```
 
-Named pipelines: `cloudflare-ci.sh` (Wrangler **dry-run only**), `cloudflare-p1-health.sh`.
+Named pipelines: `cloudflare-ci.sh` (Wrangler **dry-run only**), `cloudflare-p1-health.sh`, `env-placeholders.sh`.
+
+## Environment variables (placeholders)
+
+No values are stored in git. Copy `.env.example` to `.env.local` or inject Cloud Agent secrets. `GET /v1/env` reports which names are configured without printing values.
+
+| Variable | Used by | Closest package / alias | Status in git |
+| --- | --- | --- | --- |
+| `CLOUDFLARE_API_TOKEN` | Cloudflare MCP, Wrangler | `@cloudflare/mcp-server-cloudflare` | empty |
+| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare MCP, Wrangler | same | empty |
+| `DATABASE_URI` | Postgres MCP Pro | `DATABASE_URL` (`mcp-postgres` / libpq) | empty |
+| `FIRECRAWL_API_KEY` | Firecrawl MCP | `FIRECRAWL_OAUTH_TOKEN` for OAuth | empty |
+| `CONTEXT7_API_KEY` | Context7 MCP | `@upstash/context7-mcp` | empty |
+| `OPENLAWS_API_KEY` | OpenLaws legal search | REST client (`pip openlaws` is unpublished) | empty |
+| `WESTLAW_USERNAME` | Westlaw | `WESTLAW_CLIENT_ID` / `WESTLAW_API_KEY` | empty |
+| `WESTLAW_PASSWORD` | Westlaw | `WESTLAW_CLIENT_SECRET` | empty |
+| `LEXISNEXIS_API_KEY` | LexisNexis | REST stub; `LEXISNEXIS_CLIENT_ID` | empty |
+
+```bash
+npm run env:check
+```
 
 ## Editor extensions
 

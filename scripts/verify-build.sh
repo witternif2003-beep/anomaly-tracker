@@ -3,6 +3,8 @@ set -euo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$root"
+# shellcheck disable=SC1091
+. "$root/scripts/load-env.sh"
 
 fail() { echo "VERIFY FAIL: $*" >&2; exit 1; }
 ok() { echo "VERIFY OK: $*"; }
@@ -71,6 +73,15 @@ fi
 
 required_names=( )
 optional_names=(
+  CLOUDFLARE_API_TOKEN
+  CLOUDFLARE_ACCOUNT_ID
+  DATABASE_URI
+  FIRECRAWL_API_KEY
+  CONTEXT7_API_KEY
+  OPENLAWS_API_KEY
+  WESTLAW_USERNAME
+  WESTLAW_PASSWORD
+  LEXISNEXIS_API_KEY
   CONVERSATION_PROJECT_ID
   CONVERSATION_KEY_ID
   CONVERSATION_KEY_SECRET
@@ -108,13 +119,16 @@ cfg = json.loads(Path(".cursor/mcp.json").read_text())
 servers = cfg["mcpServers"]
 required = {
     "amplitude", "aws-cloudwatch", "figma", "linear", "stripe",
-    "cloudflare-code-mode", "playwright", "firecrawl", "postgres-mcp-pro",
+    "cloudflare", "cloudflare-code-mode", "playwright", "firecrawl", "postgres-mcp-pro",
     "sentry", "kubernetes", "slack", "context7", "folio",
 }
 missing = sorted(required - set(servers))
 assert not missing, missing
 print("VERIFY OK: mcp.json servers", len(servers), "including", ", ".join(sorted(required)))
 PY
+
+bash scripts/check-env-placeholders.sh
+ok "env placeholders empty in git and wired"
 
 python3 - <<'PY'
 from pathlib import Path
@@ -123,7 +137,7 @@ agents = list(Path(".cursor/agents").glob("*.md"))
 pipelines = list(Path("scripts/pipelines").glob("*.sh"))
 assert len(skills) == 16, len(skills)
 assert len(agents) == 10, len(agents)
-assert len(pipelines) >= 5, len(pipelines)
+assert len(pipelines) >= 6, len(pipelines)
 assert Path("workers/ci-gate.js").is_file()
 print("VERIFY OK: P1 roster", len(skills), "skills", len(agents), "agents", len(pipelines), "pipelines")
 PY
@@ -166,7 +180,16 @@ req = urllib.request.Request(
 )
 chat = json.load(urllib.request.urlopen(req, timeout=20))
 assert chat["choices"][0]["message"]["content"], chat
-print("VERIFY OK: local API models/p1/chat", p1["totalSlots"], "p1 slots")
+env = json.load(urllib.request.urlopen(base + "/v1/env", timeout=8))
+names = {row["name"] for row in env["variables"]}
+needed = {
+    "CLOUDFLARE_API_TOKEN", "CLOUDFLARE_ACCOUNT_ID", "DATABASE_URI",
+    "FIRECRAWL_API_KEY", "CONTEXT7_API_KEY", "OPENLAWS_API_KEY",
+    "WESTLAW_USERNAME", "WESTLAW_PASSWORD", "LEXISNEXIS_API_KEY",
+}
+assert needed <= names, needed - names
+assert env["secretsInGit"] is False
+print("VERIFY OK: local API models/p1/chat/env", p1["totalSlots"], "p1 slots")
 PY
 else
   echo "VERIFY WARN: ${local_api} is not up; skipped local API check"

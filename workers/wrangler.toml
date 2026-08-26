@@ -2,5 +2,8 @@ name = "lyra-ci-gate"
 main = "ci-gate.js"
 compatibility_date = "2026-01-15"
 
+# CLOUDFLARE_ACCOUNT_ID / CLOUDFLARE_API_TOKEN come from the environment.
+# Never put those values in this file.
+
 [vars]
 P1_ORIGIN = "http://127.0.0.1:4040"

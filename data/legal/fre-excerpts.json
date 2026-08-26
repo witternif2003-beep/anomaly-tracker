@@ -1,0 +1,103 @@
+{
+  "title": "Federal Rules of Evidence (excerpts)",
+  "source": "U.S. public domain. Commentary omitted. Not Black's Law Dictionary.",
+  "license": "public-domain",
+  "rules": [
+    {
+      "id": "fre-401",
+      "rule": "401",
+      "title": "Test for Relevant Evidence",
+      "text": "Evidence is relevant if: (a) it has any tendency to make a fact more or less probable than it would be without the evidence; and (b) the fact is of consequence in determining the action."
+    },
+    {
+      "id": "fre-402",
+      "rule": "402",
+      "title": "General Admissibility of Relevant Evidence",
+      "text": "Relevant evidence is admissible unless any of the following provides otherwise: the United States Constitution; a federal statute; these rules; or other rules prescribed by the Supreme Court. Irrelevant evidence is not admissible."
+    },
+    {
+      "id": "fre-403",
+      "rule": "403",
+      "title": "Excluding Relevant Evidence for Prejudice, Confusion, Waste of Time, or Other Reasons",
+      "text": "The court may exclude relevant evidence if its probative value is substantially outweighed by a danger of one or more of the following: unfair prejudice, confusing the issues, misleading the jury, undue delay, wasting time, or needlessly presenting cumulative evidence."
+    },
+    {
+      "id": "fre-404",
+      "rule": "404",
+      "title": "Character Evidence; Other Crimes, Wrongs, or Acts",
+      "text": "Evidence of a person's character or character trait is not admissible to prove that on a particular occasion the person acted in accordance with the character or trait, subject to the exceptions in 404(a)(2) and (3). Evidence of any other crime, wrong, or act is not admissible to prove a person's character in order to show that on a particular occasion the person acted in accordance with the character, subject to 404(b)(2)."
+    },
+    {
+      "id": "fre-602",
+      "rule": "602",
+      "title": "Need for Personal Knowledge",
+      "text": "A witness may testify to a matter only if evidence is introduced sufficient to support a finding that the witness has personal knowledge of the matter. Evidence to prove personal knowledge may consist of the witness's own testimony. This rule does not apply to a witness's expert testimony under Rule 703."
+    },
+    {
+      "id": "fre-701",
+      "rule": "701",
+      "title": "Opinion Testimony by Lay Witnesses",
+      "text": "If a witness is not testifying as an expert, testimony in the form of an opinion is limited to one that is: (a) rationally based on the witness's perception; (b) helpful to clearly understanding the witness's testimony or to determining a fact in issue; and (c) not based on scientific, technical, or other specialized knowledge within the scope of Rule 702."
+    },
+    {
+      "id": "fre-702",
+      "rule": "702",
+      "title": "Testimony by Expert Witnesses",
+      "text": "A witness who is qualified as an expert by knowledge, skill, experience, training, or education may testify in the form of an opinion or otherwise if the proponent demonstrates to the court that it is more likely than not that: (a) the expert's scientific, technical, or other specialized knowledge will help the trier of fact to understand the evidence or to determine a fact in issue; (b) the testimony is based on sufficient facts or data; (c) the testimony is the product of reliable principles and methods; and (d) the expert's opinion reflects a reliable application of the principles and methods to the facts of the case."
+    },
+    {
+      "id": "fre-703",
+      "rule": "703",
+      "title": "Bases of an Expert's Opinion Testimony",
+      "text": "An expert may base an opinion on facts or data in the case that the expert has been made aware of or personally observed. If experts in the particular field would reasonably rely on those kinds of facts or data in forming an opinion on the subject, they need not be admissible for the opinion to be admitted. But if the facts or data would otherwise be inadmissible, the proponent of the opinion may disclose them to the jury only if their probative value in helping the jury evaluate the opinion substantially outweighs their prejudicial effect."
+    },
+    {
+      "id": "fre-801",
+      "rule": "801",
+      "title": "Definitions That Apply to This Article; Exclusions from Hearsay",
+      "text": "\"Hearsay\" means a statement that: (1) the declarant does not make while testifying at the current trial or hearing; and (2) a party offers in evidence to prove the truth of the matter asserted in the statement. Statements that are not hearsay include certain prior statements of a declarant-witness and certain opposing-party statements."
+    },
+    {
+      "id": "fre-802",
+      "rule": "802",
+      "title": "The Rule Against Hearsay",
+      "text": "Hearsay is not admissible unless any of the following provides otherwise: a federal statute; these rules; or other rules prescribed by the Supreme Court."
+    },
+    {
+      "id": "fre-803",
+      "rule": "803",
+      "title": "Exceptions to the Rule Against Hearsay — Regardless of Whether the Declarant Is Available as a Witness",
+      "text": "The following are not excluded by the rule against hearsay, regardless of whether the declarant is available as a witness, including present sense impression, excited utterance, then-existing mental, emotional, or physical condition, statement made for medical diagnosis or treatment, recorded recollection, and records of a regularly conducted activity, among other listed exceptions."
+    },
+    {
+      "id": "fre-804",
+      "rule": "804",
+      "title": "Hearsay Exceptions; Declarant Unavailable",
+      "text": "A declarant is considered to be unavailable if the declarant is exempted by privilege, refuses to testify despite a court order, testifies to not remembering the subject matter, cannot be present because of death or then-existing infirmity, or is absent and the statement's proponent has not been able to procure attendance by process or other reasonable means. Former testimony, statement under the belief of imminent death, statement against interest, and statement of personal or family history may then be excepted."
+    },
+    {
+      "id": "fre-901",
+      "rule": "901",
+      "title": "Authenticating or Identifying Evidence",
+      "text": "To satisfy the requirement of authenticating or identifying an item of evidence, the proponent must produce evidence sufficient to support a finding that the item is what the proponent claims it is."
+    },
+    {
+      "id": "fre-1002",
+      "rule": "1002",
+      "title": "Requirement of the Original",
+      "text": "An original writing, recording, or photograph is required in order to prove its content unless these rules or a federal statute provides otherwise."
+    },
+    {
+      "id": "fre-501",
+      "rule": "501",
+      "title": "Privilege in General",
+      "text": "The common law — as interpreted by United States courts in the light of reason and experience — governs a claim of privilege unless any of the following provides otherwise: the United States Constitution; a federal statute; or rules prescribed by the Supreme Court. But in a civil case, state law governs privilege regarding a claim or defense for which state law supplies the rule of decision."
+    },
+    {
+      "id": "fre-606",
+      "rule": "606",
+      "title": "Juror's Competency as a Witness",
+      "text": "During an inquiry into the validity of a verdict or indictment, a juror may not testify about any statement made or incident that occurred during the jury's deliberations; the effect of anything on that juror's or another juror's vote; or any juror's mental processes concerning the verdict or indictment, subject to the exceptions in 606(b)(2)."
+    }
+  ]
+}
