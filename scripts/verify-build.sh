@@ -117,6 +117,9 @@ ok "typescript --noEmit"
 bash scripts/eslint.sh src server --max-warnings=0
 ok "eslint"
 
+DEP_SKIP_PIP_INSTALL=1 bash scripts/verify-dependencies.sh
+ok "dependency verify (npm lock + python closest)"
+
 python3 - <<'PY'
 import json
 from pathlib import Path
@@ -230,6 +233,9 @@ assert len(anom["inventoryLedger"]["sections"]) >= 6
 assert anom["inventoryLedger"]["liveInventory"]["cuckooLiveSandbox"] is False
 assert any(w["id"] == "mass-us-business-surveillance" for w in anom["wontDo"])
 assert any(w["id"] == "sar-cisa-autofile" for w in anom["wontDo"])
+assert anom.get("dependencyStrategy", {}).get("productName") == "lyra"
+assert anom["dependencyStrategy"].get("rejectedLockfileName") == "business-anomaly-tracker"
+assert len(anom["dependencyStrategy"].get("unpublishedScopes", [])) >= 6
 imps = json.load(urllib.request.urlopen(base + "/v1/anomaly/improvements?limit=3&categoryId=financial-records", timeout=12))
 assert imps["generated"] >= 10000 and len(imps["data"]) >= 1
 assert nb["summary"]["cuckooLiveSandbox"] is False

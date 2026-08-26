@@ -3,6 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import fixtures from "../data/anomaly/fixtures.json";
 import inventoryLedger from "../data/anomaly/inventory-ledger.json";
+import dependencyStrategyDoc from "../data/anomaly/dependency-strategy.json";
 import taxonomy from "../data/legal/corporate-taxonomy.json";
 import { listP1Slots } from "./p1-catalog";
 import { inventoryStatus } from "./inventory";
@@ -375,10 +376,29 @@ export function compileAnomalyTracker(opts?: {
     dependencyStrategy: {
       lockfile: "package-lock.json",
       install: "bash scripts/install-toolchain.sh",
-      verify: "bash scripts/verify-build.sh",
-      note: "Reuse the existing 11,280 P1 inventory slots and taxonomy bindings. Do not mint a second 10k of unpublished LE packages.",
+      verify: "bash scripts/verify-dependencies.sh",
+      requirements: "requirements.txt",
+      note: dependencyStrategyDoc.note,
+      productName: dependencyStrategyDoc.productName,
+      rejectedLockfileName: dependencyStrategyDoc.lockfile.rejectedName,
       p1Slots: p1.totalSlots,
       closestInstallPattern: "server/inventory + vendor/p1 closest matches",
+      npmCore: dependencyStrategyDoc.npm.core,
+      unpublishedScopes: dependencyStrategyDoc.npm.unpublishedScopes,
+      python: dependencyStrategyDoc.python,
+      commands: dependencyStrategyDoc.commands,
+      verifyStatus: (() => {
+        const statusPath = path.join(root, "data/anomaly/dependency-verify-status.json");
+        if (!existsSync(statusPath)) return null;
+        try {
+          return JSON.parse(readFileSync(statusPath, "utf8")) as Record<
+            string,
+            { ok: boolean; detail?: string }
+          >;
+        } catch {
+          return null;
+        }
+      })(),
     },
     mcp: {
       config: ".cursor/mcp.json",

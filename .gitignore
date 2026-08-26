@@ -44,3 +44,4 @@ next-env.d.ts
 vendor/
 data/p1/inventory-status.json
 data/p1/one-shot-status.json
+data/anomaly/dependency-verify-status.json

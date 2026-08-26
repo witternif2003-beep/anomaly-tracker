@@ -31,7 +31,11 @@ npm run build
 npm start
 ```
 
-No API keys. No database.
+## Dependencies
+
+- npm: `package-lock.json` (lockfileVersion 3). Product name stays **lyra** — do not invent unpublished `@law-research/*` lockfile entries.
+- Python closest installs: `requirements.txt`. Verify one-at-a-time with `npm run deps:verify`.
+- Expanded inventory closest installs: `npm run inventory:install`.
 
 ## Local application server (127.0.0.1:4040)
 

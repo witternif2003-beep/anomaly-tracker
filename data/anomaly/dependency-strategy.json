@@ -1,0 +1,88 @@
+{
+  "title": "Package lockfile & dependency management (research note §3)",
+  "classified": false,
+  "productName": "lyra",
+  "note": "Keep package-lock.json as the npm source of truth. Do not rename the app to business-anomaly-tracker. Unpublished scoped packages are never written into package.json — they map to closest public installs.",
+  "lockfile": {
+    "path": "package-lock.json",
+    "lockfileVersion": 3,
+    "requires": true,
+    "name": "lyra",
+    "rejectedName": "business-anomaly-tracker"
+  },
+  "npm": {
+    "core": [
+      { "requested": "next", "version": "16.3.2", "status": "lockfile" },
+      { "requested": "react", "version": "19.2.8", "status": "lockfile" },
+      { "requested": "react-dom", "version": "19.2.8", "status": "lockfile" },
+      { "requested": "lucide-react", "version": "1.34.0", "status": "lockfile" },
+      { "requested": "@types/node", "version": "22.20.1", "status": "lockfile" },
+      { "requested": "typescript", "version": "7.0.2", "status": "lockfile" },
+      { "requested": "eslint", "version": "10.9.0", "status": "lockfile" },
+      { "requested": "playwright", "version": "1.62.1", "status": "lockfile" }
+    ],
+    "unpublishedScopes": [
+      {
+        "requested": "@law-research/opinion-parser@2.1.0",
+        "action": "reject-lockfile-entry",
+        "closest": ["pdf-parse", "citation-js", "compromise"],
+        "assetId": "npm-opinion-parser"
+      },
+      {
+        "requested": "@forensic-tools/disk-imaging@3.0.1",
+        "action": "reject-lockfile-entry",
+        "closest": ["hachoir", "pefile"],
+        "assetId": "npm-disk-imaging"
+      },
+      {
+        "requested": "@financial-intel/sanctions-screen@1.2.3",
+        "action": "reject-lockfile-entry",
+        "closest": ["ofac"],
+        "assetId": "npm-sanctions"
+      },
+      {
+        "requested": "@osint-collector/social-media@4.5.0",
+        "action": "reject-lockfile-entry",
+        "closest": ["sherlock-project"],
+        "assetId": "npm-osint-social"
+      },
+      {
+        "requested": "@geo-analytics/coordinates@2.0.0",
+        "action": "reject-lockfile-entry",
+        "closest": ["@turf/turf", "geojson", "geolib"],
+        "assetId": "npm-geospatial"
+      },
+      {
+        "requested": "@evidence-chain/hash-verifier@1.1.0",
+        "action": "reject-lockfile-entry",
+        "closest": ["hash-wasm", "ssri", "hasha", "object-hash"],
+        "assetId": "npm-hash-verifier"
+      }
+    ]
+  },
+  "python": {
+    "requirementsFile": "requirements.txt",
+    "rows": [
+      { "requested": "crimemapping==2.3.1", "closest": "folium", "module": "folium" },
+      { "requested": "forensic-accounting==1.0.4", "closest": "pyod", "module": "pyod" },
+      { "requested": "legal-ner==0.8.2", "closest": "eyecite + reporters-db", "module": "eyecite" },
+      { "requested": "db-forensics==1.2.0", "closest": "sqlite-utils", "module": "sqlite_utils" },
+      { "requested": "steganography-tools==0.9.5", "closest": "stegano + pillow", "module": "stegano" },
+      { "requested": "sec-edgar==5.0.0", "closest": "edgartools", "module": "edgar" },
+      { "requested": "pacer-client==1.1.0", "closest": "PACER REST stub", "module": null },
+      { "requested": "courtlistener==2.0.0", "closest": "court-listener", "module": "court_listener" },
+      { "requested": "openlaws==1.3.0", "closest": "OpenLaws REST stub", "module": null },
+      { "requested": "pandas==2.1.0", "closest": "pandas", "module": "pandas" },
+      { "requested": "numpy==1.26.0", "closest": "numpy", "module": "numpy" },
+      { "requested": "scikit-learn==1.3.0", "closest": "scikit-learn", "module": "sklearn" },
+      { "requested": "apache-flink==1.18.0", "closest": "server/anomaly-tracker.ts classifier", "module": null, "wontInstall": true }
+    ]
+  },
+  "commands": [
+    "npm ci",
+    "bash scripts/verify-dependencies.sh",
+    "pip3 install --user -r requirements.txt",
+    "bash scripts/install-p1-inventory.sh",
+    "bash scripts/verify-build.sh"
+  ]
+}

@@ -109,7 +109,24 @@ interface TrackerBook {
   };
   wontDo: Array<{ id: string; title: string; reason: string }>;
   automation: { commands: string[] };
-  dependencyStrategy: { lockfile: string; install: string; note: string; p1Slots: number };
+  dependencyStrategy: {
+    lockfile: string;
+    install: string;
+    note: string;
+    p1Slots: number;
+    requirements?: string;
+    verify?: string;
+    productName?: string;
+    rejectedLockfileName?: string;
+    npmCore?: Array<{ requested: string; version: string; status: string }>;
+    unpublishedScopes?: Array<{ requested: string; closest: string[]; assetId: string }>;
+    python?: {
+      requirementsFile: string;
+      rows: Array<{ requested: string; closest: string; wontInstall?: boolean }>;
+    };
+    commands?: string[];
+    verifyStatus?: Record<string, { ok: boolean; detail?: string }> | null;
+  };
 }
 
 function priorityTone(priority: string) {
@@ -570,17 +587,50 @@ export function AnomalyTracker() {
 
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">Automation & dependencies</CardTitle>
+                <CardTitle className="text-base">3. Lockfile & dependencies</CardTitle>
                 <CardDescription>
-                  {book.dependencyStrategy.lockfile} · {book.dependencyStrategy.p1Slots.toLocaleString()} P1 slots
-                  reused
+                  {book.dependencyStrategy.lockfile} · product={book.dependencyStrategy.productName ?? "lyra"} ·{" "}
+                  {book.dependencyStrategy.p1Slots.toLocaleString()} P1 slots
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-2">
+              <CardContent className="space-y-3">
                 <p className="text-sm text-muted-foreground">{book.dependencyStrategy.note}</p>
+                <p className="text-xs text-muted-foreground">
+                  Rejected lockfile name: {book.dependencyStrategy.rejectedLockfileName ?? "n/a"} · requirements:{" "}
+                  {book.dependencyStrategy.requirements ?? "requirements.txt"}
+                </p>
+                {book.dependencyStrategy.npmCore ? (
+                  <div className="flex flex-wrap gap-2">
+                    {book.dependencyStrategy.npmCore.map((pkg) => (
+                      <Badge key={pkg.requested} variant="outline">
+                        {pkg.requested}@{pkg.version}
+                      </Badge>
+                    ))}
+                  </div>
+                ) : null}
+                {book.dependencyStrategy.unpublishedScopes ? (
+                  <ul className="space-y-1 text-xs text-muted-foreground">
+                    {book.dependencyStrategy.unpublishedScopes.map((row) => (
+                      <li key={row.requested}>
+                        <span className="text-foreground">{row.requested}</span> → {row.closest.join(", ")}
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+                {book.dependencyStrategy.python ? (
+                  <ul className="space-y-1 text-xs text-muted-foreground">
+                    {book.dependencyStrategy.python.rows.map((row) => (
+                      <li key={row.requested}>
+                        <span className="text-foreground">{row.requested}</span> → {row.closest}
+                        {row.wontInstall ? " (wont-install)" : ""}
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
                 <p className="text-xs text-muted-foreground">{book.dependencyStrategy.install}</p>
+                <p className="text-xs text-muted-foreground">{book.dependencyStrategy.verify}</p>
                 <ul className="space-y-1 font-mono text-[11px] text-muted-foreground">
-                  {book.automation.commands.map((cmd) => (
+                  {(book.dependencyStrategy.commands ?? book.automation.commands).map((cmd) => (
                     <li key={cmd}>{cmd}</li>
                   ))}
                 </ul>
