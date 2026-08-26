@@ -130,6 +130,8 @@ export function installNotebook() {
       corporateBindings: `${corporate.summary.bindingsPresent}/${corporate.summary.bindingsTotal}`,
       anomalyTracker: true,
       anomalyImprovements: anomaly.summary.improvements,
+      anomalyImprovementSeeds: anomaly.summary.improvementSeeds,
+      anomalyResearchQuestions: anomaly.summary.researchQuestions,
       anomalyP1Events: anomaly.summary.p1Events,
     },
     protocols: {
