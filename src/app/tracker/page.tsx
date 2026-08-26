@@ -3,7 +3,7 @@ import { TrackerClient } from "./tracker-client";
 export const metadata = {
   title: "Anomaly tracker — Lyra",
   description:
-    "Unclassified 3D business anomaly tracker with 24/7 fixture telemetry and 500 post-doctoral improvements. Fixture data only — no intercepts or live NCIC.",
+    "Unclassified 3D business anomaly tracker with 24/7 fixture telemetry and 5,500 post-doctoral forensic queries (TOP 500 SOTA). Fixture data only — no intercepts or live NCIC.",
 };
 
 /**
