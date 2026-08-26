@@ -192,7 +192,7 @@ async function searchCourtListener(query: string, limit: number): Promise<{ hits
       return { hits: [], warning: `CourtListener HTTP ${res.status}` };
     }
     const body = (await res.json()) as { results?: CourtListenerResult[] };
-    const hits = (body.results ?? []).map((row, i) => {
+    const hits = (body.results ?? []).slice(0, limit).map((row, i) => {
       const citation = Array.isArray(row.citation) ? row.citation[0] : row.citation;
       const snippet =
         row.opinions?.[0]?.snippet ||
