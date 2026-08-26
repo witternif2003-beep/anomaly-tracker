@@ -85,6 +85,8 @@ interface TrackerBook {
     telemetryP1Ticks?: number;
     telemetryActive?: boolean;
     fbiCategoryMaps?: number;
+    postdocImprovements?: number;
+    postdocAxes?: number;
     taxonomyCategories: number;
     p1InventorySlots: number;
     mcpServers: number;
@@ -139,6 +141,35 @@ interface TrackerBook {
       lyraBinding: string;
       status: string;
       wontDo: string | null;
+    }>;
+  };
+  postdocCatalog?: {
+    title: string;
+    note: string;
+    total: number;
+    axisCount: number;
+    openCount: number;
+    constrainedCount: number;
+    axes: Array<{ id: string; label: string; prompt: string }>;
+    data: Array<{
+      id: string;
+      index: number;
+      axisId: string;
+      axisLabel: string;
+      title: string;
+      question: string;
+      method: string;
+      falsifier: string;
+      deliverable: string;
+      lyraBinding: string;
+      categoryLabel: string;
+      entityTypeLabel: string;
+      fbiCategory: string | null;
+      artifact: string | null;
+      rqAnchor: string;
+      status: string;
+      wontDo: string | null;
+      priority: string;
     }>;
   };
   priorityCounts: { P1: number; P2: number; P3: number };
@@ -277,6 +308,9 @@ export function AnomalyTracker({ initialData }: { initialData?: TrackerBook }) {
   const [priority, setPriority] = useState<string>("");
   const [selected, setSelected] = useState<string | null>(initialData?.p1Queue?.[0]?.id ?? null);
   const [tick, setTick] = useState(0);
+  const [postdocQ, setPostdocQ] = useState("");
+  const [postdocAxis, setPostdocAxis] = useState("");
+  const [postdocShow, setPostdocShow] = useState(50);
 
   async function load() {
     setBusy(true);
@@ -352,6 +386,18 @@ export function AnomalyTracker({ initialData }: { initialData?: TrackerBook }) {
     return book.anomalies.find((a) => a.id === selected) ?? null;
   }, [book, selected]);
 
+  const filteredPostdoc = useMemo(() => {
+    if (!book?.postdocCatalog) return [];
+    const needle = postdocQ.trim().toLowerCase();
+    return book.postdocCatalog.data.filter((item) => {
+      if (postdocAxis && item.axisId !== postdocAxis) return false;
+      if (!needle) return true;
+      return `${item.title} ${item.question} ${item.method} ${item.artifact ?? ""} ${item.fbiCategory ?? ""} ${item.axisLabel}`
+        .toLowerCase()
+        .includes(needle);
+    });
+  }, [book, postdocQ, postdocAxis]);
+
   return (
     <div className="relative flex flex-1 flex-col">
       <header className="border-b border-border/40 bg-transparent">
@@ -423,6 +469,9 @@ export function AnomalyTracker({ initialData }: { initialData?: TrackerBook }) {
                 {book.summary.evidenceElements ?? 0} evidence elements
               </Badge>
               <Badge variant="outline">{book.summary.improvements.toLocaleString()} improvements</Badge>
+              <Badge variant="outline">
+                {book.summary.postdocImprovements ?? book.postdocCatalog?.total ?? 0} post-doc
+              </Badge>
               <Badge variant="outline">{book.summary.entityTypes} entity types</Badge>
               <Badge variant="outline">tick {tick}</Badge>
             </div>
@@ -630,7 +679,7 @@ export function AnomalyTracker({ initialData }: { initialData?: TrackerBook }) {
                 <CardTitle className="text-base">8. Post-doctoral research agenda</CardTitle>
                 <CardDescription>
                   {book.researchAgenda
-                    ? `${book.researchAgenda.questionCount} research questions · ${book.researchAgenda.constrainedCount} constrained by wont-do`
+                    ? `${book.researchAgenda.questionCount} research questions · ${book.researchAgenda.constrainedCount} constrained by wont-do · extended by ${book.postdocCatalog?.total ?? 500} improvements below`
                     : "Unclassified product research notes"}
                 </CardDescription>
               </CardHeader>
@@ -669,6 +718,127 @@ export function AnomalyTracker({ initialData }: { initialData?: TrackerBook }) {
                 )}
               </CardContent>
             </Card>
+
+            {book.postdocCatalog ? (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="font-display text-base">
+                    8.1 Post-doctoral improvement catalog ({book.postdocCatalog.total})
+                  </CardTitle>
+                  <CardDescription>
+                    {book.postdocCatalog.axisCount} axes · {book.postdocCatalog.openCount} open ·{" "}
+                    {book.postdocCatalog.constrainedCount} constrained · showing{" "}
+                    {Math.min(postdocShow, filteredPostdoc.length)} of {filteredPostdoc.length} matched
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <p className="text-sm text-muted-foreground">{book.postdocCatalog.note}</p>
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+                    <div className="flex-1">
+                      <label className="mb-1 block text-xs text-muted-foreground" htmlFor="postdoc-q">
+                        Filter post-doc catalog
+                      </label>
+                      <Input
+                        id="postdoc-q"
+                        value={postdocQ}
+                        onChange={(e) => {
+                          setPostdocQ(e.target.value);
+                          setPostdocShow(50);
+                        }}
+                        placeholder="Daubert, BMS, OFAC, falsifier…"
+                      />
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant={postdocAxis === "" ? "default" : "outline"}
+                        onClick={() => {
+                          setPostdocAxis("");
+                          setPostdocShow(50);
+                        }}
+                      >
+                        All axes
+                      </Button>
+                      {book.postdocCatalog.axes.slice(0, 6).map((axis) => (
+                        <Button
+                          key={axis.id}
+                          type="button"
+                          size="sm"
+                          variant={postdocAxis === axis.id ? "default" : "outline"}
+                          onClick={() => {
+                            setPostdocAxis(axis.id);
+                            setPostdocShow(50);
+                          }}
+                        >
+                          {axis.label.split(" ")[0]}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="grid gap-2 md:grid-cols-2">
+                    {filteredPostdoc.slice(0, postdocShow).map((item) => (
+                      <div key={item.id} className="rounded-lg border border-border/50 px-3 py-2">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Badge variant="outline" className="text-[10px]">
+                            {item.id}
+                          </Badge>
+                          <Badge className={cn("text-[10px]", priorityTone(item.priority))}>
+                            {item.priority}
+                          </Badge>
+                          <Badge
+                            className={cn(
+                              "text-[10px]",
+                              item.status === "constrained"
+                                ? "bg-muted text-muted-foreground"
+                                : "bg-secondary text-secondary-foreground",
+                            )}
+                          >
+                            {item.status}
+                          </Badge>
+                          <span className="text-[10px] text-muted-foreground">{item.rqAnchor}</span>
+                        </div>
+                        <p className="mt-1 text-sm font-medium">{item.title}</p>
+                        <p className="mt-1 text-xs text-muted-foreground">{item.question}</p>
+                        <p className="mt-1 text-[11px]">
+                          Method: {item.method} · Deliverable: {item.deliverable}
+                        </p>
+                        <p className="mt-1 text-[11px] text-amber-200/80">Falsifier: {item.falsifier}</p>
+                        {item.artifact ? (
+                          <p className="mt-1 truncate font-mono text-[10px] text-primary/85">{item.artifact}</p>
+                        ) : null}
+                        <p className="mt-1 text-[11px] text-muted-foreground">{item.lyraBinding}</p>
+                        {item.wontDo ? (
+                          <p className="mt-1 text-[11px] text-muted-foreground">Wont-do: {item.wontDo}</p>
+                        ) : null}
+                      </div>
+                    ))}
+                  </div>
+                  {filteredPostdoc.length > postdocShow ? (
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setPostdocShow((n) => Math.min(n + 50, filteredPostdoc.length))}
+                      >
+                        Show 50 more
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        onClick={() => setPostdocShow(filteredPostdoc.length)}
+                      >
+                        Show all {filteredPostdoc.length}
+                      </Button>
+                    </div>
+                  ) : null}
+                  {!filteredPostdoc.length ? (
+                    <p className="text-sm text-muted-foreground">No post-doc items match this filter.</p>
+                  ) : null}
+                </CardContent>
+              </Card>
+            ) : null}
 
             <Card>
               <CardHeader>

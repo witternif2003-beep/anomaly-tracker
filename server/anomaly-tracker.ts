@@ -10,6 +10,7 @@ import credentialsFramework from "../data/anomaly/credentials-framework.json";
 import automationDoc from "../data/anomaly/automation.json";
 import improvementSeeds from "../data/anomaly/improvement-seeds.json";
 import researchAgendaDoc from "../data/anomaly/research-agenda.json";
+import postdocImprovementsDoc from "../data/anomaly/postdoc-improvements.json";
 import taxonomy from "../data/legal/corporate-taxonomy.json";
 import { listP1Slots } from "./p1-catalog";
 import { inventoryStatus } from "./inventory";
@@ -18,8 +19,133 @@ import { oneShotStatus } from "./install-status";
 import { cjisStatus, policyStatus } from "./policy";
 
 const IMPROVEMENT_COUNT = 10080;
+const POSTDOC_IMPROVEMENT_COUNT = 500;
 const TELEMETRY_TICK_MS = 1200;
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
+
+export type PostdocImprovement = {
+  id: string;
+  index: number;
+  axisId: string;
+  axisLabel: string;
+  title: string;
+  question: string;
+  method: string;
+  falsifier: string;
+  deliverable: string;
+  lyraBinding: string;
+  categoryId: string;
+  categoryLabel: string;
+  entityTypeId: string;
+  entityTypeLabel: string;
+  fbiCategory: string | null;
+  evidenceId: string | null;
+  artifact: string | null;
+  rqAnchor: string;
+  status: "open" | "constrained";
+  wontDo: string | null;
+  priority: "P1" | "P2" | "P3";
+};
+
+function buildPostdocImprovement(index: number): PostdocImprovement {
+  const axes = postdocImprovementsDoc.axes;
+  const methods = postdocImprovementsDoc.methods;
+  const falsifiers = postdocImprovementsDoc.falsifiers;
+  const deliverables = postdocImprovementsDoc.deliverables;
+  const categories = taxonomy.categories;
+  const entityTypes = fixtures.entityTypes;
+  const elements = evidenceCorpus.elements;
+  const maps = evidenceCorpus.fbiToCorporate;
+  const rqs = researchAgendaDoc.questions;
+
+  const slot = index + 1;
+  const axis = axes[index % axes.length];
+  const method = methods[index % methods.length];
+  const falsifier = falsifiers[Math.floor(index / 3) % falsifiers.length];
+  const deliverable = deliverables[Math.floor(index / 5) % deliverables.length];
+  const category = categories[index % categories.length];
+  const entityType = entityTypes[index % entityTypes.length];
+  const element = elements[index % elements.length];
+  const map = maps[index % maps.length];
+  const rq = rqs[index % rqs.length];
+
+  const constrained =
+    Boolean(element.collectionStatus === "constrained") ||
+    axis.id === "ethics-guardrails" ||
+    axis.id === "cross-border-hold" ||
+    rq.status === "constrained";
+  const wontDo =
+    constrained
+      ? ("wontDo" in element && typeof element.wontDo === "string"
+          ? element.wontDo
+          : rq.wontDo ?? "sigint-intercepts")
+      : null;
+
+  const priority: "P1" | "P2" | "P3" =
+    index % 7 === 0 ? "P1" : index % 3 === 0 ? "P2" : "P3";
+
+  return {
+    id: `pd-${String(slot).padStart(4, "0")}`,
+    index: slot,
+    axisId: axis.id,
+    axisLabel: axis.label,
+    title: `${axis.label} · ${entityType.label} · ${category.label}`,
+    question: `${axis.prompt} Apply to ${entityType.label} under ${category.label} with artifact lens "${element.artifact}".`,
+    method,
+    falsifier,
+    deliverable,
+    lyraBinding: `Anchor ${rq.id}. Bind ${map.fbiCategory} → ${category.id}. Fixture evidence ${element.id}. Method=${method}. Deliverable=${deliverable}.`,
+    categoryId: category.id,
+    categoryLabel: category.label,
+    entityTypeId: entityType.id,
+    entityTypeLabel: entityType.label,
+    fbiCategory: map.fbiCategory,
+    evidenceId: element.id,
+    artifact: element.artifact,
+    rqAnchor: rq.id,
+    status: constrained ? "constrained" : "open",
+    wontDo,
+    priority,
+  };
+}
+
+export function listPostdocImprovements(opts?: {
+  q?: string;
+  axisId?: string;
+  categoryId?: string;
+  status?: string;
+  limit?: number;
+  offset?: number;
+}) {
+  const offset = Math.max(0, opts?.offset ?? 0);
+  const limit = Math.min(Math.max(1, opts?.limit ?? POSTDOC_IMPROVEMENT_COUNT), POSTDOC_IMPROVEMENT_COUNT);
+  const q = opts?.q?.trim().toLowerCase();
+  const axisId = opts?.axisId?.trim();
+  const categoryId = opts?.categoryId?.trim();
+  const status = opts?.status?.trim().toLowerCase();
+
+  const matched: PostdocImprovement[] = [];
+  for (let i = 0; i < POSTDOC_IMPROVEMENT_COUNT; i++) {
+    const item = buildPostdocImprovement(i);
+    if (axisId && item.axisId !== axisId) continue;
+    if (categoryId && item.categoryId !== categoryId) continue;
+    if (status && item.status !== status) continue;
+    if (q) {
+      const hay =
+        `${item.title} ${item.question} ${item.method} ${item.artifact ?? ""} ${item.fbiCategory ?? ""}`.toLowerCase();
+      if (!hay.includes(q)) continue;
+    }
+    matched.push(item);
+  }
+
+  return {
+    total: matched.length,
+    generated: POSTDOC_IMPROVEMENT_COUNT,
+    offset,
+    limit,
+    data: matched.slice(offset, offset + limit),
+  };
+}
 
 type EvidenceElement = (typeof evidenceCorpus.elements)[number];
 type CollectionStatus = "fixture" | "constrained" | "wont-do";
@@ -531,6 +657,8 @@ export function compileAnomalyTracker(opts?: {
       improvements: IMPROVEMENT_COUNT,
       improvementSeeds: improvementSeeds.seedCount,
       researchQuestions: researchAgendaDoc.questions.length,
+      postdocImprovements: POSTDOC_IMPROVEMENT_COUNT,
+      postdocAxes: postdocImprovementsDoc.axes.length,
       taxonomyCategories: taxonomy.categories.length,
       p1InventorySlots: p1.totalSlots,
       closestAssets: inventory.assets.length,
@@ -612,6 +740,29 @@ export function compileAnomalyTracker(opts?: {
       questionCount: researchAgendaDoc.questions.length,
       constrainedCount: researchAgendaDoc.questions.filter((q) => q.status === "constrained").length,
     },
+    postdocCatalog: (() => {
+      const listed = listPostdocImprovements({ limit: POSTDOC_IMPROVEMENT_COUNT, offset: 0 });
+      return {
+        object: "lyra.postdoc-improvements" as const,
+        title: postdocImprovementsDoc.title,
+        classified: false,
+        governmentProgram: false,
+        note: postdocImprovementsDoc.note,
+        axes: postdocImprovementsDoc.axes,
+        axisCount: postdocImprovementsDoc.axes.length,
+        methods: postdocImprovementsDoc.methods,
+        falsifiers: postdocImprovementsDoc.falsifiers,
+        deliverables: postdocImprovementsDoc.deliverables,
+        generated: listed.generated,
+        offset: listed.offset,
+        limit: listed.limit,
+        data: listed.data,
+        total: POSTDOC_IMPROVEMENT_COUNT,
+        matched: listed.total,
+        openCount: listed.data.filter((p) => p.status === "open").length,
+        constrainedCount: listed.data.filter((p) => p.status === "constrained").length,
+      };
+    })(),
     inventoryLedger: {
       object: "lyra.anomaly-inventory-ledger" as const,
       title: inventoryLedger.title,

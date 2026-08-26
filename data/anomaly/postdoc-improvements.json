@@ -1,0 +1,175 @@
+{
+  "title": "Post-doctoral improvement catalog (tracker §8.1)",
+  "classified": false,
+  "governmentProgram": false,
+  "total": 500,
+  "note": "Five hundred unclassified post-doctoral improvements for /tracker. Extends research-agenda §8 without replacing the five core questions. Every item binds to corporate business-law taxonomy, fixture evidence, and Lyra runtime — no live intercepts, CJIS, or SIGINT collection.",
+  "axes": [
+    {
+      "id": "daubert-admissibility",
+      "label": "Daubert / FRE 702 admissibility",
+      "prompt": "How should advisory AI scores be framed so they never outrun expert testimony?"
+    },
+    {
+      "id": "legal-hold-spoliation",
+      "label": "Legal hold & spoliation risk",
+      "prompt": "What hold chronologies close FRCP 37(e) gaps on company-held ESI?"
+    },
+    {
+      "id": "visual-encoding-p1",
+      "label": "3D / HUD visual encoding",
+      "prompt": "Which encodings make P1 priority legible without implying live surveillance?"
+    },
+    {
+      "id": "chain-of-custody-hash",
+      "label": "Chain-of-custody hashing",
+      "prompt": "What hash + bag protocols keep FRE 901 provenance intact on fixture exports?"
+    },
+    {
+      "id": "post-quantum-custody",
+      "label": "Post-quantum custody research",
+      "prompt": "Which NIST PQC candidates are research notes only versus production hashes today?"
+    },
+    {
+      "id": "mcp-self-healing",
+      "label": "MCP / agent self-healing",
+      "prompt": "How should fixture pipelines recover when optional MCP keys are absent?"
+    },
+    {
+      "id": "cross-border-hold",
+      "label": "Cross-border hold protocols",
+      "prompt": "What counsel-directed export paths replace intercept narratives for messaging?"
+    },
+    {
+      "id": "financial-typology",
+      "label": "Financial typology rigor",
+      "prompt": "How do OFAC/MT202/PAC fixture labels stay typologies without SWIFT sessions?"
+    },
+    {
+      "id": "ot-esi-integrity",
+      "label": "OT / BMS ESI integrity",
+      "prompt": "What BMS/HMI/VPN export checks prove integrity under FRCP 34?"
+    },
+    {
+      "id": "mobile-mdm-inventory",
+      "label": "Mobile MDM inventory science",
+      "prompt": "How should IMEI/MAC fields be treated as asset tags, never triangulation feeds?"
+    },
+    {
+      "id": "geofence-facility",
+      "label": "Facility geolocation science",
+      "prompt": "How do lease/SOS/GPS fixtures reconcile without live device tracking?"
+    },
+    {
+      "id": "metadata-chronology",
+      "label": "Metadata chronology",
+      "prompt": "Which timestamp lattices bind 00:10:22 / 00:14:15 / 00:20:30 into one provenance story?"
+    },
+    {
+      "id": "privilege-screening",
+      "label": "Privilege screening methods",
+      "prompt": "What privilege-log steps precede production of PAC and board packets?"
+    },
+    {
+      "id": "falsifiability",
+      "label": "Falsifiability & null results",
+      "prompt": "What null/negative findings must a post-doc write before claiming an anomaly?"
+    },
+    {
+      "id": "ethics-guardrails",
+      "label": "Ethics & wont-do guardrails",
+      "prompt": "How is each constrained SIGINT/CJIS narrative documented without executing it?"
+    },
+    {
+      "id": "reproducibility",
+      "label": "Reproducibility & fixture clocks",
+      "prompt": "How do fixture-clock ticks stay reproducible across static Pages builds?"
+    },
+    {
+      "id": "taxonomy-binding",
+      "label": "Taxonomy binding quality",
+      "prompt": "Does every improvement cite a Corporate Forensic Evidence Taxonomy category?"
+    },
+    {
+      "id": "entity-type-coverage",
+      "label": "Entity-type coverage",
+      "prompt": "Are LLC through conglomerate forms equally covered in rehearsal packets?"
+    },
+    {
+      "id": "telemetry-epistemology",
+      "label": "Telemetry epistemology",
+      "prompt": "How do we label ACTIVE 24/7 fixture telemetry so operators never confuse it with live feeds?"
+    },
+    {
+      "id": "counsel-liaison",
+      "label": "Counsel liaison protocols",
+      "prompt": "What liaison checklists move from fixture P1 to outside counsel without autofiling SARs?"
+    }
+  ],
+  "methods": [
+    "controlled fixture A/B",
+    "doctrine memo + FOLIO cite check",
+    "hash-bag reproducibility trial",
+    "HUD encoding lab on /tracker",
+    "custodian interview protocol (privilege-aware)",
+    "null-result registry",
+    "taxonomy crosswalk audit",
+    "static export bake verification",
+    "MCP allowlist failure injection",
+    "privilege-log sampling study",
+    "chronology lattice reconstruction",
+    "expert-report outline under FRE 702",
+    "wont-do boundary red-team (tabletop)",
+    "entity-type stratified sampling",
+    "OFAC stub typology calibration",
+    "BMS export integrity checklist",
+    "MDM asset-tag schema review",
+    "facility pin reconciliation worksheet",
+    "PAC packet completeness scorecard",
+    "fixture-clock drift measurement"
+  ],
+  "falsifiers": [
+    "Score presented as courtroom opinion",
+    "Live intercept claimed from studio",
+    "CJIS/NCIC query attempted",
+    "IMEI used for carrier triangulation",
+    "SWIFT gateway session opened",
+    "SAR/CISA autofile triggered",
+    "Hash missing on bag/tag form",
+    "Hold notice undated",
+    "Taxonomy category omitted",
+    "Fixture clock labeled as live FBI feed",
+    "Privilege screen skipped on PAC packet",
+    "Null result unpublished",
+    "MCP unpublished package invented",
+    "Static Pages bake drops evidence fields",
+    "P1 elevation without doctrine cue",
+    "Geolocation treated as device track",
+    "WeChat decrypt executed",
+    "VoIP wiretap simulated as collection",
+    "Classified banner added",
+    "Mass U.S. business scrape attempted"
+  ],
+  "deliverables": [
+    "one-page methods note",
+    "annotated /tracker screenshot protocol",
+    "privilege log template",
+    "hash manifest CSV",
+    "falsifier checklist",
+    "taxonomy crosswalk table",
+    "counsel liaison brief",
+    "null-result appendix",
+    "HUD encoding rubric",
+    "reproducibility receipt (SHA-256)",
+    "entity stratified sample frame",
+    "wont-do boundary card",
+    "BMS integrity worksheet",
+    "MDM schema errata",
+    "facility pin reconciliation map",
+    "OFAC typology calibration log",
+    "PAC completeness scorecard",
+    "fixture-clock drift chart",
+    "FRE 702 expert outline",
+    "static bake verification diff"
+  ]
+}
