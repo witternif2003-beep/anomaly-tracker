@@ -17,7 +17,7 @@ export async function POST(request: Request) {
   try {
     const result = optimize({
       input: payload.input,
-      mode: payload.mode === "detail" ? "detail" : "basic",
+      mode: payload.mode === "basic" ? "basic" : "detail",
       requestType: payload.requestType ?? "auto",
       platform: payload.platform ?? "chatgpt",
       answers: payload.answers,

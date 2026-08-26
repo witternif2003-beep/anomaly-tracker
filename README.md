@@ -1,16 +1,16 @@
 # Lyra
 
-Lyra is a prompt optimization studio. Paste a rough ask, pick Basic or Detail mode, and get a paste-ready prompt built with the **4-D method**: Deconstruct, Diagnose, Develop, Deliver.
+Lyra is a prompt optimization studio. Paste a rough ask, pick **GHOST-HAND** (default) or Basic mode, and get a paste-ready prompt built with the **4-D method**: Deconstruct, Diagnose, Develop, Deliver.
 
 It does not call ChatGPT, Claude, or Gemini. The optimizer runs locally in this app. You copy the result into the model of your choice.
 
 ## What you get
 
+- **GHOST-HAND detailed mode (default)** — GHOST intake (Goal, Handoffs, Output, Stakes, Taboos) asks clarifying questions, then HAND hardening writes Hypotheses, Anchors, Negatives, and Done-when into the prompt so the model cannot invent facts.
 - **Basic mode** — immediate rewrite using core techniques (role, constraints, output contract).
-- **Detail mode** — two or three clarifying questions when the brief is missing audience, format, or constraints; skip to use labeled defaults.
 - **Request types** — auto-detect, or lock Creative, Technical, Educational, or Complex.
 - **Platform formatting** — markdown sections for ChatGPT, XML-style tags for Claude, numbered comparative structure for Gemini.
-- **4-D trace** — see intent, gaps, techniques, and what changed.
+- **4-D trace** — see intent, gaps, techniques, GHOST-HAND layers, and what changed.
 
 ## Run locally
 
@@ -47,6 +47,7 @@ npm run local-api
 | `/v1/p1` | GET | 11,280 P1 slots (`q`, `limit`, `offset`) — 1,280 core + 10,000 Tier-1 | None |
 | `/v1/inventory` | GET | Requested packages vs closest installs | None |
 | `/v1/install` | GET | One-shot sequence: requested vs installed | None |
+| `/v1/mode` | GET | GHOST-HAND detailed mode status (default on) | None |
 | `/v1/playground` | GET | Streaming chat UI | None |
 
 ```bash
@@ -157,6 +158,7 @@ Named pipelines: `cloudflare-ci.sh` (Wrangler **dry-run only**), `cloudflare-p1-
 | Marketplace plugins | Integrated | Cline, Roo Code, Continue (Open VSX) + Continue/Cline/Roo config files |
 | Live Cloudflare deploy | Dry-run only | `scripts/wrangler-safe.sh` refuses deploy without `--dry-run` |
 | CJIS / NCIC / federal credentials | Applicable placeholders | `CJIS_*` / `NCIC_*` empty in git; live queries return 403 |
+| GHOST-HAND detailed mode | Activated (default) | Detail mode on; GHOST intake + HAND anti-hallucination rules |
 
 `GET /v1/policy` reports this table. `POST /v1/cjis/search` is always refused.
 

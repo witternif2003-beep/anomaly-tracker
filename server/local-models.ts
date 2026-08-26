@@ -78,6 +78,12 @@ async function buildAnswer(messages: ChatMessage[], model: LocalModelId): Promis
         } else {
           sections.push("## Optimized prompt", result.optimizedPrompt);
           sections.push("## What changed", result.whatChanged.map((w) => `- ${w}`).join("\n"));
+          if (result.ghostHand.active) {
+            sections.push(
+              "## GHOST-HAND",
+              result.ghostHand.hand.map((layer) => `- ${layer.name}: ${layer.rule}`).join("\n"),
+            );
+          }
         }
       }
     } catch {

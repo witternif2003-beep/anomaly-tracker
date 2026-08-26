@@ -11,6 +11,7 @@ export interface ClarifyingQuestion {
   question: string;
   rationale: string;
   placeholder: string;
+  ghostLetter?: "G" | "H" | "O" | "S" | "T";
 }
 
 export interface DeconstructResult {
@@ -33,6 +34,24 @@ export interface DiagnoseResult {
   completeness: "low" | "medium" | "high";
   complexity: "simple" | "moderate" | "complex";
   structureNeeds: string[];
+}
+
+export interface GhostHandLayer {
+  letter: string;
+  name: string;
+  hint?: string;
+  status?: "armed" | "idle" | "provided" | "asked" | "defaulted";
+  value?: string;
+  rule?: string;
+}
+
+export interface GhostHandReport {
+  active: boolean;
+  protocol: "GHOST-HAND";
+  mode: "detailed" | "basic";
+  defaultOn: boolean;
+  ghost: GhostHandLayer[];
+  hand: GhostHandLayer[];
 }
 
 export interface OptimizeRequest {
@@ -59,4 +78,6 @@ export interface OptimizeResult {
   implementation: string[];
   platformNotes: string;
   inferredDefaults: string[];
+  ghostHand: GhostHandReport;
 }
+

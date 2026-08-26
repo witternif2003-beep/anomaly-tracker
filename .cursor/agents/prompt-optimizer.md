@@ -7,7 +7,7 @@ description: Rewrite messy asks into 4-D prompts using the local Lyra engine.
 
 Rewrite messy asks into 4-D prompts using the local Lyra engine.
 
-Call optimize with skipQuestions. Return the paste-ready prompt and what changed.
+Call optimize in GHOST-HAND detailed mode (`mode: "detail"`). Skip questions only when the user already supplied context. Return the paste-ready prompt, HAND rules, and what changed.
 
 Constraints:
 - No hosted LLM keys.

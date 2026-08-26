@@ -36,7 +36,7 @@ const PHASES: FourDPhase[] = ["deconstruct", "diagnose", "develop", "deliver"];
 
 export function Studio() {
   const [input, setInput] = useState("");
-  const [mode, setMode] = useState<Mode>("basic");
+  const [mode, setMode] = useState<Mode>("detail");
   const [requestType, setRequestType] = useState<RequestTypeChoice>("auto");
   const [platform, setPlatform] = useState<Platform>("chatgpt");
   const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -117,7 +117,7 @@ export function Studio() {
             <div>
               <p className="font-heading text-2xl leading-none tracking-tight">Lyra</p>
               <p className="mt-1 text-xs tracking-[0.14em] text-muted-foreground uppercase">
-                Prompt optimization
+                GHOST-HAND detailed · 4-D optimizer
               </p>
             </div>
           </div>
@@ -134,7 +134,7 @@ export function Studio() {
           >
             <TabsList>
               <TabsTrigger value="basic">Basic</TabsTrigger>
-              <TabsTrigger value="detail">Detail</TabsTrigger>
+              <TabsTrigger value="detail">GHOST-HAND</TabsTrigger>
             </TabsList>
           </Tabs>
         </div>
@@ -147,8 +147,8 @@ export function Studio() {
               Turn a rough ask into a prompt a model can actually execute.
             </h1>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">
-              Lyra runs the 4-D method — Deconstruct, Diagnose, Develop, Deliver — then
-              formats the result for ChatGPT, Claude, Gemini, or any model.
+              GHOST-HAND detailed mode is on. Lyra runs 4-D — Deconstruct, Diagnose, Develop,
+              Deliver — then hardens the prompt so the model cannot invent facts.
             </p>
           </div>
 
@@ -204,7 +204,7 @@ export function Studio() {
             />
             <p className="text-xs text-muted-foreground">
               {mode === "detail"
-                ? "Detail mode asks two or three questions before writing the prompt."
+                ? "GHOST-HAND asks Goal, Handoffs, Output, Stakes, and Taboos, then writes HAND anti-hallucination rules into the prompt."
                 : "Basic mode applies core techniques and ships a prompt immediately."}
             </p>
           </div>
@@ -310,7 +310,7 @@ function EmptyState({ mode }: { mode: Mode }) {
         <CardTitle className="font-heading text-2xl">The 4-D method</CardTitle>
         <CardDescription>
           {mode === "detail"
-            ? "In Detail mode Lyra will stop after Diagnose if the brief is missing audience, format, or constraints."
+            ? "GHOST-HAND detailed mode will stop after Diagnose if Goal, Handoffs, Output, Stakes, or Taboos are still open."
             : "Paste a draft on the left. Lyra will rebuild it as a role, objective, constraints, process, and output contract."}
         </CardDescription>
       </CardHeader>
@@ -362,10 +362,10 @@ function QuestionsPanel({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>A few things would make this sharper</CardTitle>
+        <CardTitle>GHOST-HAND intake</CardTitle>
         <CardDescription>
-          Detected as {result.requestType} work. Answer what you know — skip the rest and
-          Lyra will use labeled defaults.
+          Detected as {result.requestType} work. Answer the GHOST layers you know — skip the
+          rest and Lyra will use labeled defaults, then apply HAND hardening.
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
@@ -377,7 +377,10 @@ function QuestionsPanel({
         </div>
         {(result.questions ?? []).map((q) => (
           <div key={q.id} className="flex flex-col gap-1.5">
-            <Label htmlFor={q.id}>{q.question}</Label>
+            <Label htmlFor={q.id}>
+              {q.ghostLetter ? `${q.ghostLetter} · ` : ""}
+              {q.question}
+            </Label>
             <p className="text-xs text-muted-foreground">{q.rationale}</p>
             <Input
               id={q.id}
@@ -420,6 +423,7 @@ function ResultPanel({ result }: { result: OptimizeResult }) {
         <div className="flex flex-wrap items-center gap-2">
           <Badge className="capitalize">{result.requestType}</Badge>
           <Badge variant="outline">{PLATFORM_LABELS[result.platform]}</Badge>
+          {result.ghostHand.active ? <Badge>GHOST-HAND</Badge> : null}
           <Badge variant="secondary">{diagTone}</Badge>
         </div>
         <div className="flex gap-2">
@@ -560,6 +564,30 @@ function Trace({ result }: { result: OptimizeResult }) {
               </Badge>
             ))}
           </div>
+        </CardContent>
+      </Card>
+      <Card size="sm">
+        <CardHeader>
+          <CardTitle>GHOST-HAND</CardTitle>
+          <CardDescription>
+            {result.ghostHand.active ? "Detailed protocol armed" : "Idle in Basic mode"}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="grid gap-3 sm:grid-cols-2">
+          {result.ghostHand.ghost.map((layer) => (
+            <TraceBlock
+              key={`g-${layer.letter}`}
+              title={`${layer.letter} ${layer.name}`}
+              body={`${layer.status ?? "armed"} — ${layer.value || layer.hint || ""}`}
+            />
+          ))}
+          {result.ghostHand.hand.map((layer) => (
+            <TraceBlock
+              key={`h-${layer.letter}`}
+              title={`HAND ${layer.letter} ${layer.name}`}
+              body={layer.rule || ""}
+            />
+          ))}
         </CardContent>
       </Card>
     </div>

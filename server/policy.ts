@@ -43,6 +43,12 @@ export function policyStatus() {
       liveQueries: false,
       note: "This studio is not a CJIS-certified interface. Credentials apply as empty placeholders only. No NCIC/III queries are sent.",
     },
+    ghostHandDetailedMode: {
+      status: "activated",
+      protocol: "GHOST-HAND",
+      defaultMode: "detail",
+      note: "Detail mode is the default. GHOST intake (Goal, Handoffs, Output, Stakes, Taboos) plus HAND hardening (Hypotheses, Anchors, Negatives, Done-when).",
+    },
   };
 }
 

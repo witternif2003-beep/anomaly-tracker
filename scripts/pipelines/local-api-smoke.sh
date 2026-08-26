@@ -9,4 +9,5 @@ curl -fsS --max-time 5 "${base}/v1/env" >/dev/null
 curl -fsS --max-time 5 "${base}/v1/policy" >/dev/null
 curl -fsS --max-time 5 "${base}/v1/inventory" >/dev/null
 curl -fsS --max-time 5 "${base}/v1/install" >/dev/null
+curl -fsS --max-time 5 "${base}/v1/mode" >/dev/null
 echo "PIPELINE OK local-api-smoke ${base}"

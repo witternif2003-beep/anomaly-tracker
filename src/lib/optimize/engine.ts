@@ -8,6 +8,7 @@ import type {
   Platform,
   RequestType,
 } from "./types";
+import { buildGhostHandReport, HAND_LAYERS } from "./ghost-hand";
 
 const VAGUE = [
   "thing",
@@ -338,8 +339,11 @@ function diagnose(text: string, d: DeconstructResult): DiagnoseResult {
   };
 }
 
-function techniquesFor(type: RequestType, complexity: DiagnoseResult["complexity"]): string[] {
+function techniquesFor(type: RequestType, complexity: DiagnoseResult["complexity"], mode: Mode): string[] {
   const shared = ["Role assignment", "Context layering", "Explicit output contract"];
+  if (mode === "detail") {
+    shared.push("GHOST-HAND detailed protocol");
+  }
   if (type === "creative") {
     return [...shared, "Multi-perspective generation", "Tone and voice lock", "Anti-cliché constraints"];
   }
@@ -487,6 +491,7 @@ function buildPrompt(
   platform: Platform,
   d: DeconstructResult,
   answers: Record<string, string>,
+  mode: Mode,
 ): { prompt: string; inferred: string[] } {
   const inferred: string[] = [];
   const audience = answers.audience?.trim() || defaultAudience(type, d);
@@ -544,6 +549,15 @@ function buildPrompt(
       "Ban: 'revolutionize', 'game-changer', 'in today's fast-paced world', 'unlock', 'elevate', 'leverage', 'delve'. If a sentence could appear in any brand's ad, rewrite it.";
   }
 
+  if (mode === "detail") {
+    sections["GHOST-HAND / Hypotheses"] = HAND_LAYERS[0].rule;
+    sections["GHOST-HAND / Anchors"] = HAND_LAYERS[1].rule;
+    sections["GHOST-HAND / Negatives"] = HAND_LAYERS[2].rule;
+    sections["GHOST-HAND / Done-when"] = success
+      ? `${HAND_LAYERS[3].rule} Explicit bar: ${success}`
+      : HAND_LAYERS[3].rule;
+  }
+
   return { prompt: wrapForPlatform(platform, sections), inferred };
 }
 
@@ -569,7 +583,7 @@ function implementation(platform: Platform, mode: Mode, type: RequestType): stri
   ];
   if (mode === "detail") {
     steps.push(
-      "Answers you gave in Detail mode are already baked in. If you learn more later, add a short 'Update' section rather than rewriting.",
+      "GHOST-HAND is active. Answers from the GHOST intake are baked in. HAND rules (Hypotheses, Anchors, Negatives, Done-when) are already in the prompt — do not strip them.",
     );
   }
   if (type === "technical") {
@@ -606,8 +620,8 @@ function whatChanged(
   if (!d.outputRequirements.length) {
     items.push("Specified a deliverable shape so the model cannot wander into the wrong artifact.");
   }
-  if (wordCount(input) < 20) {
-    items.push("Expanded a short brief into an executable spec without changing the user's actual goal.");
+  if (techniques.includes("GHOST-HAND detailed protocol")) {
+    items.push("Activated GHOST-HAND detailed mode: GHOST intake plus HAND anti-hallucination rules.");
   }
   return items;
 }
@@ -618,8 +632,9 @@ function buildQuestions(d: DeconstructResult, type: RequestType): ClarifyingQues
   if (d.missing.includes("audience")) {
     pool.push({
       id: "audience",
-      question: "Who is this for?",
-      rationale: "Audience sets vocabulary, depth, and what 'good' looks like.",
+      ghostLetter: "H",
+      question: "Handoffs — who is this for?",
+      rationale: "GHOST Handoffs: audience sets vocabulary, depth, and what 'good' looks like.",
       placeholder:
         type === "educational"
           ? "e.g. backend engineers who have never trained a model"
@@ -629,37 +644,41 @@ function buildQuestions(d: DeconstructResult, type: RequestType): ClarifyingQues
   if (d.missing.includes("output format")) {
     pool.push({
       id: "format",
-      question: "What should the finished artifact look like?",
-      rationale: "A model will invent a format if you do not name one.",
+      ghostLetter: "O",
+      question: "Output — what should the finished artifact look like?",
+      rationale: "GHOST Output: a model will invent a format if you do not name one.",
       placeholder: "e.g. 600-word email, PR comment, 1-page brief, JSON schema",
     });
   }
   if (d.missing.includes("constraints / non-goals") || type === "technical") {
     pool.push({
       id: "context",
-      question: "Any hard constraints or facts I must not guess?",
-      rationale: "Missing constraints are the main source of confident wrong answers.",
+      ghostLetter: "T",
+      question: "Taboos — any hard constraints or facts I must not guess?",
+      rationale: "GHOST Taboos: missing constraints are the main source of confident wrong answers.",
       placeholder: "e.g. must work offline, no new vendors, Python 3.11 only, cannot name competitors",
     });
   }
   if (type === "creative" && !d.tone) {
     pool.push({
       id: "tone",
-      question: "What voice should this have?",
+      ghostLetter: "G",
+      question: "Goal/voice — what voice should this have?",
       rationale: "Creative work collapses without a voice lock.",
       placeholder: "e.g. dry and British, like a careful friend, premium but not luxury-cosplay",
     });
   }
-  if (d.missing.includes("success criteria") && pool.length < 3) {
+  if (d.missing.includes("success criteria") && pool.length < 5) {
     pool.push({
       id: "success",
-      question: "How will you know the answer is good enough?",
-      rationale: "A definition of done stops fluent filler.",
+      ghostLetter: "S",
+      question: "Stakes — how will you know the answer is good enough?",
+      rationale: "GHOST Stakes: a definition of done stops fluent filler.",
       placeholder: "e.g. I can paste it into the weekly update without editing the structure",
     });
   }
 
-  return pool.slice(0, 3);
+  return pool.slice(0, 5);
 }
 
 function escapeRe(s: string): string {
@@ -678,7 +697,7 @@ export function optimize(request: OptimizeRequest): OptimizeResult {
   const type = classify(input, request.requestType);
   const d = deconstruct(input, type);
   const diag = diagnose(input, d);
-  const techniques = techniquesFor(type, diag.complexity);
+  const techniques = techniquesFor(type, diag.complexity, request.mode);
   const answers = request.answers ?? {};
   const hasAnswers = Object.values(answers).some((v) => v.trim().length > 0);
   const questions = buildQuestions(d, type);
@@ -704,10 +723,11 @@ export function optimize(request: OptimizeRequest): OptimizeResult {
       implementation: [],
       platformNotes: platformNotes(request.platform, type),
       inferredDefaults: [],
+      ghostHand: buildGhostHandReport({ mode: request.mode, deconstruct: d, answers, inferred: [] }),
     };
   }
 
-  const built = buildPrompt(input, type, request.platform, d, answers);
+  const built = buildPrompt(input, type, request.platform, d, answers, request.mode);
 
   return {
     status: "complete",
@@ -724,5 +744,11 @@ export function optimize(request: OptimizeRequest): OptimizeResult {
     implementation: implementation(request.platform, request.mode, type),
     platformNotes: platformNotes(request.platform, type),
     inferredDefaults: built.inferred,
+    ghostHand: buildGhostHandReport({
+      mode: request.mode,
+      deconstruct: d,
+      answers,
+      inferred: built.inferred,
+    }),
   };
 }

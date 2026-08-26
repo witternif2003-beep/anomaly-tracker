@@ -15,6 +15,7 @@ import {
 import { inventoryStatus } from "./inventory";
 import { oneShotStatus } from "./install-status";
 import { listP1Slots } from "./p1-catalog";
+import { ghostHandStatus } from "../src/lib/optimize/ghost-hand";
 
 loadEnvFiles();
 
@@ -68,6 +69,10 @@ app.get("/v1/inventory", (_req, res) => {
 
 app.get("/v1/install", (_req, res) => {
   res.json(oneShotStatus());
+});
+
+app.get("/v1/mode", (_req, res) => {
+  res.json({ object: "lyra.mode", defaultMode: "detail", ...ghostHandStatus() });
 });
 
 app.post("/v1/legal/search", async (req, res) => {

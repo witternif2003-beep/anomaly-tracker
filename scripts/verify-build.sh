@@ -167,7 +167,10 @@ base="${VERIFY_BASE_URL:-http://127.0.0.1:43127}"
 if curl -fsS -o /dev/null --max-time 3 "${base}/"; then
   payload='{"input":"write a launch email for our headphones","mode":"basic","requestType":"auto","platform":"chatgpt"}'
   body="$(curl -fsS --max-time 10 -H "Content-Type: application/json" -d "${payload}" "${base}/api/optimize")"
-  echo "${body}" | python3 -c "import json,sys; d=json.load(sys.stdin); assert d.get('status')=='complete' and d.get('optimizedPrompt'); print('VERIFY OK: optimize API', d['status'], len(d['optimizedPrompt']), 'chars')"
+  echo "${body}" | python3 -c "import json,sys; d=json.load(sys.stdin); assert d.get('status')=='complete' and d.get('optimizedPrompt'); assert d.get('ghostHand',{}).get('active') is False; print('VERIFY OK: optimize API', d['status'], len(d['optimizedPrompt']), 'chars')"
+  detail='{"input":"write a launch email for our headphones. Make it good.","mode":"detail","skipQuestions":true,"requestType":"auto","platform":"chatgpt"}'
+  dbody="$(curl -fsS --max-time 10 -H "Content-Type: application/json" -d "${detail}" "${base}/api/optimize")"
+  echo "${dbody}" | python3 -c "import json,sys; d=json.load(sys.stdin); assert d.get('status')=='complete'; assert d.get('ghostHand',{}).get('active') is True; assert d.get('ghostHand',{}).get('protocol')=='GHOST-HAND'; assert 'GHOST-HAND / Anchors' in d.get('optimizedPrompt',''); print('VERIFY OK: GHOST-HAND detailed', d['ghostHand']['mode'], len(d['optimizedPrompt']), 'chars')"
 else
   echo "VERIFY WARN: ${base} is not up; skipped live API check"
 fi
