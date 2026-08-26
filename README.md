@@ -125,7 +125,7 @@ npm install -g wrangler@4
 
 ## MCP servers (configured, not authenticated)
 
-`.cursor/mcp.json` lists stdio/OAuth MCP servers. Remote ones need OAuth or API keys injected as environment secrets — nothing is stored in git. Reinstall with `bash scripts/install-mcp.sh`.
+`.cursor/mcp.json` lists stdio/OAuth MCP servers. Remote ones need OAuth or API keys injected as environment secrets — nothing is stored in git. Reinstall with `bash scripts/install-mcp.sh`. Audit the research-note wishlist with `npm run mcp:audit` (closest public packages only; Westlaw/Lexis stay wont-do).
 
 | Server | Purpose | Requested package | Installed | Credentials |
 | --- | --- | --- | --- | --- |

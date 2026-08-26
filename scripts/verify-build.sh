@@ -137,6 +137,9 @@ assert not banned, banned
 print("VERIFY OK: mcp.json servers", len(servers), "including", ", ".join(sorted(required)))
 PY
 
+bash scripts/audit-mcp.sh
+ok "mcp audit (research-note §4 closest map)"
+
 bash scripts/check-env-placeholders.sh
 ok "env placeholders empty in git and wired"
 
@@ -236,6 +239,9 @@ assert any(w["id"] == "sar-cisa-autofile" for w in anom["wontDo"])
 assert anom.get("dependencyStrategy", {}).get("productName") == "lyra"
 assert anom["dependencyStrategy"].get("rejectedLockfileName") == "business-anomaly-tracker"
 assert len(anom["dependencyStrategy"].get("unpublishedScopes", [])) >= 6
+assert anom.get("mcp", {}).get("wiredCount", 0) >= 16
+assert "folio" in anom["mcp"]["servers"]
+assert "westlaw-mcp" in anom["mcp"]["audit"]["wontAddToMcpJson"]
 imps = json.load(urllib.request.urlopen(base + "/v1/anomaly/improvements?limit=3&categoryId=financial-records", timeout=12))
 assert imps["generated"] >= 10000 and len(imps["data"]) >= 1
 assert nb["summary"]["cuckooLiveSandbox"] is False

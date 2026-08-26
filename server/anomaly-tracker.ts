@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import fixtures from "../data/anomaly/fixtures.json";
 import inventoryLedger from "../data/anomaly/inventory-ledger.json";
 import dependencyStrategyDoc from "../data/anomaly/dependency-strategy.json";
+import mcpAuditDoc from "../data/anomaly/mcp-audit.json";
 import taxonomy from "../data/legal/corporate-taxonomy.json";
 import { listP1Slots } from "./p1-catalog";
 import { inventoryStatus } from "./inventory";
@@ -402,8 +403,26 @@ export function compileAnomalyTracker(opts?: {
     },
     mcp: {
       config: ".cursor/mcp.json",
-      note: "Law-enforcement and forensic sources are stubs or company-store MCPs only.",
+      note: mcpAuditDoc.note,
+      installCommand: mcpAuditDoc.installCommand,
+      npmScript: mcpAuditDoc.npmScript,
       servers: mcpServers,
+      wiredCount: mcpServers.length,
+      audit: {
+        title: mcpAuditDoc.title,
+        rows: mcpAuditDoc.rows,
+        wontAddToMcpJson: mcpAuditDoc.wontAddToMcpJson,
+        commands: mcpAuditDoc.commands,
+      },
+      auditStatus: (() => {
+        const statusPath = path.join(root, "data/anomaly/mcp-audit-status.json");
+        if (!existsSync(statusPath)) return null;
+        try {
+          return JSON.parse(readFileSync(statusPath, "utf8")) as Record<string, unknown>;
+        } catch {
+          return null;
+        }
+      })(),
     },
     automation: {
       commands: [

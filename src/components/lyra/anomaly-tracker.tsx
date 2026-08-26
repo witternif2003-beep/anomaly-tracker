@@ -127,6 +127,25 @@ interface TrackerBook {
     commands?: string[];
     verifyStatus?: Record<string, { ok: boolean; detail?: string }> | null;
   };
+  mcp?: {
+    config: string;
+    note: string;
+    installCommand?: string;
+    npmScript?: string;
+    servers: string[];
+    wiredCount?: number;
+    audit?: {
+      title: string;
+      rows: Array<{
+        requested: string;
+        wiredId: string | null;
+        closestPackage: string;
+        status: string;
+      }>;
+      wontAddToMcpJson: string[];
+      commands: string[];
+    };
+  };
 }
 
 function priorityTone(priority: string) {
@@ -584,6 +603,56 @@ export function AnomalyTracker() {
                 </CardContent>
               </Card>
             </div>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">4. MCP configuration audit</CardTitle>
+                <CardDescription>
+                  {book.mcp
+                    ? `${book.mcp.wiredCount ?? book.mcp.servers.length} wired · ${book.mcp.config} · ${book.mcp.npmScript ?? "mcp:install"}`
+                    : ".cursor/mcp.json"}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {book.mcp ? (
+                  <>
+                    <p className="text-sm text-muted-foreground">{book.mcp.note}</p>
+                    <div className="flex flex-wrap gap-2">
+                      {book.mcp.servers.map((name) => (
+                        <Badge key={name} variant="outline">
+                          {name}
+                        </Badge>
+                      ))}
+                    </div>
+                    {book.mcp.audit ? (
+                      <ul className="max-h-64 space-y-1 overflow-y-auto text-xs text-muted-foreground">
+                        {book.mcp.audit.rows.map((row) => (
+                          <li key={row.requested}>
+                            <span className="text-foreground">{row.requested}</span>
+                            {" → "}
+                            {row.wiredId ?? row.closestPackage}
+                            {" · "}
+                            {row.status}
+                          </li>
+                        ))}
+                      </ul>
+                    ) : null}
+                    <p className="text-xs text-muted-foreground">
+                      Wont add: {(book.mcp.audit?.wontAddToMcpJson ?? []).join(", ")}
+                    </p>
+                    <ul className="space-y-1 font-mono text-[11px] text-muted-foreground">
+                      {(book.mcp.audit?.commands ?? [book.mcp.installCommand ?? "npm run mcp:install"]).map(
+                        (cmd) => (
+                          <li key={cmd}>{cmd}</li>
+                        ),
+                      )}
+                    </ul>
+                  </>
+                ) : (
+                  <p className="text-sm text-muted-foreground">MCP audit unavailable.</p>
+                )}
+              </CardContent>
+            </Card>
 
             <Card>
               <CardHeader>
