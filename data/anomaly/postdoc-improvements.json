@@ -2,9 +2,9 @@
   "title": "Post-doctoral forensic query catalog (tracker §8.1)",
   "classified": false,
   "governmentProgram": false,
-  "total": 365500,
+  "total": 455500,
   "top500": 500,
-  "note": "365,500 unclassified post-doctoral forensic queries for /tracker (+90,000). TRACKER-TAB · Live P1 telemetry · Error scout bot self-healing. TOP 500 are SOTA DFIR / SOC-telemetry / scout self-heal improvements (Magnet DFIR 2026, cloud forensics, AI+OSINT, AML/XAI, WeirdFlows, FIU graphs, ranked-signal UX, AI SOC P1 triage, SRE self-healing detect→decide→act→verify). Virtual expand on /tracker — bake ships TOP 500 + seed. Additive only. No live intercepts, CJIS, or SIGINT.",
+  "note": "455,500 unclassified post-doctoral forensic queries for /tracker (+90,000). TRACKER-TAB · Live P1 telemetry · Black-owned business scan bot auto-queue discovery. TOP 500 are SOTA DFIR / SOC-telemetry / supplier-diversity discovery improvements (Magnet DFIR 2026, cloud forensics, AI+OSINT, AML/XAI, WeirdFlows, FIU graphs, ranked-signal UX, AI SOC P1 triage, AI supplier diversity discovery, certification attestation queues). Virtual expand on /tracker — bake ships TOP 500 + seed. Additive only. No live CERT/SBA queries, intercepts, CJIS, or SIGINT.",
   "sotaSources": [
     {
       "id": "magnet-dfir-2026",
@@ -71,6 +71,24 @@
       "title": "Autonomous remediation / self-healing infrastructure 2026",
       "url": "https://novaaiops.com/self-healing-infrastructure",
       "themes": ["repair→rescan", "blast-radius limits", "verify after heal", "scout bot"]
+    },
+    {
+      "id": "bo-ai-supplier-diversity-2026",
+      "title": "How AI is transforming supplier diversity programs (2026)",
+      "url": "https://starssmp.com/insights/how-ai-is-transforming-supplier-diversity-programs-in-2026/",
+      "themes": ["AI supplier discovery", "certification tracking", "auto-queue pipelines", "Black-owned scan"]
+    },
+    {
+      "id": "bo-supplier-diversity-tech-trends-2026",
+      "title": "Supplier diversity technology trends 2026 — discovery & matching",
+      "url": "https://starssmp.com/insights/supplier-diversity-technology-trends-2026-innovations-reshaping-inclusive-procurement/",
+      "themes": ["AI matching", "discovery pool", "onboarding queue", "fixture attestation vs live CERT"]
+    },
+    {
+      "id": "bo-diversity-cert-continuous",
+      "title": "Continuous diversity certification & minority-status verification",
+      "url": "https://www.onecredential.io/products/diversity-certification-minority-status",
+      "themes": ["ownership attestation", "re-verify without live scrape", "queue hygiene", "audit trail"]
     }
   ],
   "axes": [
@@ -396,6 +414,41 @@
       "prompt": "How should Error scout and Live P1 telemetry share fixture-clock epistemology so heals never imply live mass surveillance?",
       "sota": true,
       "sourceId": "scout-self-healing-sre"
+    },
+    {
+      "id": "sota-bo-auto-queue-discovery",
+      "label": "SOTA Black-owned auto-queue on discover",
+      "prompt": "How should the Black-owned scan bot on /tracker admit discovery-pool candidates into the live queue on discover without duplicate fingerprints or feature deletion?",
+      "sota": true,
+      "sourceId": "bo-ai-supplier-diversity-2026"
+    },
+    {
+      "id": "sota-bo-discovery-pool",
+      "label": "SOTA Black-owned discovery-pool staging",
+      "prompt": "What discovery-pool size, priority, and channel mix keep auto-queue rehearsal realistic while remaining fixture-attested (never live CERT.gov / SBA)?",
+      "sota": true,
+      "sourceId": "bo-supplier-diversity-tech-trends-2026"
+    },
+    {
+      "id": "sota-bo-hardening-gates",
+      "label": "SOTA Black-owned hardening gate score",
+      "prompt": "Which 50+ hardening gates must pass before auto-queue-admit so discovery→fingerprint→gate→queue→crime-scan stays additive-only?",
+      "sota": true,
+      "sourceId": "bo-ai-supplier-diversity-2026"
+    },
+    {
+      "id": "sota-bo-attestation-epistemology",
+      "label": "SOTA Black-owned fixture attestation epistemology",
+      "prompt": "What HUD copy keeps Black-owned flags labeled as hard-coded fixture attestations for supplier-verify rehearsal, never live minority-status scrapes?",
+      "sota": true,
+      "sourceId": "bo-diversity-cert-continuous"
+    },
+    {
+      "id": "sota-bo-live-p1-coupling",
+      "label": "SOTA BO scan × Live P1 coupling",
+      "prompt": "How should Black-owned auto-queue admissions and Live P1 telemetry share fixture-clock epistemology so P1 queue ticks never imply live SBA/CERT surveillance?",
+      "sota": true,
+      "sourceId": "bo-supplier-diversity-tech-trends-2026"
     }
   ],
   "methods": [
@@ -428,7 +481,11 @@
     "SOTA XAI scorecard for FRE 702 review",
     "SOTA IdP/SaaS audit-log export schema trial",
     "SOTA dynamic risk decay + null-result publish",
-    "SOTA mobile consent/MDM packet completeness lab"
+    "SOTA mobile consent/MDM packet completeness lab",
+    "SOTA Black-owned discovery→auto-queue admit rehearsal",
+    "SOTA fixture-attestation vs live CERT/SBA boundary drill",
+    "SOTA BO hardening-gate scorecard (50+)",
+    "SOTA Live P1 × BO queue coupling epistemology check"
   ],
   "falsifiers": [
     "Score presented as courtroom opinion",

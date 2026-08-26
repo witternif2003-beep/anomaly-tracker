@@ -371,7 +371,9 @@ export function BlackOwnedScanBot({ bot }: { bot: BlackOwnedScanBotPayload }) {
           </div>
           <div className="flex flex-wrap gap-2">
             <Badge className="bg-emerald-500/20 text-emerald-200">ACTIVE 24/7</Badge>
+            <Badge className="bg-amber-500/20 text-amber-100">SOTA · BO SCAN</Badge>
             <Badge className="bg-sky-500/20 text-sky-100">AUTO-QUEUE ON DISCOVER</Badge>
+            <Badge className="bg-violet-500/20 text-violet-100">DISCOVERY→QUEUE</Badge>
             <Badge variant="outline">schema v{bot.schemaVersion ?? 3}</Badge>
             <Badge variant="outline">{bot.crimeCategoryCount ?? 52} crime cats</Badge>
             <Badge variant="outline">{bot.crimeCaseCount ?? 60} cases</Badge>
