@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -127,21 +127,22 @@ export function LiveTelemetryFeed({
   const [cursor, setCursor] = useState(0);
   const [clock, setClock] = useState("");
   const [feed, setFeed] = useState<TelemetryTick[]>([]);
+  const cursorRef = useRef(0);
 
   useEffect(() => {
     if (!stream.length) return;
     const tickMs = Math.max(400, telemetry.tickMs || 1200);
+    cursorRef.current = 0;
     setFeed([stream[0]]);
     setCursor(0);
     setClock(new Date().toISOString());
     const id = window.setInterval(() => {
-      setCursor((c) => {
-        const next = (c + 1) % stream.length;
-        const row = stream[next];
-        setFeed((prev) => [row, ...prev].slice(0, 18));
-        setClock(new Date().toISOString());
-        return next;
-      });
+      const next = (cursorRef.current + 1) % stream.length;
+      cursorRef.current = next;
+      const row = stream[next];
+      setCursor(next);
+      setFeed((prev) => [row, ...prev].slice(0, 18));
+      setClock(new Date().toISOString());
     }, tickMs);
     return () => window.clearInterval(id);
   }, [stream, telemetry.tickMs]);
