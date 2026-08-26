@@ -6,7 +6,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { compileAnomalyTracker } from "../server/anomaly-tracker";
 import { compileCorporateTaxonomy } from "../server/corporate-taxonomy";
-import { compileNotebook } from "../server/notebook";
+import { installNotebook } from "../server/notebook";
 
 const outDir = path.join(process.cwd(), "public/static");
 mkdirSync(outDir, { recursive: true });
@@ -25,6 +25,6 @@ write(
   }),
 );
 write("corporate.json", compileCorporateTaxonomy());
-write("notebook.json", compileNotebook());
+write("notebook.json", installNotebook());
 
 console.log("STATIC DATA OK", outDir);

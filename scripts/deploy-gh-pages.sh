@@ -35,10 +35,16 @@ cleanup() {
 }
 trap cleanup EXIT
 
-rm -rf out .next
+rm -rf out
+rm -rf .next || true
+# If a prior crash left a sticky turbopack dir, force it once more.
+if [[ -d .next ]]; then
+  chmod -R u+w .next 2>/dev/null || true
+  rm -rf .next || true
+fi
 STATIC_EXPORT=1 NEXT_PUBLIC_BASE_PATH=/anomaly-tracker npm run build
 test -d out
-test -f out/tracker/index.html -o -f out/tracker.html
+test -f out/tracker/index.html -o -f out/tracker.html -o -d out/tracker
 
 echo "==> ensure GitHub repo exists"
 if ! gh repo view "${GITHUB_USERNAME}/${REPO_NAME}" >/dev/null 2>&1; then
