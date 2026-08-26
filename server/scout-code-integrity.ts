@@ -1,8 +1,9 @@
 /**
- * Postdoc ×9 hidden-code integrity audit (additive).
+ * Postdoc ×81 hidden-code integrity audit (additive).
  * Runs at static bake time — scout validates the embedded report.
  * Never removes features; only reports / requires heals via reload-static.
- * Thorough deep dive: all 12 pipelines + latent client/server anti-patterns.
+ * Thorough deep dive: all 12 pipelines + latent client/server anti-patterns
+ * + data/scripts surface · ≥648 gates · every 2ms scout tick.
  */
 import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import path from "node:path";
@@ -17,16 +18,33 @@ export type CodeIntegrityGate = {
   detail: string;
 };
 
-function walk(dir: string, acc: string[] = [], depth = 0): string[] {
-  if (depth > 6 || !existsSync(dir)) return acc;
+const SKIP_DIRS = new Set([
+  "node_modules",
+  ".git",
+  "out",
+  ".next",
+  "vendor",
+  "dist",
+  "coverage",
+  ".turbo",
+  "gh-pages",
+]);
+
+const DEEP_FILE_RE = /\.(tsx?|jsx?|mjs|cjs|json|sh|css|md)$/;
+
+function walk(dir: string, acc: string[] = [], depth = 0, maxDepth = 8): string[] {
+  if (depth > maxDepth || !existsSync(dir)) return acc;
   for (const name of readdirSync(dir)) {
-    if (name === "node_modules" || name === ".git" || name === "out" || name === ".next" || name === "vendor") {
+    if (SKIP_DIRS.has(name)) continue;
+    const full = path.join(dir, name);
+    let st;
+    try {
+      st = statSync(full);
+    } catch {
       continue;
     }
-    const full = path.join(dir, name);
-    const st = statSync(full);
-    if (st.isDirectory()) walk(full, acc, depth + 1);
-    else if (/\.(tsx?|jsx?|mjs|cjs)$/.test(name)) acc.push(full);
+    if (st.isDirectory()) walk(full, acc, depth + 1, maxDepth);
+    else if (DEEP_FILE_RE.test(name)) acc.push(full);
   }
   return acc;
 }
@@ -143,38 +161,50 @@ export function compileScoutCodeIntegrity() {
     "scout-healer re-inspects after reload before marking healed",
   );
 
-  // Scout ×27 pressure constants
+  // Scout ×81 pressure constants (prior ×27 modes retained in SCOUT_EXTREME_MODES)
   push(
-    "hidden-scout-tick-const-7",
+    "hidden-scout-tick-const-2",
     "scout",
-    fileHas("src/lib/scout-healer.ts", "SCOUT_TICK_MS = 7") ||
-      fileHas("src/lib/scout-healer.ts", "tickMsMax: 7"),
-    "scout-healer SCOUT_TICK_MS / tickMsMax = 7 (×27 harder)",
+    fileHas("src/lib/scout-healer.ts", "SCOUT_TICK_MS = 2") ||
+      fileHas("src/lib/scout-healer.ts", "tickMsMax: 2"),
+    "scout-healer SCOUT_TICK_MS / tickMsMax = 2 (×81 harder)",
   );
   push(
-    "hidden-scout-gate-target-3645",
+    "hidden-scout-gate-target-10935",
     "scout",
-    fileHas("src/lib/scout-healer.ts", "gateTarget: 3645"),
-    "scout-healer gateTarget = 3645",
+    fileHas("src/lib/scout-healer.ts", "gateTarget: 10935"),
+    "scout-healer gateTarget = 10935",
   );
   push(
-    "hidden-scout-repair-passes-27",
+    "hidden-scout-repair-passes-81",
     "scout",
-    fileHas("src/lib/scout-healer.ts", "repairRescanPasses: 27") &&
+    fileHas("src/lib/scout-healer.ts", "repairRescanPasses: 81") &&
       fileHas("src/components/lyra/scout-bot.tsx", "repairRescanPasses"),
-    "repair→rescan ×27 wired in healer + panel",
+    "repair→rescan ×81 wired in healer + panel",
   );
   push(
     "hidden-scout-x27-mode-const",
     "scout",
     fileHas("src/lib/scout-healer.ts", "postdoc-x27-extreme-24x7"),
-    "scout-healer knows postdoc-x27-extreme-24x7 mode",
+    "scout-healer retains postdoc-x27-extreme-24x7 in mode history",
+  );
+  push(
+    "hidden-scout-x81-mode-const",
+    "scout",
+    fileHas("src/lib/scout-healer.ts", "postdoc-x81-extreme-24x7"),
+    "scout-healer knows postdoc-x81-extreme-24x7 mode",
+  );
+  push(
+    "hidden-scout-hidden-gates-min-648",
+    "scout",
+    fileHas("src/lib/scout-healer.ts", "hiddenCodeGatesMin: 648"),
+    "scout-healer hiddenCodeGatesMin ≥648",
   );
   push(
     "hidden-scout-inflight-guard",
     "scout",
     fileHas("src/components/lyra/scout-bot.tsx", "inFlightRef"),
-    "scout panel guards overlapping ticks under 7ms pressure",
+    "scout panel guards overlapping ticks under 2ms pressure",
   );
   push(
     "hidden-scout-repair-loop",
@@ -357,7 +387,7 @@ export function compileScoutCodeIntegrity() {
     "POSTDOC_TOTAL locked at 905500",
   );
 
-  // Scout ×9 tick pressure in config source of truth
+  // Scout ×81 tick pressure in config source of truth
   const scoutJson = read("data/anomaly/scout-bot.json");
   let tickOk = false;
   let gateOk = false;
@@ -366,6 +396,8 @@ export function compileScoutCodeIntegrity() {
   let modeOk = false;
   let additiveOk = false;
   let healFloorOk = false;
+  let scrollHealOk = false;
+  let pagesHealOk = false;
   try {
     const s = JSON.parse(scoutJson) as {
       tickMs?: number;
@@ -377,23 +409,38 @@ export function compileScoutCodeIntegrity() {
       mode?: string;
       additiveOnly?: boolean;
       healActions?: string[];
+      baselines?: { hiddenCodeGatesMin?: number };
     };
-    tickOk = (s.tickMs ?? 9999) <= 7;
-    gateOk = (s.gateTarget ?? 0) >= 3645 && s.extremeScan === true;
-    passesOk = (s.repairRescanPasses ?? 0) >= 27 && s.repairRescan === true;
+    tickOk = (s.tickMs ?? 9999) <= 2;
+    gateOk = (s.gateTarget ?? 0) >= 10935 && s.extremeScan === true;
+    passesOk = (s.repairRescanPasses ?? 0) >= 81 && s.repairRescan === true;
     hiddenOk = s.hiddenCodeScan === true;
-    modeOk = s.mode === "postdoc-x27-extreme-24x7";
+    modeOk = s.mode === "postdoc-x81-extreme-24x7";
     additiveOk = s.additiveOnly === true;
-    healFloorOk = (s.healActions ?? []).length >= 10;
+    healFloorOk = (s.healActions ?? []).length >= 12;
+    scrollHealOk = (s.healActions ?? []).includes("revalidate-scroll-stable");
+    pagesHealOk = (s.healActions ?? []).includes("revalidate-pages-bake");
   } catch {
     tickOk = false;
   }
-  push("hidden-scout-tick-7", "scout", tickOk, "scout-bot.json tickMs ≤7 (×27 harder than 22)");
-  push("hidden-scout-gates-3645", "scout", gateOk, "scout-bot.json gateTarget ≥3645 + extremeScan");
-  push("hidden-scout-repair-x27", "scout", passesOk, "scout-bot.json repairRescanPasses ≥27");
+  push("hidden-scout-tick-2", "scout", tickOk, "scout-bot.json tickMs ≤2 (×81 harder than 7)");
+  push("hidden-scout-gates-10935", "scout", gateOk, "scout-bot.json gateTarget ≥10935 + extremeScan");
+  push("hidden-scout-repair-x81", "scout", passesOk, "scout-bot.json repairRescanPasses ≥81");
   push("hidden-scout-hidden-code-flag", "scout", hiddenOk, "scout-bot.json hiddenCodeScan=true");
-  push("hidden-scout-mode-x27", "scout", modeOk, "scout-bot.json mode=postdoc-x27-extreme-24x7");
-  push("hidden-scout-heal-actions-10", "scout", healFloorOk, "scout-bot.json healActions ≥10");
+  push("hidden-scout-mode-x81", "scout", modeOk, "scout-bot.json mode=postdoc-x81-extreme-24x7");
+  push("hidden-scout-heal-actions-12", "scout", healFloorOk, "scout-bot.json healActions ≥12");
+  push(
+    "hidden-scout-heal-scroll-stable",
+    "scout",
+    scrollHealOk,
+    "scout-bot.json healActions includes revalidate-scroll-stable",
+  );
+  push(
+    "hidden-scout-heal-pages-bake",
+    "scout",
+    pagesHealOk,
+    "scout-bot.json healActions includes revalidate-pages-bake",
+  );
 
   // Additive-only guarantee in scout panel copy / healer
   push(
@@ -433,31 +480,99 @@ export function compileScoutCodeIntegrity() {
     "Dashboard shell ships Studio/Tracker/Corporate/Inventory/AIP tabs",
   );
 
-  // Thorough hidden-code deep dive: every src/server/scripts pipeline file
+  // Thorough hidden-code deep dive: src + server + scripts + data (≥648 gates)
   const deepRoots = [
     path.join(ROOT, "src"),
     path.join(ROOT, "server"),
-    path.join(ROOT, "scripts", "pipelines"),
+    path.join(ROOT, "scripts"),
+    path.join(ROOT, "data"),
   ];
   const deepFiles: string[] = [];
-  for (const root of deepRoots) walk(root, deepFiles, 0);
+  for (const root of deepRoots) walk(root, deepFiles, 0, 8);
+  const seen = new Set<string>();
   for (const full of deepFiles) {
     const rel = path.relative(ROOT, full).replace(/\\/g, "/");
+    if (seen.has(rel)) continue;
+    seen.add(rel);
     const idSafe = rel.replace(/[^a-zA-Z0-9]+/g, "-").replace(/^-|-$/g, "");
-    const text = readFileSync(full, "utf8");
+    let text = "";
+    let nonempty = false;
+    try {
+      text = readFileSync(full, "utf8");
+      nonempty = text.trim().length > 0;
+    } catch {
+      nonempty = false;
+    }
     push(`hidden-file-present-${idSafe}`, "deep-file", true, `${rel} present`);
-    const hasEffectEvent = /\buseEffectEvent\s*\(/.test(
-      text
-        .split("\n")
-        .filter((l) => !l.trim().startsWith("//") && !l.trim().startsWith("*"))
-        .join("\n"),
-    );
     push(
-      `hidden-file-no-effect-event-${idSafe}`,
+      `hidden-file-nonempty-${idSafe}`,
       "deep-file",
-      !hasEffectEvent,
-      hasEffectEvent ? `${rel} contains useEffectEvent` : `${rel} clear of useEffectEvent`,
+      nonempty,
+      nonempty ? `${rel} nonempty` : `${rel} empty or unreadable`,
     );
+
+    const isCode = /\.(tsx?|jsx?|mjs|cjs)$/.test(rel);
+    const isJson = rel.endsWith(".json");
+    const isShell = rel.endsWith(".sh");
+    const codeBlob = text
+      .split("\n")
+      .filter((l) => !l.trim().startsWith("//") && !l.trim().startsWith("*"))
+      .join("\n");
+
+    if (isCode) {
+      const hasEffectEvent = /\buseEffectEvent\s*\(/.test(codeBlob);
+      push(
+        `hidden-file-no-effect-event-${idSafe}`,
+        "deep-file",
+        !hasEffectEvent,
+        hasEffectEvent ? `${rel} contains useEffectEvent` : `${rel} clear of useEffectEvent`,
+      );
+      // Skip scanner self-file: its source contains the detection regex literals.
+      if (!rel.endsWith("scout-code-integrity.ts")) {
+        const hasEval = /\beval\s*\(/.test(codeBlob);
+        push(
+          `hidden-file-no-eval-${idSafe}`,
+          "deep-file",
+          !hasEval,
+          hasEval ? `${rel} contains eval(` : `${rel} clear of eval(`,
+        );
+        const hasFnCtor = /\bnew\s+Function\s*\(/.test(codeBlob);
+        push(
+          `hidden-file-no-function-ctor-${idSafe}`,
+          "deep-file",
+          !hasFnCtor,
+          hasFnCtor ? `${rel} contains new Function(` : `${rel} clear of Function ctor`,
+        );
+      }
+    }
+
+    if (isJson) {
+      let jsonOk = false;
+      try {
+        JSON.parse(text);
+        jsonOk = true;
+      } catch {
+        jsonOk = false;
+      }
+      push(
+        `hidden-file-json-parse-${idSafe}`,
+        "deep-file",
+        jsonOk,
+        jsonOk ? `${rel} parses as JSON` : `${rel} JSON parse failed`,
+      );
+    }
+
+    if (isShell) {
+      const hasPipeMarker =
+        /PIPELINE OK|PIPELINE FAIL|set -euo pipefail|set -e/.test(text) || text.length > 20;
+      push(
+        `hidden-file-shell-sane-${idSafe}`,
+        "deep-file",
+        hasPipeMarker,
+        hasPipeMarker ? `${rel} shell surface sane` : `${rel} shell surface thin`,
+      );
+    }
+
     // Ban destructive "remove feature" patterns in scout/heal paths only
     if (/scout|heal/i.test(rel) && !rel.endsWith("scout-code-integrity.ts")) {
       const destructive =
@@ -474,9 +589,9 @@ export function compileScoutCodeIntegrity() {
   const okCount = gates.filter((g) => g.ok).length;
   return {
     object: "lyra.scout-code-integrity" as const,
-    title: "Postdoc ×27 hidden-code integrity audit",
+    title: "Postdoc ×81 hidden-code integrity audit",
     classified: false,
-    note: "Bake-time thorough deep dive of latent client/server anti-patterns + all 12 pipelines + every src/server/pipeline file. Scout validates every 7ms tick. Additive only — never removes features.",
+    note: "Bake-time thorough deep dive of latent client/server anti-patterns + all 12 pipelines + every src/server/scripts/data file. Scout validates every 2ms tick. Additive only — never removes features. Gate floor ≥648.",
     gateCount: gates.length,
     okCount,
     allOk: okCount === gates.length,

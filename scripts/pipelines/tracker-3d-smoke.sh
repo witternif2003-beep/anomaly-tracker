@@ -147,23 +147,24 @@ if not scout.get("hiddenCodeScan"):
     errors.append("scoutBot.hiddenCodeScan false")
 if not scout.get("repairRescan"):
     errors.append("scoutBot.repairRescan false")
-if (scout.get("repairRescanPasses") or 0) < 27:
-    errors.append("scoutBot.repairRescanPasses < 27")
+if (scout.get("repairRescanPasses") or 0) < 81:
+    errors.append("scoutBot.repairRescanPasses < 81")
 if scout.get("mode") not in (
     "postdoc-extreme-24x7",
     "postdoc-x3-extreme-24x7",
     "postdoc-x9-extreme-24x7",
     "postdoc-x27-extreme-24x7",
+    "postdoc-x81-extreme-24x7",
 ):
-    errors.append("scoutBot.mode not postdoc-x27-extreme")
-if scout.get("mode") != "postdoc-x27-extreme-24x7":
-    errors.append("scoutBot.mode must be postdoc-x27-extreme-24x7")
-if len(scout.get("healActions") or []) < 10:
-    errors.append("scoutBot.healActions incomplete (<10)")
-if (scout.get("tickMs") or 9999) > 7:
-    errors.append("scoutBot.tickMs not ≤7 (×27 harder)")
-if (scout.get("gateTarget") or 0) < 3645:
-    errors.append("scoutBot.gateTarget < 3645")
+    errors.append("scoutBot.mode not postdoc-x81-extreme")
+if scout.get("mode") != "postdoc-x81-extreme-24x7":
+    errors.append("scoutBot.mode must be postdoc-x81-extreme-24x7")
+if len(scout.get("healActions") or []) < 12:
+    errors.append("scoutBot.healActions incomplete (<12)")
+if (scout.get("tickMs") or 9999) > 2:
+    errors.append("scoutBot.tickMs not ≤2 (×81 harder)")
+if (scout.get("gateTarget") or 0) < 10935:
+    errors.append("scoutBot.gateTarget < 10935")
 if scout.get("liveSurveillance"):
     errors.append("scoutBot must not enable live surveillance")
 if not summary.get("scoutBotActive"):
@@ -173,8 +174,8 @@ if len(checks) < 20:
 code = d.get("scoutCodeIntegrity") or {}
 if not code.get("allOk"):
     errors.append("scoutCodeIntegrity.allOk false")
-if (code.get("gateCount") or 0) < 216:
-    errors.append("scoutCodeIntegrity.gateCount < 216")
+if (code.get("gateCount") or 0) < 648:
+    errors.append("scoutCodeIntegrity.gateCount < 648")
 
 if errors:
     print("PIPELINE FAIL tracker-3d-smoke")
