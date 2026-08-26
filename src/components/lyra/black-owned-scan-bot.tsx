@@ -3,7 +3,6 @@
 import {
   startTransition,
   useEffect,
-  useEffectEvent,
   useMemo,
   useRef,
   useState,
@@ -225,85 +224,17 @@ export function BlackOwnedScanBot({ bot }: { bot: BlackOwnedScanBotPayload }) {
   const [discoverCount, setDiscoverCount] = useState(0);
   const cursorRef = useRef(0);
   const poolCursorRef = useRef(0);
+  const streamRef = useRef(stream);
+  const discoveryPoolRef = useRef(discoveryPool);
+  const channelsRef = useRef(bot.discoveryChannels);
+  streamRef.current = stream;
+  discoveryPoolRef.current = discoveryPool;
+  channelsRef.current = bot.discoveryChannels;
 
   useEffect(() => {
     setLiveQueue(seedQueue);
     setAutoQueuedCount(seedQueue.length);
   }, [seedQueue]);
-
-  const onScanTick = useEffectEvent((row: BlackOwnedScanTick) => {
-    setLog((prev) =>
-      [{ ...row, renderKey: `${row.id}-${row.seq}-${Date.now()}-${prev.length}` }, ...prev].slice(
-        0,
-        36,
-      ),
-    );
-    if (row.status === "logged-new" || row.status === "auto-queued") {
-      setNewCount((n) => n + 1);
-    }
-    if (row.status === "documented") setDocCount((n) => n + 1);
-    if (row.status === "discovered") setDiscoverCount((n) => n + 1);
-    setClock(new Date().toISOString());
-  });
-
-  const onDiscoverAndAutoQueue = useEffectEvent((candidate: BlackOwnedScanTarget) => {
-    const admittedAt = new Date().toISOString();
-    const channel =
-      bot.discoveryChannels?.find((c) => c.id === candidate.channelId)?.label ??
-      candidate.channelId ??
-      "discovery";
-
-    startTransition(() => {
-      setLiveQueue((prev) => {
-        if (prev.some((p) => p.id === candidate.id || p.fingerprint === candidate.fingerprint)) {
-          return prev; // idempotent admit
-        }
-        const next: QueueRow = {
-          ...candidate,
-          kind: "new-to-scan",
-          ownershipVerification: "pending-scan",
-          scanAction: "auto-queue-admit",
-          source: "auto-queue-admitter",
-          queueStatus: "auto-queued",
-          admittedAt,
-          autoQueued: true,
-          discoveryChannel: channel,
-        };
-        return sortByPriority([next, ...prev]);
-      });
-      setAutoQueuedCount((n) => n + 1);
-      setDiscoveryLog((prev) =>
-        [
-          {
-            renderKey: `${candidate.id}-${admittedAt}`,
-            at: admittedAt,
-            business: candidate.name,
-            priority: candidate.priority,
-            channel,
-            action: "AUTO-QUEUED on discover",
-          },
-          ...prev,
-        ].slice(0, 24),
-      );
-      setLog((prev) =>
-        [
-          {
-            id: `live-autoq-${candidate.id}-${Date.now()}`,
-            seq: prev.length + 1,
-            loggedAtOffsetMs: 0,
-            status: "auto-queued" as const,
-            target: { ...candidate, kind: "new-to-scan" as const },
-            message: `AUTO-QUEUED · ${candidate.name} discovered via ${channel} → scan queue`,
-            priority: candidate.priority,
-            stage: "auto-queue",
-            autoQueued: true,
-            renderKey: `live-autoq-${candidate.id}-${Date.now()}`,
-          },
-          ...prev,
-        ].slice(0, 36),
-      );
-    });
-  });
 
   useEffect(() => {
     if (!stream.length) return;
@@ -317,28 +248,95 @@ export function BlackOwnedScanBot({ bot }: { bot: BlackOwnedScanBotPayload }) {
     setDiscoverCount(first?.status === "discovered" ? 1 : 0);
     setClock(new Date().toISOString());
     const id = window.setInterval(() => {
-      // Never call useEffectEvent inside a setState updater — that runs during render (#440).
-      const next = (cursorRef.current + 1) % stream.length;
+      const rows = streamRef.current;
+      if (!rows.length) return;
+      const next = (cursorRef.current + 1) % rows.length;
       cursorRef.current = next;
+      const row = rows[next];
       setCursor(next);
-      onScanTick(stream[next]);
+      setLog((prev) =>
+        [{ ...row, renderKey: `${row.id}-${row.seq}-${Date.now()}-${prev.length}` }, ...prev].slice(0, 36),
+      );
+      if (row.status === "logged-new" || row.status === "auto-queued") {
+        setNewCount((n) => n + 1);
+      }
+      if (row.status === "documented") setDocCount((n) => n + 1);
+      if (row.status === "discovered") setDiscoverCount((n) => n + 1);
+      setClock(new Date().toISOString());
     }, tickMs);
     return () => window.clearInterval(id);
   }, [stream, bot.tickMs]);
 
-  // 24/7 discovery → automatic scan-queue admission
+  // 24/7 discovery → auto-queue. Plain interval + refs only (no useEffectEvent — React #440 under concurrent render).
   useEffect(() => {
     if (!bot.autoQueueOnDiscover || !discoveryPool.length) return;
     const tickMs = Math.max(800, bot.discoveryTickMs || 2200);
     poolCursorRef.current = 0;
     const id = window.setInterval(() => {
-      // Never call useEffectEvent inside a setState updater — that runs during render (#440).
-      const idx = poolCursorRef.current % discoveryPool.length;
-      const candidate = discoveryPool[idx];
-      const next = (idx + 1) % discoveryPool.length;
+      const pool = discoveryPoolRef.current;
+      if (!pool.length) return;
+      const idx = poolCursorRef.current % pool.length;
+      const candidate = pool[idx];
+      const next = (idx + 1) % pool.length;
       poolCursorRef.current = next;
       setPoolCursor(next);
-      onDiscoverAndAutoQueue(candidate);
+
+      const admittedAt = new Date().toISOString();
+      const channel =
+        channelsRef.current?.find((c) => c.id === candidate.channelId)?.label ??
+        candidate.channelId ??
+        "discovery";
+
+      startTransition(() => {
+        setLiveQueue((prev) => {
+          if (prev.some((p) => p.id === candidate.id || p.fingerprint === candidate.fingerprint)) {
+            return prev;
+          }
+          const admitted: QueueRow = {
+            ...candidate,
+            kind: "new-to-scan",
+            ownershipVerification: "pending-scan",
+            scanAction: "auto-queue-admit",
+            source: "auto-queue-admitter",
+            queueStatus: "auto-queued",
+            admittedAt,
+            autoQueued: true,
+            discoveryChannel: channel,
+          };
+          return sortByPriority([admitted, ...prev]);
+        });
+        setAutoQueuedCount((n) => n + 1);
+        setDiscoveryLog((prev) =>
+          [
+            {
+              renderKey: `${candidate.id}-${admittedAt}`,
+              at: admittedAt,
+              business: candidate.name,
+              priority: candidate.priority,
+              channel,
+              action: "AUTO-QUEUED on discover",
+            },
+            ...prev,
+          ].slice(0, 24),
+        );
+        setLog((prev) =>
+          [
+            {
+              id: `live-autoq-${candidate.id}-${Date.now()}`,
+              seq: prev.length + 1,
+              loggedAtOffsetMs: 0,
+              status: "auto-queued" as const,
+              target: { ...candidate, kind: "new-to-scan" as const },
+              message: `AUTO-QUEUED · ${candidate.name} discovered via ${channel} → scan queue`,
+              priority: candidate.priority,
+              stage: "auto-queue",
+              autoQueued: true,
+              renderKey: `live-autoq-${candidate.id}-${Date.now()}`,
+            },
+            ...prev,
+          ].slice(0, 36),
+        );
+      });
     }, tickMs);
     return () => window.clearInterval(id);
   }, [bot.autoQueueOnDiscover, bot.discoveryTickMs, discoveryPool]);

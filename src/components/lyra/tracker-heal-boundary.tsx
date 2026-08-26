@@ -7,8 +7,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 type Props = { children: ReactNode };
 type State = { error: Error | null; retries: number };
 
+function isEffectEventRenderFault(error: Error): boolean {
+  const msg = error.message || "";
+  return msg.includes("#440") || /useEffectEvent.*during rendering/i.test(msg);
+}
+
 /**
  * Additive self-heal shell: catches render crashes and auto-retries without removing features.
+ * Backs off on React #440 so a bad timer does not spin an infinite heal loop.
  */
 export class TrackerHealBoundary extends Component<Props, State> {
   state: State = { error: null, retries: 0 };
@@ -21,9 +27,12 @@ export class TrackerHealBoundary extends Component<Props, State> {
   componentDidCatch(error: Error, info: ErrorInfo) {
     console.warn("[lyra.scout] tracker render fault — scheduling self-heal", error.message, info.componentStack);
     if (this.timer) window.clearTimeout(this.timer);
+    const delay = isEffectEventRenderFault(error)
+      ? Math.min(8000, 2000 + this.state.retries * 1500)
+      : 1600;
     this.timer = window.setTimeout(() => {
       this.setState((s) => ({ error: null, retries: s.retries + 1 }));
-    }, 1600);
+    }, delay);
   }
 
   componentWillUnmount() {
