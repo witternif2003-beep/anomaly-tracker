@@ -3,7 +3,7 @@ import { TrackerClient } from "./tracker-client";
 export const metadata = {
   title: "Anomaly tracker — Lyra",
   description:
-    "Unclassified 3D business anomaly tracker with 24/7 Live P1 fixture telemetry, Black-owned auto-queue discovery, 3D anomaly chamber CRISP labels, and 545,500 post-doctoral forensic queries (TOP 500 SOTA, tracker-tab). Fixture data only — no intercepts or live NCIC.",
+    "Unclassified 3D business anomaly tracker with 24/7 Live P1 fixture telemetry, Black-owned auto-queue discovery, 3D anomaly chamber CRISP labels, and 635,500 post-doctoral forensic queries (TOP 500 SOTA, tracker-tab). Fixture data only — no intercepts or live NCIC.",
 };
 
 /**

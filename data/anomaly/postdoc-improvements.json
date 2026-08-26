@@ -2,9 +2,9 @@
   "title": "Post-doctoral forensic query catalog (tracker §8.1)",
   "classified": false,
   "governmentProgram": false,
-  "total": 545500,
+  "total": 635500,
   "top500": 500,
-  "note": "545,500 unclassified post-doctoral forensic queries for /tracker (+90,000). TRACKER-TAB · Live P1 telemetry · Black-owned scan bot auto-queue · 3D anomaly chamber CRISP labels. TOP 500 are SOTA DFIR / SOC-telemetry / supplier-diversity / decision-focused 3D chamber improvements (Magnet DFIR 2026, AI SOC P1, AI supplier diversity discovery, Vectra decision dashboards, SIMURG realtime 3D threat viz). Virtual expand on /tracker — bake ships TOP 500 + seed. Additive only. No live CERT/SBA queries, intercepts, CJIS, or SIGINT.",
+  "note": "635,500 unclassified post-doctoral forensic queries for /tracker (+90,000). TRACKER-TAB · Live P1 telemetry · Black-owned scan bot auto-queue · 3D anomaly chamber CRISP labels. TOP 500 are SOTA DFIR / SOC-telemetry / supplier-diversity / decision-focused 3D chamber improvements (Magnet DFIR 2026, AI SOC P1, AI supplier diversity discovery, Vectra decision dashboards, SIMURG realtime 3D threat viz). Virtual expand on /tracker — bake ships TOP 500 + seed. Additive only. No live CERT/SBA queries, intercepts, CJIS, or SIGINT.",
   "sotaSources": [
     {
       "id": "magnet-dfir-2026",

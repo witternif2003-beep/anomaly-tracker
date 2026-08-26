@@ -89,7 +89,7 @@ export function ScoutBotPanel({
         crimeCategories: 52,
         crimeCases: 60,
         mayPackets: 15,
-        postdoc: 545500,
+        postdoc: 635500,
       },
     [book?.scoutBot?.baselines],
   );
