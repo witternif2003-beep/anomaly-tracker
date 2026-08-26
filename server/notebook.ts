@@ -9,6 +9,7 @@ import { legalSearchStatus } from "./legal-search";
 import { listP1Slots } from "./p1-catalog";
 import { cjisStatus, policyStatus } from "./policy";
 import { compileCorporateTaxonomy } from "./corporate-taxonomy";
+import { anomalyTrackerStatus, compileAnomalyTracker } from "./anomaly-tracker";
 
 const EXPANSION = [
   {
@@ -89,6 +90,8 @@ export function installNotebook() {
   const policy = policyStatus();
   const cjis = cjisStatus();
   const corporate = compileCorporateTaxonomy();
+  const anomaly = compileAnomalyTracker({ improvementLimit: 8 });
+  const anomalyStatus = anomalyTrackerStatus();
   const aip = aipSigma0Status();
   const mode = ghostHandStatus();
   const postdoc = postdocStatus();
@@ -125,6 +128,9 @@ export function installNotebook() {
       liveSuggestionBot: bot.hardcoded && bot.live,
       corporateTaxonomy: true,
       corporateBindings: `${corporate.summary.bindingsPresent}/${corporate.summary.bindingsTotal}`,
+      anomalyTracker: true,
+      anomalyImprovements: anomaly.summary.improvements,
+      anomalyP1Events: anomaly.summary.p1Events,
     },
     protocols: {
       ghostHand: {
@@ -153,6 +159,19 @@ export function installNotebook() {
         enforcement: corporate.summary.enforcement,
         wontDo: corporate.summary.wontDo,
         intercepts: false,
+        classified: false,
+      },
+      anomalyTracker: {
+        activated: anomalyStatus.activated,
+        hardcoded: anomalyStatus.hardcoded,
+        simulated: anomalyStatus.simulated,
+        improvements: anomalyStatus.improvements,
+        entities: anomaly.summary.entities,
+        anomalies: anomaly.summary.anomalies,
+        p1Events: anomaly.summary.p1Events,
+        intercepts: false,
+        liveFbi: false,
+        massSurveillance: false,
         classified: false,
       },
       aipSigma0: {

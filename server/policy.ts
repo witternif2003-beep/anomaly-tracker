@@ -82,6 +82,18 @@ export function policyStatus() {
       liveNcic: false,
       note: "Business-law forensic map bound to lockfile, MCP, and placeholders. Not a classified case file.",
     },
+    anomalyTracker: {
+      status: "activated",
+      endpoint: "/v1/anomaly",
+      page: "/tracker",
+      skills: ["p1-anomaly-tracker"],
+      agent: "anomaly-tracker",
+      improvements: 10080,
+      intercepts: false,
+      liveFbi: false,
+      massSurveillance: false,
+      note: "Unclassified 3D fixture tracker. Taxonomy-mapped improvements. Not a field collection system.",
+    },
   };
 }
 

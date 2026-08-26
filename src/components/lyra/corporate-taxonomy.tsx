@@ -131,6 +131,9 @@ export function CorporateTaxonomy() {
             <Link href="/inventory" className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}>
               Inventory
             </Link>
+            <Link href="/tracker" className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}>
+              Tracker
+            </Link>
             <Button type="button" size="sm" variant="ghost" onClick={() => void load()} disabled={busy}>
               Reload
             </Button>

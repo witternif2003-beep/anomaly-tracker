@@ -15,6 +15,7 @@ It does not call ChatGPT, Claude, or Gemini. The optimizer runs locally in this 
 - **Request types** — auto-detect, or lock Creative, Technical, Educational, or Complex.
 - **Platform formatting** — markdown sections for ChatGPT, XML-style tags for Claude, numbered comparative structure for Gemini.
 - **Corporate forensic taxonomy** — business-law evidence map (records, ESI, financials, compliance) bound to this repo's files, `package-lock.json`, `.cursor/mcp.json`, and empty credential placeholders. Intercepts/SIGINT/NCIC are won't-do. Open `/corporate`.
+- **Business anomaly 3D tracker** — unclassified fixture tracker for U.S. entity types with P1 queues, taxonomy-mapped improvements (10,080+), and a CSS 3D scene. Not mass surveillance. Open `/tracker`.
 
 ## Run locally
 
@@ -23,7 +24,7 @@ npm install
 npm run dev
 ```
 
-Open [http://localhost:43127](http://localhost:43127) for the studio, [http://localhost:43127/aip](http://localhost:43127/aip) for AIP-Σ0, [http://localhost:43127/inventory](http://localhost:43127/inventory) for the live install notebook, or [http://localhost:43127/corporate](http://localhost:43127/corporate) for the corporate evidence taxonomy.
+Open [http://localhost:43127](http://localhost:43127) for the studio, [http://localhost:43127/aip](http://localhost:43127/aip) for AIP-Σ0, [http://localhost:43127/inventory](http://localhost:43127/inventory) for the live install notebook, [http://localhost:43127/corporate](http://localhost:43127/corporate) for the corporate evidence taxonomy, or [http://localhost:43127/tracker](http://localhost:43127/tracker) for the anomaly tracker.
 
 ```bash
 npm run build
@@ -52,6 +53,8 @@ npm run local-api
 | `/v1/inventory` | GET | Requested packages vs closest installs | None |
 | `/v1/notebook` | GET | Live install inventory + expansion plan (not classified) | None |
 | `/v1/corporate` | GET | Corporate forensic taxonomy bound to lockfile/MCP/credentials | None |
+| `/v1/anomaly` | GET | 3D anomaly tracker (fixtures + 10k+ taxonomy improvements) | None |
+| `/v1/anomaly/improvements` | GET | Paginated improvement recommendations | None |
 | `/v1/mode` | GET | GHOST-HAND / Post-doc / live-bot status (default still detail) | None |
 | `/v1/suggest` | GET/POST | Hard-coded live suggestion bot (`input`/`q`, `mode`) | None |
 | `/v1/aip` | GET | AIP-Σ0 full-spectrum status (real, not simulated) | None |

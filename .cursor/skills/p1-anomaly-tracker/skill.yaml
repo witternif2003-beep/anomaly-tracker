@@ -1,0 +1,19 @@
+id: p1-anomaly-tracker
+name: p1-anomaly-tracker
+description: Run the unclassified 3D business anomaly tracker bound to the corporate forensic taxonomy.
+p1:
+  capability: anomaly-tracker
+  catalog: /v1/p1
+  local_api: http://127.0.0.1:4040
+when_to_use: |
+  Use for fixture business-entity anomalies, P1 queues, and taxonomy-mapped improvements.
+  GET /v1/anomaly or open /tracker. Never invent intercepts or live FBI feeds.
+steps:
+  - Load GET http://127.0.0.1:4040/v1/anomaly and name P1 events first.
+  - Map each event to a corporate taxonomy category via GET /v1/corporate.
+  - Page improvements with /v1/anomaly/improvements when needed.
+  - Refuse SIGINT, NCIC, and mass U.S. business surveillance.
+resources:
+  - path: .cursor/skills/p1-anomaly-tracker/SKILL.md
+  - path: data/anomaly/fixtures.json
+  - path: server/anomaly-tracker.ts

@@ -142,8 +142,8 @@ from pathlib import Path
 skills = list(Path(".cursor/skills").glob("*/skill.yaml"))
 agents = list(Path(".cursor/agents").glob("*.md"))
 pipelines = list(Path("scripts/pipelines").glob("*.sh"))
-assert len(skills) == 19, len(skills)
-assert len(agents) == 11, len(agents)
+assert len(skills) == 20, len(skills)
+assert len(agents) == 12, len(agents)
 assert len(pipelines) >= 8, len(pipelines)
 assert Path("workers/ci-gate.js").is_file()
 assert Path("data/legal/glossary.json").is_file()
@@ -179,9 +179,11 @@ if curl -fsS -o /dev/null --max-time 3 "${base}/"; then
   dip="$(curl -fsS --max-time 15 "${base}/api/aip/dive")"
   echo "${dip}" | python3 -c "import json,sys; d=json.load(sys.stdin); assert d.get('ok') is True and d.get('simulated') is False; assert d.get('fixturesOk') is True; print('VERIFY OK: AIP-Σ0 deep dive', d['proofHash'][:12], d['elapsedMs'], 'ms')"
   nb="$(curl -fsS --max-time 15 "${base}/api/notebook")"
-  echo "${nb}" | python3 -c "import json,sys; d=json.load(sys.stdin); assert d.get('classified') is False; assert d.get('summary',{}).get('p1Slots',0)>=11000; assert d.get('summary',{}).get('corporateTaxonomy') is True; print('VERIFY OK: inventory notebook', d['summary']['p1Slots'], 'p1 slots')"
+  echo "${nb}" | python3 -c "import json,sys; d=json.load(sys.stdin); assert d.get('classified') is False; assert d.get('summary',{}).get('p1Slots',0)>=11000; assert d.get('summary',{}).get('corporateTaxonomy') is True; assert d.get('summary',{}).get('anomalyTracker') is True; assert d.get('summary',{}).get('anomalyImprovements',0)>=10000; print('VERIFY OK: inventory notebook', d['summary']['p1Slots'], 'p1 slots')"
   corp="$(curl -fsS --max-time 15 "${base}/api/corporate")"
   echo "${corp}" | python3 -c "import json,sys; d=json.load(sys.stdin); assert d.get('classified') is False and d.get('governmentProgram') is False; assert d['summary']['categories']>=10; assert any(w['id']=='sigint-intercepts' for w in d['wontDo']); assert all(e.get('liveAction') is False for e in d['enforcement']); print('VERIFY OK: corporate taxonomy', d['summary']['categories'], 'categories', d['summary']['bindingsPresent'], 'bindings')"
+  anom="$(curl -fsS --max-time 15 "${base}/api/anomaly")"
+  echo "${anom}" | python3 -c "import json,sys; d=json.load(sys.stdin); assert d.get('classified') is False and d.get('governmentProgram') is False; assert d.get('simulated') is True and d.get('liveSurveillance') is False; assert d['summary']['improvements']>=10000; assert d['summary']['entityTypes']>=15; assert d['summary']['p1Events']>=1; assert any(w['id']=='sigint-intercepts' for w in d['wontDo']); assert any(w['id']=='mass-us-business-surveillance' for w in d['wontDo']); print('VERIFY OK: anomaly tracker', d['summary']['entities'], 'entities', d['summary']['improvements'], 'improvements')"
 else
   echo "VERIFY WARN: ${base} is not up; skipped live API check"
 fi
@@ -207,11 +209,22 @@ nb = json.load(urllib.request.urlopen(base + "/v1/notebook", timeout=12))
 assert nb["classified"] is False and nb["governmentProgram"] is False, nb
 assert nb["summary"]["p1Slots"] >= 11000, nb["summary"]
 assert nb["summary"]["corporateTaxonomy"] is True
+assert nb["summary"]["anomalyTracker"] is True
+assert nb["summary"]["anomalyImprovements"] >= 10000
 corp = json.load(urllib.request.urlopen(base + "/v1/corporate", timeout=12))
 assert corp["classified"] is False and corp["simulated"] is False
 assert corp["summary"]["categories"] >= 10
 assert any(w["id"] == "sigint-intercepts" for w in corp["wontDo"])
 assert "express" in corp["commandOutput"]["lockfileCore"]
+anom = json.load(urllib.request.urlopen(base + "/v1/anomaly", timeout=12))
+assert anom["classified"] is False and anom["governmentProgram"] is False
+assert anom["simulated"] is True and anom["liveSurveillance"] is False
+assert anom["summary"]["improvements"] >= 10000
+assert anom["summary"]["entityTypes"] >= 15
+assert anom["summary"]["p1Events"] >= 1
+assert any(w["id"] == "mass-us-business-surveillance" for w in anom["wontDo"])
+imps = json.load(urllib.request.urlopen(base + "/v1/anomaly/improvements?limit=3&categoryId=financial-records", timeout=12))
+assert imps["generated"] >= 10000 and len(imps["data"]) >= 1
 assert nb["summary"]["cuckooLiveSandbox"] is False
 assert nb["oneShot"]["stepCount"] >= 20
 inv = json.load(urllib.request.urlopen(base + "/v1/inventory", timeout=8))

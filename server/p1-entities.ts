@@ -18,6 +18,7 @@ export const P1_SKILLS = [
   { id: "p1-corporate-taxonomy", path: ".cursor/skills/p1-corporate-taxonomy/skill.yaml" },
   { id: "p1-legal-hold", path: ".cursor/skills/p1-legal-hold/skill.yaml" },
   { id: "p1-compliance-matrix", path: ".cursor/skills/p1-compliance-matrix/skill.yaml" },
+  { id: "p1-anomaly-tracker", path: ".cursor/skills/p1-anomaly-tracker/skill.yaml" },
 ] as const;
 
 export const P1_AGENTS = [
@@ -32,6 +33,7 @@ export const P1_AGENTS = [
   { id: "issue-memo-writer", path: ".cursor/agents/issue-memo-writer.md" },
   { id: "local-api-operator", path: ".cursor/agents/local-api-operator.md" },
   { id: "corporate-counsel", path: ".cursor/agents/corporate-counsel.md" },
+  { id: "anomaly-tracker", path: ".cursor/agents/anomaly-tracker.md" },
 ] as const;
 
 export const P1_PIPELINES = [

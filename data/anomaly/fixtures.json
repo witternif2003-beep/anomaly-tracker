@@ -1,0 +1,380 @@
+{
+  "title": "Advanced Business Anomaly 3D Realtime Tracker",
+  "product": "Lyra local studio — unclassified compliance demo",
+  "classified": false,
+  "governmentProgram": false,
+  "simulated": true,
+  "note": "Hard-coded fixture entities and anomalies for internal-investigation rehearsal. Not a law-enforcement field collection system. No intercepts, SIGINT, live NCIC, or mass surveillance of U.S. businesses.",
+  "entityTypes": [
+    { "id": "sole-proprietorship", "label": "Sole proprietorship" },
+    { "id": "partnership", "label": "Partnership" },
+    { "id": "llc", "label": "LLC" },
+    { "id": "c-corp", "label": "C corporation" },
+    { "id": "s-corp", "label": "S corporation" },
+    { "id": "benefit-corp", "label": "Benefit corporation" },
+    { "id": "close-corp", "label": "Close corporation" },
+    { "id": "cooperative", "label": "Cooperative" },
+    { "id": "nonprofit", "label": "Nonprofit" },
+    { "id": "private-company", "label": "Private company" },
+    { "id": "public-company", "label": "Public company" },
+    { "id": "holding-company", "label": "Holding company" },
+    { "id": "joint-venture", "label": "Joint venture" },
+    { "id": "enterprise", "label": "Enterprise" },
+    { "id": "conglomerate", "label": "Conglomerate" }
+  ],
+  "cities": [
+    { "id": "nyc", "label": "New York, NY", "lat": 40.7128, "lon": -74.006 },
+    { "id": "dc", "label": "Washington, DC", "lat": 38.9072, "lon": -77.0369 },
+    { "id": "chi", "label": "Chicago, IL", "lat": 41.8781, "lon": -87.6298 },
+    { "id": "sf", "label": "San Francisco, CA", "lat": 37.7749, "lon": -122.4194 },
+    { "id": "dal", "label": "Dallas, TX", "lat": 32.7767, "lon": -96.797 },
+    { "id": "atl", "label": "Atlanta, GA", "lat": 33.749, "lon": -84.388 },
+    { "id": "sea", "label": "Seattle, WA", "lat": 47.6062, "lon": -122.3321 },
+    { "id": "bos", "label": "Boston, MA", "lat": 42.3601, "lon": -71.0589 },
+    { "id": "den", "label": "Denver, CO", "lat": 39.7392, "lon": -104.9903 },
+    { "id": "mia", "label": "Miami, FL", "lat": 25.7617, "lon": -80.1918 }
+  ],
+  "entities": [
+    {
+      "id": "ent-aurora-llc",
+      "name": "Aurora Lattice LLC",
+      "entityType": "llc",
+      "cityId": "nyc",
+      "sector": "Software services",
+      "risk": "medium"
+    },
+    {
+      "id": "ent-helios-public",
+      "name": "Helios Public Holdings Inc.",
+      "entityType": "public-company",
+      "cityId": "dc",
+      "sector": "Industrial conglomerate",
+      "risk": "high"
+    },
+    {
+      "id": "ent-cedar-nonprofit",
+      "name": "Cedar Commons Foundation",
+      "entityType": "nonprofit",
+      "cityId": "chi",
+      "sector": "Education nonprofit",
+      "risk": "low"
+    },
+    {
+      "id": "ent-northwind-scorp",
+      "name": "Northwind Fabrication S Corp",
+      "entityType": "s-corp",
+      "cityId": "dal",
+      "sector": "Manufacturing",
+      "risk": "medium"
+    },
+    {
+      "id": "ent-pacific-benefit",
+      "name": "Pacific Steward Benefit Corp",
+      "entityType": "benefit-corp",
+      "cityId": "sf",
+      "sector": "Clean energy",
+      "risk": "medium"
+    },
+    {
+      "id": "ent-ridge-jv",
+      "name": "Ridge & Vale Joint Venture",
+      "entityType": "joint-venture",
+      "cityId": "den",
+      "sector": "Logistics",
+      "risk": "high"
+    },
+    {
+      "id": "ent-harbor-holding",
+      "name": "Harborline Holding Co.",
+      "entityType": "holding-company",
+      "cityId": "bos",
+      "sector": "Financial holding",
+      "risk": "high"
+    },
+    {
+      "id": "ent-mesa-coop",
+      "name": "Mesa Growers Cooperative",
+      "entityType": "cooperative",
+      "cityId": "atl",
+      "sector": "Agriculture",
+      "risk": "low"
+    },
+    {
+      "id": "ent-summit-ccorp",
+      "name": "Summit Circuit C Corp",
+      "entityType": "c-corp",
+      "cityId": "sea",
+      "sector": "Semiconductors",
+      "risk": "high"
+    },
+    {
+      "id": "ent-bayou-sole",
+      "name": "Bayou Ledger Bookkeeping",
+      "entityType": "sole-proprietorship",
+      "cityId": "mia",
+      "sector": "Professional services",
+      "risk": "low"
+    },
+    {
+      "id": "ent-ironclad-close",
+      "name": "Ironclad Close Corp",
+      "entityType": "close-corp",
+      "cityId": "chi",
+      "sector": "Defense contracting (commercial)",
+      "risk": "high"
+    },
+    {
+      "id": "ent-atlas-enterprise",
+      "name": "Atlas Enterprise Group",
+      "entityType": "enterprise",
+      "cityId": "nyc",
+      "sector": "Diversified enterprise",
+      "risk": "medium"
+    },
+    {
+      "id": "ent-polaris-private",
+      "name": "Polaris Private Partners LLC",
+      "entityType": "private-company",
+      "cityId": "sf",
+      "sector": "Private equity portfolio ops",
+      "risk": "medium"
+    },
+    {
+      "id": "ent-cascade-partnership",
+      "name": "Cascade River Partnership",
+      "entityType": "partnership",
+      "cityId": "sea",
+      "sector": "Legal services",
+      "risk": "low"
+    },
+    {
+      "id": "ent-omnibus-conglomerate",
+      "name": "Omnibus Industrial Conglomerate",
+      "entityType": "conglomerate",
+      "cityId": "dc",
+      "sector": "Multi-industry conglomerate",
+      "risk": "high"
+    }
+  ],
+  "anomalies": [
+    {
+      "id": "anom-p1-ofac-hit",
+      "entityId": "ent-harbor-holding",
+      "priority": "P1",
+      "title": "OFAC name-screen match on vendor remittance list",
+      "categoryId": "financial-records",
+      "indicator": "Public sanctions screening typology (not a live FBI feed)",
+      "doctrine": ["31 C.F.R. Part 501 overview", "FRE 803(6)"],
+      "source": "api-ofac stub + fixture remittance CSV",
+      "geo": true,
+      "action": "Freeze outbound payment pending counsel review; preserve bank export."
+    },
+    {
+      "id": "anom-p1-edgar-gap",
+      "entityId": "ent-helios-public",
+      "priority": "P1",
+      "title": "EDGAR 8-K filing lag vs board-minute date stamp",
+      "categoryId": "regulatory-compliance",
+      "indicator": "Disclosure timing anomaly (public EDGAR)",
+      "doctrine": ["Exchange Act reporting overview", "FRE 902(11)"],
+      "source": "api-edgar stub + fixture board minutes",
+      "geo": false,
+      "action": "Open disclosure chronologies; counsel reviews materiality."
+    },
+    {
+      "id": "anom-p1-legal-hold",
+      "entityId": "ent-summit-ccorp",
+      "priority": "P1",
+      "title": "Legal-hold notice overdue on ESI custodians",
+      "categoryId": "esi",
+      "indicator": "Spoliation-risk clock (FRCP 37(e) typology)",
+      "doctrine": ["FRCP 37(e)", "FRCP 34"],
+      "source": "fixture hold tracker",
+      "geo": false,
+      "action": "Issue hold, suspend auto-delete, inventory custodian mailboxes."
+    },
+    {
+      "id": "anom-p2-slack-export",
+      "entityId": "ent-aurora-llc",
+      "priority": "P2",
+      "title": "Corporate Slack channel retention gap on deal desk",
+      "categoryId": "electronic-communications",
+      "indicator": "Retention policy miss (company-administered workspace)",
+      "doctrine": ["FRCP 37(e)", "Stored Communications Act overview"],
+      "source": "Slack MCP placeholder + fixture retention matrix",
+      "geo": false,
+      "action": "Export channel under hold; do not intercept third-party messaging apps."
+    },
+    {
+      "id": "anom-p2-geo-branch",
+      "entityId": "ent-ridge-jv",
+      "priority": "P2",
+      "title": "Registered office vs warehouse GPS mismatch",
+      "categoryId": "geolocation",
+      "indicator": "Address consistency check (public registry + fixture GPS)",
+      "doctrine": ["Carpenter v. United States (doctrine label only)"],
+      "source": "fixture geocode — no live IMEI triangulation",
+      "geo": true,
+      "action": "Reconcile SOS filing address with lease; no device tracking."
+    },
+    {
+      "id": "anom-p2-mdm",
+      "entityId": "ent-ironclad-close",
+      "priority": "P2",
+      "title": "MDM inventory missing executive BYOD devices",
+      "categoryId": "mobile-device",
+      "indicator": "Asset-list incompleteness",
+      "doctrine": ["Carpenter v. United States"],
+      "source": "fixture MDM export",
+      "geo": false,
+      "action": "Update MDM roster from HR assets; no carrier IMSI query."
+    },
+    {
+      "id": "anom-p3-usb",
+      "entityId": "ent-northwind-scorp",
+      "priority": "P3",
+      "title": "Removable-media write events outside change window",
+      "categoryId": "removable-media",
+      "indicator": "Endpoint policy deviation (company DLP log)",
+      "doctrine": ["FRE 803(6)"],
+      "source": "fixture endpoint log",
+      "geo": false,
+      "action": "Preserve DLP export; interview custodian under privilege protocol."
+    },
+    {
+      "id": "anom-p3-meta",
+      "entityId": "ent-pacific-benefit",
+      "priority": "P3",
+      "title": "PDF metadata author string vs HR roster mismatch",
+      "categoryId": "metadata-audit",
+      "indicator": "Document provenance anomaly",
+      "doctrine": ["FRE 901"],
+      "source": "fixture PDF sample",
+      "geo": false,
+      "action": "Hash and bag document; note authenticity questions for counsel."
+    },
+    {
+      "id": "anom-p2-third-party",
+      "entityId": "ent-omnibus-conglomerate",
+      "priority": "P2",
+      "title": "Vendor SOC2 report expired for payment processor",
+      "categoryId": "third-party-records",
+      "indicator": "Third-party assurance lag",
+      "doctrine": ["FRE 803(6)", "FRE 902(11)"],
+      "source": "fixture vendor register",
+      "geo": false,
+      "action": "Request updated SOC2; map to vendor-risk workflow."
+    },
+    {
+      "id": "anom-p3-physical",
+      "entityId": "ent-mesa-coop",
+      "priority": "P3",
+      "title": "Badge-access log gap at cold-storage door",
+      "categoryId": "physical-evidence",
+      "indicator": "Facility access continuity",
+      "doctrine": ["FRE 803(6)"],
+      "source": "fixture BMS export",
+      "geo": true,
+      "action": "Preserve BMS CSV; photograph door hardware if relevant."
+    },
+    {
+      "id": "anom-p2-expert",
+      "entityId": "ent-atlas-enterprise",
+      "priority": "P2",
+      "title": "ERP hash chain break flagged by internal auditor",
+      "categoryId": "technical-expert",
+      "indicator": "Forensic integrity check on company systems",
+      "doctrine": ["FRE 702 overview", "FRE 901"],
+      "source": "fixture auditor worksheet",
+      "geo": false,
+      "action": "Queue expert protocol; image ERP tables the company owns."
+    },
+    {
+      "id": "anom-p1-business-records",
+      "entityId": "ent-polaris-private",
+      "priority": "P1",
+      "title": "Board consent packet incomplete for related-party loan",
+      "categoryId": "business-records",
+      "indicator": "Governance completeness (white-collar typology label)",
+      "doctrine": ["FRE 803(6)", "FRE 902(11)"],
+      "source": "fixture minute book index",
+      "geo": false,
+      "action": "Privilege screen, then assemble regularly kept board records."
+    }
+  ],
+  "architecture": {
+    "layers": [
+      {
+        "id": "ingest",
+        "title": "Verified ingest",
+        "detail": "Public stubs (EDGAR, OFAC, FINRA) and company-held fixtures only. No intercept pipes."
+      },
+      {
+        "id": "crossref",
+        "title": "Taxonomy cross-reference",
+        "detail": "Each anomaly binds to a Corporate Forensic Evidence Taxonomy category and doctrine labels."
+      },
+      {
+        "id": "priority",
+        "title": "P1 / P2 / P3 scoring",
+        "detail": "Hard-coded priorities for operational rehearsal. P1 surfaces first in the 3D scene."
+      },
+      {
+        "id": "scene3d",
+        "title": "3D realtime scene",
+        "detail": "CSS perspective map of fixture entities. Coordinates from city fixtures, not live device tracking."
+      },
+      {
+        "id": "improve",
+        "title": "Improvement generator",
+        "detail": "10,080+ deterministic recommendations mapped to taxonomy categories and P1 inventory closest-installs."
+      },
+      {
+        "id": "guardrails",
+        "title": "Guardrails",
+        "detail": "CJIS/NCIC always 403. SIGINT and intercepts wont-do. Credentials stay placeholders unless the operator sets them."
+      }
+    ],
+    "dataPlane": [
+      "data/anomaly/fixtures.json",
+      "data/legal/corporate-taxonomy.json",
+      "package-lock.json",
+      ".cursor/mcp.json",
+      "server/inventory/public-apis.ts"
+    ],
+    "controlPlane": [
+      "GET /v1/anomaly",
+      "GET /api/anomaly",
+      "GET /v1/corporate",
+      "GET /v1/policy",
+      "POST /v1/legal/search"
+    ]
+  },
+  "wontDo": [
+    {
+      "id": "sigint-intercepts",
+      "title": "Intercepted plain-text business communications",
+      "reason": "No wiretap, VoIP decrypt, or messaging intercept. Collect only from company-administered stores under legal hold."
+    },
+    {
+      "id": "cjis-ncic",
+      "title": "Live FBI / NCIC / CJIS queries",
+      "reason": "Not a CJIS-certified interface. Indicator labels are typology text only."
+    },
+    {
+      "id": "mass-us-business-surveillance",
+      "title": "Track all American business entities in the wild",
+      "reason": "Fixture set only. No national registry scrape or continuous field collection."
+    },
+    {
+      "id": "imei-triangulation",
+      "title": "Live IMEI / IMSI triangulation",
+      "reason": "Geolocation uses fixture city coordinates and company address fields."
+    },
+    {
+      "id": "classified-program",
+      "title": "Classified U.S. intelligence program",
+      "reason": "Unclassified Lyra studio product. No SCI/NOFORN banners or SAP roleplay."
+    }
+  ]
+}

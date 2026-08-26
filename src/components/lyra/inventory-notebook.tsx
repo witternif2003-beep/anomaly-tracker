@@ -161,6 +161,9 @@ export function InventoryNotebook() {
             <Link href="/corporate" className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}>
               Corporate
             </Link>
+            <Link href="/tracker" className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}>
+              Tracker
+            </Link>
             <Button size="sm" variant="ghost" onClick={() => void load()} disabled={busy}>
               Refresh
             </Button>

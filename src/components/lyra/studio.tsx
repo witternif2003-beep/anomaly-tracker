@@ -148,6 +148,10 @@ export function Studio() {
                 <Link href="/corporate" className="underline-offset-4 hover:underline">
                   Corporate
                 </Link>
+                {" · "}
+                <Link href="/tracker" className="underline-offset-4 hover:underline">
+                  Tracker
+                </Link>
               </p>
             </div>
           </div>

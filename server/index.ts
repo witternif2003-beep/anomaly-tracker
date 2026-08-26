@@ -16,6 +16,7 @@ import { inventoryStatus } from "./inventory";
 import { oneShotStatus } from "./install-status";
 import { installNotebook } from "./notebook";
 import { compileCorporateTaxonomy } from "./corporate-taxonomy";
+import { anomalyTrackerStatus, compileAnomalyTracker, listImprovements } from "./anomaly-tracker";
 import { listP1Slots } from "./p1-catalog";
 import { ghostHandStatus } from "../src/lib/optimize/ghost-hand";
 import { parseMode } from "../src/lib/optimize/types";
@@ -85,6 +86,46 @@ app.get("/v1/notebook", (_req, res) => {
 
 app.get("/v1/corporate", (_req, res) => {
   res.json(compileCorporateTaxonomy());
+});
+
+app.get("/v1/anomaly", (req, res) => {
+  const q = typeof req.query.q === "string" ? req.query.q : undefined;
+  const categoryId = typeof req.query.categoryId === "string" ? req.query.categoryId : undefined;
+  const priority = typeof req.query.priority === "string" ? req.query.priority : undefined;
+  const improvementLimit =
+    req.query.improvementLimit !== undefined ? Number(req.query.improvementLimit) : undefined;
+  const improvementOffset =
+    req.query.improvementOffset !== undefined ? Number(req.query.improvementOffset) : undefined;
+  if (req.query.status === "1" || req.query.status === "true") {
+    res.json(anomalyTrackerStatus());
+    return;
+  }
+  res.json(
+    compileAnomalyTracker({
+      q,
+      categoryId,
+      priority,
+      improvementLimit: Number.isFinite(improvementLimit) ? improvementLimit : undefined,
+      improvementOffset: Number.isFinite(improvementOffset) ? improvementOffset : undefined,
+    }),
+  );
+});
+
+app.get("/v1/anomaly/improvements", (req, res) => {
+  const q = typeof req.query.q === "string" ? req.query.q : undefined;
+  const categoryId = typeof req.query.categoryId === "string" ? req.query.categoryId : undefined;
+  const priority = typeof req.query.priority === "string" ? req.query.priority : undefined;
+  const limitRaw = req.query.limit !== undefined ? Number(req.query.limit) : undefined;
+  const offsetRaw = req.query.offset !== undefined ? Number(req.query.offset) : 0;
+  res.json(
+    listImprovements({
+      q,
+      categoryId,
+      priority,
+      limit: Number.isFinite(limitRaw) && (limitRaw as number) > 0 ? limitRaw : undefined,
+      offset: Number.isFinite(offsetRaw) && (offsetRaw as number) > 0 ? offsetRaw : 0,
+    }),
+  );
 });
 
 app.get("/v1/mode", (_req, res) => {

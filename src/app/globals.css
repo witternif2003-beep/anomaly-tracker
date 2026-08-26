@@ -112,6 +112,56 @@
     radial-gradient(1px 1px at 92% 42%, oklch(0.95 0.02 90 / 45%), transparent);
 }
 
+.tracker-stage {
+  background:
+    radial-gradient(ellipse 70% 55% at 50% 30%, oklch(0.32 0.05 250 / 35%), transparent 70%),
+    linear-gradient(165deg, oklch(0.18 0.03 278), oklch(0.14 0.02 260));
+  perspective: 900px;
+}
+
+.tracker-grid {
+  background-image:
+    linear-gradient(oklch(0.78 0.04 280 / 10%) 1px, transparent 1px),
+    linear-gradient(90deg, oklch(0.78 0.04 280 / 10%) 1px, transparent 1px);
+  background-size: 48px 48px;
+  transform: rotateX(58deg) scale(1.35);
+  transform-origin: center 70%;
+  opacity: 0.55;
+}
+
+.tracker-scene {
+  transform-style: preserve-3d;
+  animation: tracker-drift 18s ease-in-out infinite alternate;
+}
+
+.tracker-node {
+  backdrop-filter: blur(6px);
+  box-shadow: 0 0 0 1px oklch(0.84 0.12 88 / 12%);
+}
+
+.tracker-pulse {
+  animation: tracker-pulse 2.2s ease-in-out infinite;
+}
+
+@keyframes tracker-drift {
+  from {
+    transform: rotateX(8deg) rotateY(-6deg) translateY(0);
+  }
+  to {
+    transform: rotateX(10deg) rotateY(6deg) translateY(-6px);
+  }
+}
+
+@keyframes tracker-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 oklch(0.7 0.19 22 / 0%);
+  }
+  50% {
+    box-shadow: 0 0 0 10px oklch(0.7 0.19 22 / 18%);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   * {
     animation-duration: 0.01ms !important;
