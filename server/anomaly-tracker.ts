@@ -840,8 +840,8 @@ export function compileAnomalyTracker(opts?: {
       postdocExtreme: scoutBotDoc.postdocExtreme === true,
       hiddenCodeScan: scoutBotDoc.hiddenCodeScan === true,
       repairRescan: scoutBotDoc.repairRescan === true,
-      repairRescanPasses: scoutBotDoc.repairRescanPasses ?? 9,
-      gateTarget: scoutBotDoc.gateTarget ?? 1215,
+      repairRescanPasses: scoutBotDoc.repairRescanPasses ?? 27,
+      gateTarget: scoutBotDoc.gateTarget ?? 3645,
       note: scoutBotDoc.note,
       healActions: scoutBotDoc.healActions,
       baselines: scoutBotDoc.baselines,
@@ -1099,15 +1099,15 @@ export function compileAnomalyTracker(opts?: {
             scoutBotDoc.selfHealing === true &&
             scoutBotDoc.additiveOnly === true &&
             Array.isArray(scoutBotDoc.healActions) &&
-            scoutBotDoc.healActions.length >= 8 &&
+            scoutBotDoc.healActions.length >= 10 &&
             scoutBotDoc.extremeScan === true &&
             scoutBotDoc.hiddenCodeScan === true &&
             scoutBotDoc.repairRescan === true &&
-            (scoutBotDoc.repairRescanPasses ?? 0) >= 9 &&
-            (scoutBotDoc.tickMs ?? 9999) <= 22 &&
-            (scoutBotDoc.gateTarget ?? 0) >= 1215 &&
-            scoutBotDoc.mode === "postdoc-x9-extreme-24x7",
-          detail: `scout postdoc ×9 extreme 22ms · gates≥1215 · hidden-code deep · repair→rescan ×9 · ${scoutBotDoc.healActions.length} heal actions`,
+            (scoutBotDoc.repairRescanPasses ?? 0) >= 27 &&
+            (scoutBotDoc.tickMs ?? 9999) <= 7 &&
+            (scoutBotDoc.gateTarget ?? 0) >= 3645 &&
+            scoutBotDoc.mode === "postdoc-x27-extreme-24x7",
+          detail: `scout postdoc ×27 extreme 7ms · gates≥3645 · hidden-code deep · repair→rescan ×27 · ${scoutBotDoc.healActions.length} heal actions`,
         },
         {
           id: "business-crime-taxonomy",
@@ -1226,13 +1226,13 @@ export function compileAnomalyTracker(opts?: {
           detail: "Scout reload heals re-inspect before marking healed",
         },
         {
-          id: "scout-x9-pressure",
+          id: "scout-x27-pressure",
           ok:
-            (scoutBotDoc.tickMs ?? 9999) <= 22 &&
-            (scoutBotDoc.gateTarget ?? 0) >= 1215 &&
-            (scoutBotDoc.repairRescanPasses ?? 0) >= 9 &&
-            scoutBotDoc.mode === "postdoc-x9-extreme-24x7",
-          detail: "×9 pressure: 22ms tick · gates≥1215 · repair→rescan ×9 · hidden-code deep dive",
+            (scoutBotDoc.tickMs ?? 9999) <= 7 &&
+            (scoutBotDoc.gateTarget ?? 0) >= 3645 &&
+            (scoutBotDoc.repairRescanPasses ?? 0) >= 27 &&
+            scoutBotDoc.mode === "postdoc-x27-extreme-24x7",
+          detail: "×27 pressure: 7ms tick · gates≥3645 · repair→rescan ×27 · hidden-code deep dive",
         },
       ],
     },

@@ -1,8 +1,8 @@
 {
   "object": "lyra.scout-bot",
   "title": "Error scout bot",
-  "mode": "postdoc-x9-extreme-24x7",
-  "tickMs": 22,
+  "mode": "postdoc-x27-extreme-24x7",
+  "tickMs": 7,
   "active": true,
   "selfHealing": true,
   "additiveOnly": true,
@@ -10,9 +10,9 @@
   "postdocExtreme": true,
   "hiddenCodeScan": true,
   "repairRescan": true,
-  "repairRescanPasses": 9,
-  "gateTarget": 1215,
-  "note": "24/7 postdoc ×9 extreme Error scout (3× harder than prior ×3) · self-healing detect→decide→act→verify · 22ms tick · hidden-code thorough deep dive · all 12 pipelines · repair each error then rescan ×9 · baselines postdoc=905500. Never removes features — only restores and adds coverage. Not live mass surveillance.",
+  "repairRescanPasses": 27,
+  "gateTarget": 3645,
+  "note": "24/7 postdoc ×27 extreme Error scout (3× harder than prior ×9) · self-healing detect→decide→act→verify · 7ms tick · hidden-code thorough deep dive (≥216 gates) · all 12 pipelines · repair each error then rescan ×27 · baselines postdoc=905500. Never removes features — only restores and adds coverage. Not live mass surveillance.",
   "healActions": [
     "reload-static",
     "reset-selected-anomaly",
@@ -23,7 +23,9 @@
     "revalidate-hidden-code",
     "repair-rescan",
     "revalidate-postdoc-catalog",
-    "revalidate-live-p1"
+    "revalidate-live-p1",
+    "revalidate-globe-pipeline",
+    "revalidate-chamber-crisp"
   ],
   "baselines": {
     "minNodes": 15,
@@ -37,10 +39,10 @@
     "pipelineScripts": 12,
     "boHardeningScore": 95,
     "improvementsGenerated": 15080,
-    "gateTarget": 1215,
-    "tickMs": 22,
-    "repairRescanPasses": 9,
-    "hiddenCodeGatesMin": 72
+    "gateTarget": 3645,
+    "tickMs": 7,
+    "repairRescanPasses": 27,
+    "hiddenCodeGatesMin": 216
   },
   "pipelineIds": [
     "aip-static-smoke",

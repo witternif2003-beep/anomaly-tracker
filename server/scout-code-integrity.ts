@@ -143,38 +143,38 @@ export function compileScoutCodeIntegrity() {
     "scout-healer re-inspects after reload before marking healed",
   );
 
-  // Scout ×9 pressure constants
+  // Scout ×27 pressure constants
   push(
-    "hidden-scout-tick-const-22",
+    "hidden-scout-tick-const-7",
     "scout",
-    fileHas("src/lib/scout-healer.ts", "SCOUT_TICK_MS = 22") ||
-      fileHas("src/lib/scout-healer.ts", "tickMsMax: 22"),
-    "scout-healer SCOUT_TICK_MS / tickMsMax = 22 (×9 harder)",
+    fileHas("src/lib/scout-healer.ts", "SCOUT_TICK_MS = 7") ||
+      fileHas("src/lib/scout-healer.ts", "tickMsMax: 7"),
+    "scout-healer SCOUT_TICK_MS / tickMsMax = 7 (×27 harder)",
   );
   push(
-    "hidden-scout-gate-target-1215",
+    "hidden-scout-gate-target-3645",
     "scout",
-    fileHas("src/lib/scout-healer.ts", "gateTarget: 1215"),
-    "scout-healer gateTarget = 1215",
+    fileHas("src/lib/scout-healer.ts", "gateTarget: 3645"),
+    "scout-healer gateTarget = 3645",
   );
   push(
-    "hidden-scout-repair-passes-9",
+    "hidden-scout-repair-passes-27",
     "scout",
-    fileHas("src/lib/scout-healer.ts", "repairRescanPasses: 9") &&
+    fileHas("src/lib/scout-healer.ts", "repairRescanPasses: 27") &&
       fileHas("src/components/lyra/scout-bot.tsx", "repairRescanPasses"),
-    "repair→rescan ×9 wired in healer + panel",
+    "repair→rescan ×27 wired in healer + panel",
   );
   push(
-    "hidden-scout-x9-mode-const",
+    "hidden-scout-x27-mode-const",
     "scout",
-    fileHas("src/lib/scout-healer.ts", "postdoc-x9-extreme-24x7"),
-    "scout-healer knows postdoc-x9-extreme-24x7 mode",
+    fileHas("src/lib/scout-healer.ts", "postdoc-x27-extreme-24x7"),
+    "scout-healer knows postdoc-x27-extreme-24x7 mode",
   );
   push(
     "hidden-scout-inflight-guard",
     "scout",
     fileHas("src/components/lyra/scout-bot.tsx", "inFlightRef"),
-    "scout panel guards overlapping ticks under 22ms pressure",
+    "scout panel guards overlapping ticks under 7ms pressure",
   );
   push(
     "hidden-scout-repair-loop",
@@ -378,22 +378,22 @@ export function compileScoutCodeIntegrity() {
       additiveOnly?: boolean;
       healActions?: string[];
     };
-    tickOk = (s.tickMs ?? 9999) <= 22;
-    gateOk = (s.gateTarget ?? 0) >= 1215 && s.extremeScan === true;
-    passesOk = (s.repairRescanPasses ?? 0) >= 9 && s.repairRescan === true;
+    tickOk = (s.tickMs ?? 9999) <= 7;
+    gateOk = (s.gateTarget ?? 0) >= 3645 && s.extremeScan === true;
+    passesOk = (s.repairRescanPasses ?? 0) >= 27 && s.repairRescan === true;
     hiddenOk = s.hiddenCodeScan === true;
-    modeOk = s.mode === "postdoc-x9-extreme-24x7";
+    modeOk = s.mode === "postdoc-x27-extreme-24x7";
     additiveOk = s.additiveOnly === true;
-    healFloorOk = (s.healActions ?? []).length >= 8;
+    healFloorOk = (s.healActions ?? []).length >= 10;
   } catch {
     tickOk = false;
   }
-  push("hidden-scout-tick-22", "scout", tickOk, "scout-bot.json tickMs ≤22 (×9 harder than 67)");
-  push("hidden-scout-gates-1215", "scout", gateOk, "scout-bot.json gateTarget ≥1215 + extremeScan");
-  push("hidden-scout-repair-x9", "scout", passesOk, "scout-bot.json repairRescanPasses ≥9");
+  push("hidden-scout-tick-7", "scout", tickOk, "scout-bot.json tickMs ≤7 (×27 harder than 22)");
+  push("hidden-scout-gates-3645", "scout", gateOk, "scout-bot.json gateTarget ≥3645 + extremeScan");
+  push("hidden-scout-repair-x27", "scout", passesOk, "scout-bot.json repairRescanPasses ≥27");
   push("hidden-scout-hidden-code-flag", "scout", hiddenOk, "scout-bot.json hiddenCodeScan=true");
-  push("hidden-scout-mode-x9", "scout", modeOk, "scout-bot.json mode=postdoc-x9-extreme-24x7");
-  push("hidden-scout-heal-actions-8", "scout", healFloorOk, "scout-bot.json healActions ≥8");
+  push("hidden-scout-mode-x27", "scout", modeOk, "scout-bot.json mode=postdoc-x27-extreme-24x7");
+  push("hidden-scout-heal-actions-10", "scout", healFloorOk, "scout-bot.json healActions ≥10");
 
   // Additive-only guarantee in scout panel copy / healer
   push(
@@ -433,12 +433,50 @@ export function compileScoutCodeIntegrity() {
     "Dashboard shell ships Studio/Tracker/Corporate/Inventory/AIP tabs",
   );
 
+  // Thorough hidden-code deep dive: every src/server/scripts pipeline file
+  const deepRoots = [
+    path.join(ROOT, "src"),
+    path.join(ROOT, "server"),
+    path.join(ROOT, "scripts", "pipelines"),
+  ];
+  const deepFiles: string[] = [];
+  for (const root of deepRoots) walk(root, deepFiles, 0);
+  for (const full of deepFiles) {
+    const rel = path.relative(ROOT, full).replace(/\\/g, "/");
+    const idSafe = rel.replace(/[^a-zA-Z0-9]+/g, "-").replace(/^-|-$/g, "");
+    const text = readFileSync(full, "utf8");
+    push(`hidden-file-present-${idSafe}`, "deep-file", true, `${rel} present`);
+    const hasEffectEvent = /\buseEffectEvent\s*\(/.test(
+      text
+        .split("\n")
+        .filter((l) => !l.trim().startsWith("//") && !l.trim().startsWith("*"))
+        .join("\n"),
+    );
+    push(
+      `hidden-file-no-effect-event-${idSafe}`,
+      "deep-file",
+      !hasEffectEvent,
+      hasEffectEvent ? `${rel} contains useEffectEvent` : `${rel} clear of useEffectEvent`,
+    );
+    // Ban destructive "remove feature" patterns in scout/heal paths only
+    if (/scout|heal/i.test(rel) && !rel.endsWith("scout-code-integrity.ts")) {
+      const destructive =
+        /\b(deleteFeature|removeFeature|stripFeature|destroyFeature)\s*\(/.test(text);
+      push(
+        `hidden-file-no-destructive-${idSafe}`,
+        "deep-file",
+        !destructive,
+        destructive ? `${rel} has destructive feature API` : `${rel} additive-only API surface`,
+      );
+    }
+  }
+
   const okCount = gates.filter((g) => g.ok).length;
   return {
     object: "lyra.scout-code-integrity" as const,
-    title: "Postdoc ×9 hidden-code integrity audit",
+    title: "Postdoc ×27 hidden-code integrity audit",
     classified: false,
-    note: "Bake-time thorough deep dive of latent client/server anti-patterns + all 12 pipelines + core modules. Scout validates every 22ms tick. Additive only — never removes features.",
+    note: "Bake-time thorough deep dive of latent client/server anti-patterns + all 12 pipelines + every src/server/pipeline file. Scout validates every 7ms tick. Additive only — never removes features.",
     gateCount: gates.length,
     okCount,
     allOk: okCount === gates.length,
