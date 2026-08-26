@@ -2,9 +2,9 @@
   "title": "Post-doctoral forensic query catalog (tracker §8.1)",
   "classified": false,
   "governmentProgram": false,
-  "total": 275500,
+  "total": 365500,
   "top500": 500,
-  "note": "275,500 unclassified post-doctoral forensic queries for /tracker (+90,000). TRACKER-TAB · Live P1 telemetry · Error scout bot self-healing. TOP 500 are SOTA DFIR / SOC-telemetry / scout self-heal improvements (Magnet DFIR 2026, cloud forensics, AI+OSINT, AML/XAI, WeirdFlows, FIU graphs, ranked-signal UX, AI SOC P1 triage, SRE self-healing detect→decide→act→verify). Virtual expand on /tracker — bake ships TOP 500 + seed. Additive only. No live intercepts, CJIS, or SIGINT.",
+  "note": "365,500 unclassified post-doctoral forensic queries for /tracker (+90,000). TRACKER-TAB · Live P1 telemetry · Error scout bot self-healing. TOP 500 are SOTA DFIR / SOC-telemetry / scout self-heal improvements (Magnet DFIR 2026, cloud forensics, AI+OSINT, AML/XAI, WeirdFlows, FIU graphs, ranked-signal UX, AI SOC P1 triage, SRE self-healing detect→decide→act→verify). Virtual expand on /tracker — bake ships TOP 500 + seed. Additive only. No live intercepts, CJIS, or SIGINT.",
   "sotaSources": [
     {
       "id": "magnet-dfir-2026",

@@ -1057,8 +1057,8 @@ export function compileAnomalyTracker(opts?: {
           detail: `${p1Events.length} P1 incidents in p1Queue`,
         },
         {
-          id: "postdoc-275500",
-          ok: POSTDOC_IMPROVEMENT_COUNT === 275500,
+          id: "postdoc-365500",
+          ok: POSTDOC_IMPROVEMENT_COUNT === 365500,
           detail: `Post-doc forensic catalog locked at ${POSTDOC_IMPROVEMENT_COUNT} (+90,000) · TOP ${POSTDOC_TOP500} SOTA · tracker-tab + Live P1 + Error scout self-heal virtual expand`,
         },
         {
@@ -1166,8 +1166,8 @@ export function compileAnomalyTracker(opts?: {
         },
         {
           id: "pipe-tracker-3d-smoke",
-          ok: entities.length >= 15 && anomalies.length >= 51 && POSTDOC_IMPROVEMENT_COUNT === 275500,
-          detail: "tracker-3d-smoke floors: nodes≥15 events≥51 postdoc=275500 top500-sota live-p1 scout-self-heal virtual",
+          ok: entities.length >= 15 && anomalies.length >= 51 && POSTDOC_IMPROVEMENT_COUNT === 365500,
+          detail: "tracker-3d-smoke floors: nodes≥15 events≥51 postdoc=365500 top500-sota live-p1 scout-self-heal virtual",
         },
         {
           id: "pipe-aip-static-smoke",

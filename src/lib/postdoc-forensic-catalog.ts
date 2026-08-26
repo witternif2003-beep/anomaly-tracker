@@ -4,7 +4,7 @@
  * Never removes features — additive only. No live intercepts/CJIS.
  */
 
-export const POSTDOC_TOTAL = 275_500;
+export const POSTDOC_TOTAL = 365_500;
 export const POSTDOC_TOP500 = 500;
 /** Baked window of non-SOTA samples for offline filter demos (beyond TOP 500). */
 export const POSTDOC_BAKE_SAMPLE = 200;
