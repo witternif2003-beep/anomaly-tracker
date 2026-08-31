@@ -20,6 +20,22 @@ const eslintConfig = defineConfig([
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
+    // Repo tooling under scripts/ runs in Node, not the browser.
+    files: ["scripts/**/*.{js,cjs,mjs}"],
+    languageOptions: {
+      globals: {
+        console: "readonly",
+        process: "readonly",
+        Buffer: "readonly",
+        URL: "readonly",
+        fetch: "readonly",
+        __dirname: "readonly",
+        require: "readonly",
+        module: "writable",
+      },
+    },
+  },
+  {
     rules: {
       "@typescript-eslint/no-unused-vars": [
         "error",

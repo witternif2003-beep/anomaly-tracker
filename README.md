@@ -126,7 +126,7 @@ npm install -g wrangler@4
 
 ## MCP servers (configured, not authenticated)
 
-`.cursor/mcp.json` lists stdio/OAuth MCP servers. Remote ones need OAuth or API keys injected as environment secrets — nothing is stored in git. Reinstall with `bash scripts/install-mcp.sh`. Audit the research-note wishlist with `npm run mcp:audit` (closest public packages only; Westlaw/Lexis stay wont-do).
+`.cursor/mcp.json` lists stdio/OAuth MCP servers. Remote ones need OAuth or API keys injected as environment secrets — nothing is stored in git. Reinstall with `bash scripts/install-mcp.sh`. Audit the research-note wishlist with `npm run mcp:audit` (closest public packages only; Westlaw/Lexis stay wont-do). `npm run mcp:check` validates the config structurally — every server has a command, secret values are `${VAR}` placeholders declared in `.env.example`, no literals — and `npm run mcp:prefetch` warms the npx cache for the packages listed in the config. Neither reads a secret nor hits the network beyond the npm registry, and neither runs during `next build`.
 
 | Server | Purpose | Requested package | Installed | Credentials |
 | --- | --- | --- | --- | --- |
@@ -143,6 +143,7 @@ npm install -g wrangler@4
 | Kubernetes | Cluster ops | `@kubernetes/mcp` | `mcp-server-kubernetes@4.1.4` | Kubeconfig |
 | Slack | Messaging | `@slack/mcp` | `@chinchillaenterprises/mcp-slack@4.14.0` (official Slack MCP unpublished; Anthropic package deprecated) | Bot token |
 | Context7 | Live docs | `context7-mcp` | `@upstash/context7-mcp@4.0.3` | API key |
+| Brave Search | Web search | `@modelcontextprotocol/server-brave-search` | `@brave/brave-search-mcp-server@2.1.3` (reference server archived at 0.6.2) | `BRAVE_API_KEY` |
 | FOLIO | Legal ontology | `folio-mcp@0.4.1` | Installed | None (CC-BY cards locally; document pulls need `folio login`) |
 
 ## Skills, agents, and pipelines

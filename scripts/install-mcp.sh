@@ -25,7 +25,8 @@ npm install -g \
   @upstash/context7-mcp@4.0.3 \
   mcp-remote@0.2.5 \
   folio-mcp@0.4.1 \
-  @teolin/mcp-cloudwatch-logs@3.3.9
+  @teolin/mcp-cloudwatch-logs@3.3.9 \
+  @brave/brave-search-mcp-server@2.1.3
 
 python3 -m pip install --user --quiet 'mcp<2' 'postgres-mcp==0.3.0'
 
@@ -44,3 +45,4 @@ command -v context7-mcp
 command -v folio-mcp
 command -v mcp-remote
 command -v mcp-server-cloudflare
+command -v brave-search-mcp-server

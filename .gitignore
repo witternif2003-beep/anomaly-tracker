@@ -40,6 +40,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# per-machine MCP overrides (secrets stay out of git)
+.cursor/mcp.local.json
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

@@ -1,37 +1,46 @@
 {
-  "title": "Expanded MCP configuration audit (research note §4)",
+  "title": "Expanded MCP configuration audit (research note \u00a74)",
   "classified": false,
   "configPath": ".cursor/mcp.json",
   "installCommand": "bash scripts/install-mcp.sh",
   "npmScript": "mcp:install",
   "note": "Audit maps the research-note MCP wishlist to packages actually wired in this checkout. Unpublished westlaw/lexis/oracle/sec-edgar MCP packages are not invented. Legal sources use REST stubs via /v1/legal/search.",
-  "wiredCountExpected": 16,
+  "wiredCountExpected": 17,
   "rows": [
     {
       "requested": "amplitude / @amplitude/mcp",
       "wiredId": "amplitude",
       "closestPackage": "amplitude-mcp@0.0.2",
       "status": "wired",
-      "credentials": ["AMPLITUDE_API_KEY", "AMPLITUDE_SECRET_KEY"]
+      "credentials": [
+        "AMPLITUDE_API_KEY",
+        "AMPLITUDE_SECRET_KEY"
+      ]
     },
     {
       "requested": "aws / @aws/mcp",
       "wiredId": "aws-cloudwatch",
       "closestPackage": "@teolin/mcp-cloudwatch-logs@3.3.9",
       "status": "closest",
-      "credentials": ["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_REGION"]
+      "credentials": [
+        "AWS_ACCESS_KEY_ID",
+        "AWS_SECRET_ACCESS_KEY",
+        "AWS_REGION"
+      ]
     },
     {
       "requested": "figma / @figma/mcp",
       "wiredId": "figma",
       "closestPackage": "figma-developer-mcp@0.13.2",
       "status": "closest",
-      "credentials": ["FIGMA_API_KEY"]
+      "credentials": [
+        "FIGMA_API_KEY"
+      ]
     },
     {
       "requested": "linear / @linear/mcp",
       "wiredId": "linear",
-      "closestPackage": "mcp-remote@0.2.5 → https://mcp.linear.app/sse",
+      "closestPackage": "mcp-remote@0.2.5 \u2192 https://mcp.linear.app/sse",
       "status": "closest",
       "credentials": []
     },
@@ -40,21 +49,29 @@
       "wiredId": "stripe",
       "closestPackage": "@stripe/mcp@0.3.3",
       "status": "wired",
-      "credentials": ["STRIPE_SECRET_KEY"]
+      "credentials": [
+        "STRIPE_SECRET_KEY"
+      ]
     },
     {
       "requested": "cloudflare / @cloudflare/mcp",
       "wiredId": "cloudflare",
       "closestPackage": "@cloudflare/mcp-server-cloudflare@0.2.0",
       "status": "closest",
-      "credentials": ["CLOUDFLARE_API_TOKEN", "CLOUDFLARE_ACCOUNT_ID"]
+      "credentials": [
+        "CLOUDFLARE_API_TOKEN",
+        "CLOUDFLARE_ACCOUNT_ID"
+      ]
     },
     {
       "requested": "cloudflare code mode",
       "wiredId": "cloudflare-code-mode",
-      "closestPackage": "mcp-remote → https://mcp.cloudflare.com/mcp",
+      "closestPackage": "mcp-remote \u2192 https://mcp.cloudflare.com/mcp",
       "status": "wired",
-      "credentials": ["CLOUDFLARE_API_TOKEN", "CLOUDFLARE_ACCOUNT_ID"]
+      "credentials": [
+        "CLOUDFLARE_API_TOKEN",
+        "CLOUDFLARE_ACCOUNT_ID"
+      ]
     },
     {
       "requested": "playwright / @playwright/mcp",
@@ -68,42 +85,55 @@
       "wiredId": "firecrawl",
       "closestPackage": "firecrawl-mcp@3.24.0",
       "status": "wired",
-      "credentials": ["FIRECRAWL_API_KEY"]
+      "credentials": [
+        "FIRECRAWL_API_KEY"
+      ]
     },
     {
       "requested": "postgres / @postgres/mcp-pro",
       "wiredId": "postgres-mcp-pro",
       "closestPackage": "scripts/postgres-mcp-pro.sh + postgres-mcp==0.3.0",
       "status": "closest",
-      "credentials": ["DATABASE_URI"]
+      "credentials": [
+        "DATABASE_URI"
+      ]
     },
     {
       "requested": "sentry / @sentry/mcp",
       "wiredId": "sentry",
       "closestPackage": "@sentry/mcp-server@0.37.0",
       "status": "closest",
-      "credentials": ["SENTRY_AUTH_TOKEN"]
+      "credentials": [
+        "SENTRY_AUTH_TOKEN"
+      ]
     },
     {
       "requested": "kubernetes / @kubernetes/mcp",
       "wiredId": "kubernetes",
       "closestPackage": "mcp-server-kubernetes@4.1.4",
       "status": "closest",
-      "credentials": ["KUBECONFIG"]
+      "credentials": [
+        "KUBECONFIG"
+      ]
     },
     {
       "requested": "slack / @slack/mcp",
       "wiredId": "slack",
       "closestPackage": "@chinchillaenterprises/mcp-slack@4.14.0",
       "status": "closest",
-      "credentials": ["SLACK_BOT_TOKEN", "SLACK_TEAM_ID"]
+      "credentials": [
+        "SLACK_BOT_TOKEN",
+        "SLACK_TEAM_ID"
+      ]
     },
     {
       "requested": "context7 / context7-mcp",
       "wiredId": "context7",
       "closestPackage": "@upstash/context7-mcp@4.0.3",
       "status": "closest",
-      "credentials": ["CONTEXT7_API_KEY"]
+      "credentials": [
+        "CONTEXT7_API_KEY"
+      ]
     },
     {
       "requested": "folio / folio-mcp@0.4.1",
@@ -117,42 +147,58 @@
       "wiredId": "Sinch",
       "closestPackage": "@sinch/mcp",
       "status": "wired",
-      "credentials": ["CONVERSATION_PROJECT_ID", "CONVERSATION_KEY_ID", "CONVERSATION_KEY_SECRET"]
+      "credentials": [
+        "CONVERSATION_PROJECT_ID",
+        "CONVERSATION_KEY_ID",
+        "CONVERSATION_KEY_SECRET"
+      ]
     },
     {
       "requested": "oracle / oracle-mcp",
       "wiredId": null,
       "closestPackage": "postgres-mcp-pro (company DB URI)",
       "status": "closest-not-mcp-entry",
-      "credentials": ["DATABASE_URI"]
+      "credentials": [
+        "DATABASE_URI"
+      ]
     },
     {
       "requested": "openlaws / openlaws-mcp",
       "wiredId": null,
       "closestPackage": "OpenLaws REST stub via /v1/legal/search",
       "status": "rest-stub",
-      "credentials": ["OPENLAWS_API_KEY"]
+      "credentials": [
+        "OPENLAWS_API_KEY"
+      ]
     },
     {
       "requested": "westlaw / westlaw-mcp",
       "wiredId": null,
       "closestPackage": "blocked-contract REST stub",
       "status": "wont-do",
-      "credentials": ["WESTLAW_USERNAME", "WESTLAW_PASSWORD"]
+      "credentials": [
+        "WESTLAW_USERNAME",
+        "WESTLAW_PASSWORD"
+      ]
     },
     {
       "requested": "lexisnexis / lexisnexis-mcp",
       "wiredId": null,
       "closestPackage": "blocked-contract REST stub",
       "status": "wont-do",
-      "credentials": ["LEXISNEXIS_API_KEY"]
+      "credentials": [
+        "LEXISNEXIS_API_KEY"
+      ]
     },
     {
       "requested": "pacer / pacer-mcp",
       "wiredId": null,
       "closestPackage": "PACER REST stub (no CM/ECF session)",
       "status": "rest-stub",
-      "credentials": ["PACER_USERNAME", "PACER_PASSWORD"]
+      "credentials": [
+        "PACER_USERNAME",
+        "PACER_PASSWORD"
+      ]
     },
     {
       "requested": "sec-edgar / sec-edgar-mcp",
@@ -173,7 +219,9 @@
       "wiredId": null,
       "closestPackage": "api.finra.org REST stub",
       "status": "rest-stub",
-      "credentials": ["FINRA_API_KEY"]
+      "credentials": [
+        "FINRA_API_KEY"
+      ]
     },
     {
       "requested": "courtlistener / courtlistener-mcp",
@@ -181,6 +229,13 @@
       "closestPackage": "court-listener pip + public REST v4",
       "status": "rest-stub",
       "credentials": []
+    },
+    {
+      "requested": "brave-search / @modelcontextprotocol/server-brave-search",
+      "wiredId": "brave-search",
+      "closestPackage": "@brave/brave-search-mcp-server@2.1.3",
+      "status": "closest",
+      "note": "Requested @modelcontextprotocol/server-brave-search is the archived 0.6.2 reference server; Brave's maintained package is wired instead."
     }
   ],
   "wontAddToMcpJson": [
