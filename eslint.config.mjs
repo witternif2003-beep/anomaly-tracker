@@ -15,6 +15,7 @@ const eslintConfig = defineConfig([
     "node_modules/**",
     "vendor/**",
     "wh-tracker/**",
+    "wh-tracker-vercel/**",
   ]),
   js.configs.recommended,
   ...tseslint.configs.recommended,
