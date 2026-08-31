@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>WH Anomaly Tracker &middot; topology</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #070a0f;
+        --panel: rgba(12, 18, 26, 0.86);
+        --line: rgba(120, 150, 180, 0.22);
+        --text: #dce6f2;
+        --muted: #7d8da0;
+      }
+      * { box-sizing: border-box; }
+      html, body { height: 100%; margin: 0; background: var(--bg); color: var(--text);
+        font: 13px/1.5 -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; overflow: hidden; }
+      #scene { position: fixed; inset: 0; touch-action: none; }
+      .panel { position: fixed; z-index: 2; background: var(--panel); border: 1px solid var(--line);
+        border-radius: 10px; padding: 14px 16px; backdrop-filter: blur(6px); }
+      #hud { top: 16px; left: 16px; min-width: 232px; }
+      #hud h1 { margin: 0 0 2px; font-size: 15px; letter-spacing: .02em; }
+      #hud .sub { color: #7d8da0; font-size: 11px; margin-bottom: 12px; }
+      #hud dl { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; margin: 0; }
+      #hud dt { color: #7d8da0; }
+      #hud dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; }
+      #status { margin-top: 12px; font-size: 11px; }
+      #status .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+        background: #f0a13c; margin-right: 6px; vertical-align: 1px; }
+      #status.live .dot { background: #3ad07f; }
+      #status.polling .dot { background: #4b8ed0; }
+      #status.down .dot { background: #e2504b; }
+      #feed { top: 16px; right: 16px; width: 330px; max-height: calc(58vh - 32px); overflow: auto; }
+      #feed h2 { margin: 0 0 10px; font-size: 12px; text-transform: uppercase; letter-spacing: .1em; color: #7d8da0; }
+      .anomaly { border-left: 3px solid #4b5c70; padding: 6px 0 6px 10px; margin-bottom: 10px; }
+      .anomaly .title { font-weight: 600; }
+      .anomaly .row { color: #7d8da0; font-size: 11px; }
+      .anomaly.critical { border-color: #e2504b; }
+      .anomaly.high { border-color: #f0762f; }
+      .anomaly.medium { border-color: #e0b13c; }
+      .anomaly.low { border-color: #3ad07f; }
+      .anomaly.info { border-color: #4b8ed0; }
+      #legend { bottom: 16px; left: 16px; font-size: 11px; color: #9fb0c4; }
+      #legend b { color: var(--text); font-weight: 600; }
+      #legend button { margin-left: 8px; background: rgba(75, 142, 208, 0.16); color: var(--text);
+        border: 1px solid var(--line); border-radius: 6px; padding: 4px 8px; font: inherit; cursor: pointer; }
+      #tooltip { position: fixed; pointer-events: none; background: rgba(8, 12, 18, 0.94);
+        border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; font-size: 11px;
+        display: none; z-index: 5; }
+      .empty { color: #7d8da0; font-style: italic; }
+      #errors { bottom: 16px; right: 16px; width: 330px; max-height: 40vh; overflow: auto; }
+      #errors header { display: flex; align-items: baseline; gap: 8px; margin-bottom: 8px; }
+      #errors h2 { margin: 0; font-size: 12px; text-transform: uppercase; letter-spacing: .1em; color: #7d8da0; }
+      #error-count { font-variant-numeric: tabular-nums; font-weight: 600; }
+      #error-count[data-state="errors"] { color: #e2504b; }
+      #error-count[data-state="clear"] { color: #3ad07f; }
+      #errors .actions { margin-left: auto; display: flex; gap: 6px; align-items: center; }
+      #errors button, #errors a { background: rgba(75, 142, 208, 0.16); color: var(--text);
+        border: 1px solid var(--line); border-radius: 6px; padding: 3px 7px; font: inherit;
+        cursor: pointer; text-decoration: none; font-size: 11px; }
+      .error { border-left: 3px solid #4b5c70; padding: 6px 0 6px 10px; margin-bottom: 10px; }
+      .error .title { font-weight: 600; word-break: break-word; }
+      .error .row { color: #7d8da0; font-size: 11px; word-break: break-word; }
+      .error.critical { border-color: #e2504b; }
+      .error.high { border-color: #f0762f; }
+      .error.medium { border-color: #e0b13c; }
+
+      /* Fixed panels overlap once the viewport is narrower than hud + feed, so
+         below that they stack in a scrollable column over the canvas. */
+      @media (max-width: 720px), (max-height: 520px) {
+        body { overflow: auto; }
+        #panels { position: fixed; inset: 0; display: flex; flex-direction: column; gap: 8px;
+          padding: 8px; overflow-y: auto; pointer-events: none; }
+        #panels > .panel { position: static; width: auto; min-width: 0; max-height: none;
+          padding: 10px 12px; pointer-events: auto; }
+        #hud dl { grid-template-columns: repeat(4, 1fr); text-align: center; gap: 2px 8px; }
+        #hud dt, #hud dd { text-align: center; font-size: 11px; }
+        #feed { max-height: 34vh; overflow: auto; }
+        #errors { width: auto; max-height: 28vh; order: 4; }
+        #legend { order: 3; font-size: 10px; }
+        #tooltip { display: none !important; }
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="scene"></canvas>
+
+    <div id="panels">
+      <section class="panel" id="hud">
+        <h1>WH Anomaly Tracker</h1>
+        <div class="sub" id="source-label">entity topology &middot; live</div>
+        <dl>
+          <dt>Entities</dt><dd id="kpi-entities">0</dd>
+          <dt>Links</dt><dd id="kpi-links">0</dd>
+          <dt>Anomalies</dt><dd id="kpi-anomalies">0</dd>
+          <dt>Max score</dt><dd id="kpi-score">0</dd>
+        </dl>
+        <div id="status"><span class="dot"></span><span id="status-text">connecting…</span></div>
+      </section>
+
+      <section class="panel" id="feed">
+        <h2>Anomaly feed</h2>
+        <div id="feed-list"><p class="empty">No anomalies recorded.</p></div>
+      </section>
+
+      <section class="panel" id="errors">
+        <header>
+          <h2>Error queue</h2>
+          <span id="error-count" data-state="clear">0</span>
+          <span class="actions">
+            <a href="/errors.html" target="_blank" rel="noopener">open</a>
+            <button id="error-clear" type="button">clear</button>
+          </span>
+        </header>
+        <div id="error-list"><p class="empty">No errors observed this session.</p></div>
+      </section>
+
+      <section class="panel" id="legend">
+        <span id="controls-hint">drag to orbit &middot; scroll to zoom</span> &middot; <b>H</b> toggles the White House wireframe &middot;
+        node size = <b>degree</b>, colour = <b>worst anomaly severity</b>
+        <button id="toggle-house" type="button">toggle wireframe</button>
+        <button id="export-png" type="button">export PNG</button>
+      </section>
+    </div>
+
+    <div id="tooltip"></div>
+
+    <script type="module" src="/viewer.js"></script>
+  </body>
+</html>

@@ -1,0 +1,28 @@
+{
+  "name": "wh-tracker",
+  "version": "0.1.0",
+  "private": true,
+  "description": "WH Anomaly Tracker - entity topology viewer, PDF reporting and open-data enrichment pipelines",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=20.11"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "start:pdf": "node pdf-service.js",
+    "start:scheduler": "node src/pipeline-scheduler.js",
+    "pipeline:fec": "node fec-taxii-pipeline.js",
+    "smoke": "node scripts/smoke.js",
+    "lint": "node --check server.js && node --check pdf-service.js && node --check fec-taxii-pipeline.js && node --check src/treasury-api.js && node --check src/otx-enrichment.js && node --check src/pipeline-scheduler.js && node --check src/store.js && node --check src/metrics.js && node --check src/stix.js && node --check src/logger.js"
+  },
+  "dependencies": {
+    "axios": "1.19.0",
+    "dotenv": "16.4.7",
+    "express": "4.22.2",
+    "prom-client": "15.1.3",
+    "puppeteer-core": "23.11.1",
+    "three": "0.170.0",
+    "uuid": "11.1.1",
+    "ws": "8.21.3"
+  }
+}

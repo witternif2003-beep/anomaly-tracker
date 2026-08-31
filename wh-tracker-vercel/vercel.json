@@ -1,0 +1,28 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "npm run build",
+  "outputDirectory": "public",
+  "functions": {
+    "api/**/*.js": {
+      "maxDuration": 60
+    }
+  },
+  "headers": [
+    {
+      "source": "/vendor/(.*)",
+      "headers": [{ "key": "cache-control", "value": "public, max-age=31536000, immutable" }]
+    },
+    {
+      "source": "/index.html",
+      "headers": [{ "key": "cache-control", "value": "no-cache" }]
+    },
+    {
+      "source": "/(viewer|scout|error-queue|topology-fallback).js",
+      "headers": [{ "key": "cache-control", "value": "no-cache" }]
+    },
+    {
+      "source": "/errors.html",
+      "headers": [{ "key": "cache-control", "value": "no-cache" }]
+    }
+  ]
+}

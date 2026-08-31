@@ -1,0 +1,81 @@
+groups:
+  - name: wh-tracker-availability
+    rules:
+      - alert: ServiceDown
+        expr: up == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "{{ $labels.job }} is down"
+          description: "Prometheus has not scraped {{ $labels.job }} ({{ $labels.instance }}) for 2 minutes."
+
+      - alert: HighHttpErrorRate
+        expr: |
+          sum by (service) (rate(wh_http_requests_total{status=~"5.."}[5m]))
+            / sum by (service) (rate(wh_http_requests_total[5m])) > 0.05
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "5xx rate above 5% on {{ $labels.service }}"
+          description: "{{ $labels.service }} has served >5% 5xx responses for 10 minutes."
+
+      - alert: PdfRenderFailures
+        expr: increase(wh_pdf_reports_total{result!="ok"}[15m]) > 3
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "PDF rendering is failing"
+          description: "More than 3 failed renders in the last 15 minutes."
+
+  - name: wh-tracker-pipelines
+    rules:
+      - alert: PipelineStale
+        # Covers both "succeeded, but too long ago" and "enabled and never
+        # succeeded since the scheduler started".
+        expr: |
+          (
+            time() - wh_pipeline_last_success_timestamp_seconds > 86400
+          )
+          or
+          (
+            wh_pipeline_enabled == 1
+            unless on (pipeline) wh_pipeline_last_success_timestamp_seconds
+          ) and on () (time() - wh_scheduler_start_timestamp_seconds > 86400)
+        for: 30m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Pipeline {{ $labels.pipeline }} has not succeeded in 24h"
+          description: "No successful run in the last day; check upstream API keys and quotas."
+
+      - alert: UpstreamApiErrors
+        expr: increase(wh_upstream_errors_total[30m]) > 10
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Upstream errors from {{ $labels.upstream }}"
+          description: "More than 10 upstream errors in 30 minutes (rate limit or outage)."
+
+  - name: wh-tracker-signal
+    rules:
+      - alert: CriticalAnomalyDetected
+        expr: wh_anomalies_total{severity="critical"} > 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Critical anomaly tracked"
+          description: "{{ $value }} critical anomalies are currently tracked. Review the anomaly feed."
+
+      - alert: AnomalyScoreSpike
+        expr: wh_anomaly_score_max >= 90
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Anomaly score at {{ $value }}"
+          description: "An anomaly is scoring 90+; likely a large outlier award or contribution."
