@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { LoaderCircleIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -27,6 +27,7 @@ import {
   type MayForensicPacket,
 } from "@/components/lyra/forensic-evidence-popup";
 import { ScoutBotPanel, type ScoutBotPayload } from "@/components/lyra/scout-bot";
+import { discoveryStore } from "@/lib/continuous-discovery";
 
 interface SceneNode {
   id: string;
@@ -388,6 +389,11 @@ export function AnomalyTracker({ initialData }: { initialData?: TrackerBook }) {
   const [priority, setPriority] = useState<string>("");
   const [selected, setSelected] = useState<string | null>(initialData?.p1Queue?.[0]?.id ?? null);
   const [tick, setTick] = useState(0);
+  const discovery = useSyncExternalStore(
+    discoveryStore.subscribe,
+    discoveryStore.getSnapshot,
+    discoveryStore.getServerSnapshot,
+  );
   const [postdocQ, setPostdocQ] = useState("");
   const [postdocAxis, setPostdocAxis] = useState("");
   const [postdocShow, setPostdocShow] = useState(50);
@@ -631,10 +637,15 @@ export function AnomalyTracker({ initialData }: { initialData?: TrackerBook }) {
                 telemetry={book.summary.telemetryActive ? "ACTIVE 24/7" : "off"}
               </Badge>
               <Badge variant="outline">
-                {book.summary.p1Events} P1 · {book.summary.anomalies} events
+                {(book.summary.p1Events + discovery.p1Violations).toLocaleString()} P1 ·{" "}
+                {(book.summary.anomalies + discovery.violations).toLocaleString()} events
+              </Badge>
+              <Badge className="bg-sky-500/20 text-sky-100">
+                +{discovery.businesses.toLocaleString()} businesses discovered
               </Badge>
               <Badge variant="outline">
-                {(book.summary.telemetryTicks ?? 0).toLocaleString()} telemetry ticks
+                {((book.summary.telemetryTicks ?? 0) + discovery.ticks).toLocaleString()} telemetry
+                ticks
               </Badge>
               <Badge variant="outline">
                 {book.summary.evidenceElements ?? 0} evidence elements
@@ -645,6 +656,7 @@ export function AnomalyTracker({ initialData }: { initialData?: TrackerBook }) {
               </Badge>
               <Badge variant="outline">{book.summary.entityTypes} entity types</Badge>
               <Badge variant="outline">tick {tick}</Badge>
+              <Badge variant="outline">continuous discovery · never idle</Badge>
             </div>
 
             {book.telemetry ? (

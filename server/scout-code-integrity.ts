@@ -2,7 +2,7 @@
  * Postdoc ×729 hidden-code integrity audit (additive).
  * Runs at static bake time — scout validates the embedded report.
  * Never removes features; only reports / requires heals via reload-static.
- * Thorough deep dive: all 12 pipelines + latent client/server anti-patterns
+ * Thorough deep dive: all 13 pipelines + latent client/server anti-patterns
  * + data/scripts/public/.cursor surface · ≥5832 gates · every 1ms scout tick.
  */
 import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
@@ -320,8 +320,9 @@ export function compileScoutCodeIntegrity() {
     "load-env applies free-API defaults for empty placeholders",
   );
 
-  // All 12 pipeline scripts exist + contain PIPELINE OK / FAIL markers
+  // All 13 pipeline scripts exist + contain PIPELINE OK / FAIL markers
   const pipes = [
+    "continuous-discovery",
     "aip-static-smoke",
     "business-crime-audit",
     "cloudflare-ci",
@@ -337,10 +338,10 @@ export function compileScoutCodeIntegrity() {
   ];
   const missingPipes = pipes.filter((p) => !fileExists(`scripts/pipelines/${p}.sh`));
   push(
-    "hidden-pipeline-scripts-12",
+    "hidden-pipeline-scripts-13",
     "pipeline",
     missingPipes.length === 0,
-    missingPipes.length === 0 ? "All 12 pipeline scripts present" : `missing=${missingPipes.join(",")}`,
+    missingPipes.length === 0 ? "All 13 pipeline scripts present" : `missing=${missingPipes.join(",")}`,
   );
   for (const p of pipes) {
     const rel = `scripts/pipelines/${p}.sh`;
@@ -358,8 +359,58 @@ export function compileScoutCodeIntegrity() {
     );
   }
 
+  // Continuous discovery: the finite pool is a seed, never the universe
+  push(
+    "hidden-discovery-synthesis-lib",
+    "discovery",
+    fileHas("src/lib/continuous-discovery.ts", "export function synthesizeBusiness") &&
+      fileHas("src/lib/continuous-discovery.ts", "export function synthesizeViolation"),
+    "continuous-discovery exposes unbounded business/violation synthesis",
+  );
+  push(
+    "hidden-discovery-monotonic-store",
+    "discovery",
+    fileHas("src/lib/continuous-discovery.ts", "Math.max("),
+    "discovery counters clamp monotonically (never regress)",
+  );
+  push(
+    "hidden-discovery-wallclock-anchor",
+    "discovery",
+    fileHas("src/lib/continuous-discovery.ts", "DISCOVERY_EPOCH_MS") &&
+      fileHas("src/lib/continuous-discovery.ts", "export function backlogCounters"),
+    "growth is anchored to wall clock, not tab uptime",
+  );
+  push(
+    "hidden-discovery-seed-baked",
+    "discovery",
+    fileHas("server/black-owned-scan-pipeline.ts", "discoverySynthesis") &&
+      fileHas("data/anomaly/black-owned-scan-bot.json", "\"synthesis\""),
+    "scan payload bakes the synthesis seed corpora",
+  );
+  push(
+    "hidden-discovery-client-unbounded",
+    "discovery",
+    fileHas("src/components/lyra/black-owned-scan-bot.tsx", "synthesizeBusiness") &&
+      fileHas("src/components/lyra/black-owned-scan-bot.tsx", "QUEUE_RENDER_CAP"),
+    "scan bot synthesizes past pool exhaustion with a bounded render window",
+  );
+  push(
+    "hidden-discovery-stall-gate",
+    "discovery",
+    fileHas("src/lib/scout-healer.ts", "continuous-discovery-stalled"),
+    "scout raises a P1 when discovery stops advancing",
+  );
+  push(
+    "hidden-discovery-labelled-fixture",
+    "discovery",
+    fileHas("src/lib/continuous-discovery.ts", "fixture-synthesis") &&
+      !fileHas("src/lib/continuous-discovery.ts", "liveSurveillance: true"),
+    "synthesized rows stay labelled fixture-synthesis with no live claims",
+  );
+
   // Core module presence (hidden-code surface area)
   const coreFiles = [
+    "src/lib/continuous-discovery.ts",
     "src/lib/scout-healer.ts",
     "src/components/lyra/scout-bot.tsx",
     "src/components/lyra/live-telemetry-feed.tsx",
@@ -737,6 +788,7 @@ export function compileScoutCodeIntegrity() {
     "scroll-stable",
   ] as const;
   const pipeIds = [
+    "continuous-discovery",
     "aip-static-smoke",
     "business-crime-audit",
     "cloudflare-ci",
@@ -876,7 +928,7 @@ export function compileScoutCodeIntegrity() {
     object: "lyra.scout-code-integrity" as const,
     title: "Postdoc ×729 hidden-code integrity audit",
     classified: false,
-    note: "Bake-time thorough deep dive of latent client/server anti-patterns + all 12 pipelines + every src/server/scripts/data/public/.cursor file. Scout validates every 1ms tick. Additive only — never removes features. Gate floor ≥5832.",
+    note: "Bake-time thorough deep dive of latent client/server anti-patterns + all 13 pipelines + every src/server/scripts/data/public/.cursor file. Scout validates every 1ms tick. Additive only — never removes features. Gate floor ≥5832.",
     gateCount: gates.length,
     okCount,
     allOk: okCount === gates.length,

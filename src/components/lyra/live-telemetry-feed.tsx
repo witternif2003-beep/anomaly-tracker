@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { discoveryStore } from "@/lib/continuous-discovery";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -149,7 +150,16 @@ export function LiveTelemetryFeed({
   }, [stream, telemetry.tickMs]);
 
   const head = stream[cursor] ?? feed[0] ?? null;
-  const entitiesCovered = useMemo(() => new Set(stream.map((t) => t.entityId)).size, [stream]);
+  const discovery = useSyncExternalStore(
+    discoveryStore.subscribe,
+    discoveryStore.getSnapshot,
+    discoveryStore.getServerSnapshot,
+  );
+  const bakedEntities = useMemo(() => new Set(stream.map((t) => t.entityId)).size, [stream]);
+  // Baked roster + everything the continuous search has admitted since the epoch.
+  const entitiesCovered = bakedEntities + discovery.businesses;
+  const totalTicks = telemetry.totalTicks + discovery.ticks;
+  const p1Ticks = (preferP1 ? stream.length : telemetry.p1Ticks) + discovery.p1Violations;
 
   return (
     <Card className="overflow-hidden">
@@ -167,7 +177,8 @@ export function LiveTelemetryFeed({
             <Badge className="bg-amber-500/20 text-amber-100">SOTA · Live P1</Badge>
             <Badge variant="outline">{telemetry.mode}</Badge>
             <Badge variant="outline">
-              {stream.length.toLocaleString()} live ticks · {entitiesCovered} entities
+              {(stream.length + discovery.ticks).toLocaleString()} live ticks ·{" "}
+              {entitiesCovered.toLocaleString()} entities
             </Badge>
             <Badge variant="secondary">liveSurveillance={String(telemetry.liveSurveillance)}</Badge>
             <Badge variant="outline">fixture-clock · not live NCIC</Badge>
@@ -222,15 +233,15 @@ export function LiveTelemetryFeed({
           )}
           <div className="grid grid-cols-3 gap-2">
             <div className="hud-stat">
-              <span className="hud-stat-value">{telemetry.totalTicks.toLocaleString()}</span>
+              <span className="hud-stat-value">{totalTicks.toLocaleString()}</span>
               <span className="hud-stat-label">Total ticks</span>
             </div>
             <div className="hud-stat">
-              <span className="hud-stat-value">{(preferP1 ? stream.length : telemetry.p1Ticks).toLocaleString()}</span>
+              <span className="hud-stat-value">{p1Ticks.toLocaleString()}</span>
               <span className="hud-stat-label">P1 ticks</span>
             </div>
             <div className="hud-stat">
-              <span className="hud-stat-value">{entitiesCovered}</span>
+              <span className="hud-stat-value">{entitiesCovered.toLocaleString()}</span>
               <span className="hud-stat-label">Businesses</span>
             </div>
           </div>

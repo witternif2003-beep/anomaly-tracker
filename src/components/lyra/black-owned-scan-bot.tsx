@@ -6,7 +6,18 @@ import {
   useMemo,
   useRef,
   useState,
+  useSyncExternalStore,
 } from "react";
+import {
+  backlogCounters,
+  discoveryIndexAt,
+  discoveryStore,
+  seedFromScanPayload,
+  synthesizeBusiness,
+  synthesizeViolation,
+  type DiscoverySeed,
+  type SyntheticBusiness,
+} from "@/lib/continuous-discovery";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -114,6 +125,7 @@ export type BlackOwnedScanBotPayload = {
     note: string;
     results: Array<{ id: string; group: string; detail: string; ok: boolean }>;
   };
+  discoverySynthesis?: DiscoverySeed;
   targets: BlackOwnedScanTarget[];
   discoveryPool?: BlackOwnedScanTarget[];
   queue?: BlackOwnedScanTarget[];
@@ -186,6 +198,30 @@ function statusTone(status: BlackOwnedScanTick["status"] | string) {
   return "border-border/50 bg-background/40 text-muted-foreground";
 }
 
+/** Visible rows are capped; the counters keep climbing without growing the DOM. */
+const QUEUE_RENDER_CAP = 120;
+
+function syntheticToTarget(business: SyntheticBusiness): BlackOwnedScanTarget {
+  return {
+    id: business.id,
+    name: business.name,
+    normalizedName: business.name.toLowerCase(),
+    city: business.city,
+    sector: business.sector,
+    entityType: business.entityType,
+    kind: "discovery-pool",
+    blackOwned: true,
+    ownershipVerification: "pending-discovery",
+    signal: business.signal,
+    priority: business.priority,
+    scanAction: "discovery-channel-normalize",
+    source: business.source,
+    channelId: business.channelId,
+    fingerprint: business.fingerprint,
+    queueStatus: "discovered",
+  };
+}
+
 function sortByPriority(rows: QueueRow[]) {
   const rank = (p: string) => (p === "P1" ? 0 : p === "P2" ? 1 : 2);
   return [...rows].sort(
@@ -223,8 +259,15 @@ export function BlackOwnedScanBot({ bot }: { bot: BlackOwnedScanBotPayload }) {
   const [newCount, setNewCount] = useState(0);
   const [docCount, setDocCount] = useState(0);
   const [discoverCount, setDiscoverCount] = useState(0);
+  const synthesis = useMemo(() => seedFromScanPayload(bot), [bot]);
+  const counters = useSyncExternalStore(
+    discoveryStore.subscribe,
+    discoveryStore.getSnapshot,
+    discoveryStore.getServerSnapshot,
+  );
   const cursorRef = useRef(0);
-  const poolCursorRef = useRef(0);
+  const discoveryIndexRef = useRef(0);
+  const synthIndexRef = useRef(0);
   const streamRef = useRef(stream);
   const discoveryPoolRef = useRef(discoveryPool);
   const channelsRef = useRef(bot.discoveryChannels);
@@ -272,19 +315,33 @@ export function BlackOwnedScanBot({ bot }: { bot: BlackOwnedScanBotPayload }) {
     return () => window.clearInterval(id);
   }, [stream, bot.tickMs]);
 
+  // Credit the 24/7 backlog earned while the console was closed, then never go back down.
+  useEffect(() => {
+    discoveryStore.floor(backlogCounters(Date.now(), synthesis?.epochMs));
+  }, [synthesis]);
+
   // 24/7 discovery → auto-queue. Plain interval + refs only (no useEffectEvent — React #440 under concurrent render).
   useEffect(() => {
-    if (!bot.autoQueueOnDiscover || !discoveryPool.length) return;
+    if (!bot.autoQueueOnDiscover) return;
+    if (!discoveryPool.length && !synthesis) return;
     const tickMs = Math.max(800, bot.discoveryTickMs || 2200);
-    poolCursorRef.current = 0;
+    discoveryIndexRef.current = 0;
+    synthIndexRef.current = discoveryIndexAt(Date.now(), tickMs, synthesis?.epochMs);
     const id = window.setInterval(() => {
       const pool = discoveryPoolRef.current;
-      if (!pool.length) return;
-      const idx = poolCursorRef.current % pool.length;
-      const candidate = pool[idx];
-      const next = (idx + 1) % pool.length;
-      poolCursorRef.current = next;
-      setPoolCursor(next);
+      const step = discoveryIndexRef.current;
+      discoveryIndexRef.current = step + 1;
+      // The baked pool is a seed, not a ceiling: past its end the search keeps
+      // synthesizing never-before-seen fixture businesses, forever.
+      const synthetic =
+        step >= pool.length && synthesis
+          ? synthesizeBusiness(synthIndexRef.current++, synthesis)
+          : null;
+      const candidate = synthetic
+        ? syntheticToTarget(synthetic)
+        : pool[step % Math.max(1, pool.length)];
+      if (!candidate) return;
+      setPoolCursor(Math.min(step + 1, pool.length));
 
       const admitKey = candidate.fingerprint || candidate.id;
       if (admittedKeysRef.current.has(candidate.id) || admittedKeysRef.current.has(admitKey)) {
@@ -298,6 +355,20 @@ export function BlackOwnedScanBot({ bot }: { bot: BlackOwnedScanBotPayload }) {
         channelsRef.current?.find((c) => c.id === candidate.channelId)?.label ??
         candidate.channelId ??
         "discovery";
+      const violation =
+        synthetic && synthesis
+          ? synthesizeViolation(synthetic.index, synthetic, synthesis)
+          : null;
+
+      discoveryStore.advance({
+        discovered: 1,
+        autoQueued: 1,
+        businesses: 1,
+        violations: violation ? 1 : 0,
+        p1Violations: violation?.priority === "P1" ? 1 : 0,
+        documented: violation ? 1 : 0,
+        ticks: 1,
+      });
 
       startTransition(() => {
         setLiveQueue((prev) => {
@@ -315,9 +386,8 @@ export function BlackOwnedScanBot({ bot }: { bot: BlackOwnedScanBotPayload }) {
             autoQueued: true,
             discoveryChannel: channel,
           };
-          return sortByPriority([nextRow, ...prev]);
+          return sortByPriority([nextRow, ...prev]).slice(0, QUEUE_RENDER_CAP);
         });
-        setAutoQueuedCount((n) => n + 1);
         setDiscoveryLog((prev) =>
           [
             {
@@ -326,7 +396,9 @@ export function BlackOwnedScanBot({ bot }: { bot: BlackOwnedScanBotPayload }) {
               business: candidate.name,
               priority: candidate.priority,
               channel,
-              action: "AUTO-QUEUED on discover",
+              action: violation
+                ? `AUTO-QUEUED + ${violation.categoryLabel}`
+                : "AUTO-QUEUED on discover",
             },
             ...prev,
           ].slice(0, 24),
@@ -337,11 +409,18 @@ export function BlackOwnedScanBot({ bot }: { bot: BlackOwnedScanBotPayload }) {
               id: `live-autoq-${candidate.id}-${Date.now()}`,
               seq: prev.length + 1,
               loggedAtOffsetMs: 0,
-              status: "auto-queued" as const,
+              status: (violation ? "documented" : "auto-queued") as
+                | "documented"
+                | "auto-queued",
               target: { ...candidate, kind: "new-to-scan" as const },
-              message: `AUTO-QUEUED · ${candidate.name} discovered via ${channel} → scan queue`,
-              priority: candidate.priority,
-              stage: "auto-queue",
+              message: violation
+                ? `NEW VIOLATION · ${violation.title} · discovered via ${channel} → documented`
+                : `AUTO-QUEUED · ${candidate.name} discovered via ${channel} → scan queue`,
+              priority: violation?.priority ?? candidate.priority,
+              crimeCategoryId: violation?.categoryId,
+              crimeCategoryLabel: violation?.categoryLabel,
+              documentation: violation?.documentation,
+              stage: violation ? "crime-scan" : "auto-queue",
               autoQueued: true,
               renderKey: `live-autoq-${candidate.id}-${Date.now()}`,
             },
@@ -351,7 +430,7 @@ export function BlackOwnedScanBot({ bot }: { bot: BlackOwnedScanBotPayload }) {
       });
     }, tickMs);
     return () => window.clearInterval(id);
-  }, [bot.autoQueueOnDiscover, bot.discoveryTickMs, discoveryPool]);
+  }, [bot.autoQueueOnDiscover, bot.discoveryTickMs, discoveryPool, synthesis]);
 
   const head = stream[cursor] ?? log[0] ?? null;
   const hardening = bot.hardening;
@@ -423,13 +502,21 @@ export function BlackOwnedScanBot({ bot }: { bot: BlackOwnedScanBotPayload }) {
             <p className="text-sm text-muted-foreground">Scan stream empty — regenerate static data.</p>
           )}
 
-          <div className="grid grid-cols-2 gap-2 text-center sm:grid-cols-3 lg:grid-cols-6">
+          <div className="grid grid-cols-2 gap-2 text-center sm:grid-cols-3 lg:grid-cols-7">
             <div className="rounded-lg border border-border/40 px-2 py-2">
               <p className="font-display text-lg">{liveQueue.length}</p>
               <p className="text-[10px] tracking-[0.14em] text-muted-foreground uppercase">Live queue</p>
             </div>
+            <div className="rounded-lg border border-emerald-400/30 bg-emerald-500/5 px-2 py-2">
+              <p className="font-display text-lg text-emerald-100">
+                {(verified.length + newCount + counters.businesses).toLocaleString()}
+              </p>
+              <p className="text-[10px] tracking-[0.14em] text-muted-foreground uppercase">Businesses</p>
+            </div>
             <div className="rounded-lg border border-border/40 px-2 py-2">
-              <p className="font-display text-lg">{autoQueuedCount}</p>
+              <p className="font-display text-lg">
+                {(autoQueuedCount + counters.autoQueued).toLocaleString()}
+              </p>
               <p className="text-[10px] tracking-[0.14em] text-muted-foreground uppercase">Auto-queued</p>
             </div>
             <div className="rounded-lg border border-border/40 px-2 py-2">
@@ -437,15 +524,21 @@ export function BlackOwnedScanBot({ bot }: { bot: BlackOwnedScanBotPayload }) {
               <p className="text-[10px] tracking-[0.14em] text-muted-foreground uppercase">P1 in queue</p>
             </div>
             <div className="rounded-lg border border-border/40 px-2 py-2">
-              <p className="font-display text-lg">{discoverCount}</p>
+              <p className="font-display text-lg">
+                {(discoverCount + counters.discovered).toLocaleString()}
+              </p>
               <p className="text-[10px] tracking-[0.14em] text-muted-foreground uppercase">Discovered</p>
             </div>
             <div className="rounded-lg border border-border/40 px-2 py-2">
-              <p className="font-display text-lg">{docCount}</p>
+              <p className="font-display text-lg">
+                {(docCount + counters.documented).toLocaleString()}
+              </p>
               <p className="text-[10px] tracking-[0.14em] text-muted-foreground uppercase">Documented</p>
             </div>
             <div className="rounded-lg border border-border/40 px-2 py-2">
-              <p className="font-display text-lg">{stream.length}</p>
+              <p className="font-display text-lg">
+                {(stream.length + counters.ticks).toLocaleString()}
+              </p>
               <p className="text-[10px] tracking-[0.14em] text-muted-foreground uppercase">24/7 ticks</p>
             </div>
           </div>
@@ -467,6 +560,9 @@ export function BlackOwnedScanBot({ bot }: { bot: BlackOwnedScanBotPayload }) {
               <p className="mb-1 text-[10px] tracking-[0.16em] text-muted-foreground uppercase">
                 New businesses to scan · live queue {liveQueue.length}
                 {remainingPool ? ` · pool ${discoveryPool.length}` : ""}
+                {counters.businesses
+                  ? ` · synthesized ${counters.businesses.toLocaleString()}`
+                  : ""}
               </p>
               <ul className="max-h-48 space-y-1 overflow-y-auto text-xs text-muted-foreground">
                 {liveQueue.map((t) => (
