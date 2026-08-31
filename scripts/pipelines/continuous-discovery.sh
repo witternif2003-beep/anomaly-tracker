@@ -75,4 +75,14 @@ done
 grep -q "continuous-discovery-stalled" src/lib/scout-healer.ts ||
   { echo "PIPELINE FAIL continuous-discovery — scout stall gate missing"; exit 1; }
 
-echo "PIPELINE OK continuous-discovery unbounded-synthesis monotonic wall-clock-anchored bounded-dom fixture-labelled"
+# 4. Every P1 is individually numbered and the whole set is reachable from the menu.
+for needle in formatP1Ref syntheticP1Number p1Log; do
+  grep -q "$needle" src/components/lyra/black-owned-scan-bot.tsx ||
+    { echo "PIPELINE FAIL continuous-discovery — scan bot missing P1 numbering ($needle)"; exit 1; }
+done
+grep -q "P1CatalogMenu" src/components/lyra/anomaly-tracker.tsx ||
+  { echo "PIPELINE FAIL continuous-discovery — tracker missing the P1 drop-down menu"; exit 1; }
+grep -q "P1_LOG_CAP" src/lib/p1-registry.ts ||
+  { echo "PIPELINE FAIL continuous-discovery — P1 menu log is unbounded"; exit 1; }
+
+echo "PIPELINE OK continuous-discovery unbounded-synthesis monotonic wall-clock-anchored bounded-dom fixture-labelled p1-numbered"

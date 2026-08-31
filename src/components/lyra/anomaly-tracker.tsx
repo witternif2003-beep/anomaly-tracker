@@ -28,6 +28,8 @@ import {
 } from "@/components/lyra/forensic-evidence-popup";
 import { ScoutBotPanel, type ScoutBotPayload } from "@/components/lyra/scout-bot";
 import { discoveryStore } from "@/lib/continuous-discovery";
+import { P1CatalogMenu } from "@/components/lyra/p1-catalog-menu";
+import { bakedP1Entries } from "@/lib/p1-registry";
 
 interface SceneNode {
   id: string;
@@ -497,6 +499,13 @@ export function AnomalyTracker({ initialData }: { initialData?: TrackerBook }) {
     return book.anomalies.find((a) => a.id === selected) ?? null;
   }, [book, selected]);
 
+  // Every P1 gets its own number, and the number follows the row everywhere it shows.
+  const p1Entries = useMemo(() => bakedP1Entries(book?.anomalies ?? []), [book]);
+  const p1RefById = useMemo(
+    () => new Map(p1Entries.map((entry) => [entry.id, entry.ref])),
+    [p1Entries],
+  );
+
   const filteredPostdoc = useMemo(() => {
     if (!book?.postdocCatalog) return [];
     const needle = postdocQ.trim().toLowerCase();
@@ -640,6 +649,12 @@ export function AnomalyTracker({ initialData }: { initialData?: TrackerBook }) {
                 {(book.summary.p1Events + discovery.p1Violations).toLocaleString()} P1 ·{" "}
                 {(book.summary.anomalies + discovery.violations).toLocaleString()} events
               </Badge>
+              <P1CatalogMenu
+                entries={p1Entries}
+                totalP1={p1Entries.length + discovery.p1Violations}
+                selectedId={selected}
+                onSelect={(id) => setSelected(id)}
+              />
               <Badge className="bg-sky-500/20 text-sky-100">
                 +{discovery.businesses.toLocaleString()} businesses discovered
               </Badge>
@@ -669,7 +684,9 @@ export function AnomalyTracker({ initialData }: { initialData?: TrackerBook }) {
               />
             ) : null}
 
-            {book.blackOwnedScanBot ? <BlackOwnedScanBot bot={book.blackOwnedScanBot} /> : null}
+            {book.blackOwnedScanBot ? (
+              <BlackOwnedScanBot bot={book.blackOwnedScanBot} p1NumberBase={p1Entries.length} />
+            ) : null}
 
             {book.businessCrimeCatalog ? (
               <BusinessCrimeCatalogPanel catalog={book.businessCrimeCatalog} />
@@ -825,6 +842,11 @@ export function AnomalyTracker({ initialData }: { initialData?: TrackerBook }) {
                     >
                       <div className="flex items-center gap-2">
                         <Badge className={priorityTone(a.priority)}>{a.priority}</Badge>
+                        {p1RefById.has(a.id) ? (
+                          <span className="font-mono text-[10px] tabular-nums text-muted-foreground">
+                            {p1RefById.get(a.id)}
+                          </span>
+                        ) : null}
                         <span className="text-sm font-medium">{a.title}</span>
                       </div>
                       <p className="mt-1 text-xs text-muted-foreground">
@@ -850,6 +872,11 @@ export function AnomalyTracker({ initialData }: { initialData?: TrackerBook }) {
                         <Badge className={priorityTone(selectedAnomaly.priority)}>
                           {selectedAnomaly.priority}
                         </Badge>
+                        {p1RefById.has(selectedAnomaly.id) ? (
+                          <Badge variant="outline" className="font-mono tabular-nums">
+                            {p1RefById.get(selectedAnomaly.id)}
+                          </Badge>
+                        ) : null}
                         <Badge variant="outline">{selectedAnomaly.categoryLabel}</Badge>
                         {selectedAnomaly.fbiCategory ? (
                           <Badge variant="secondary">{selectedAnomaly.fbiCategory}</Badge>

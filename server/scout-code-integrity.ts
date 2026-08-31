@@ -408,9 +408,27 @@ export function compileScoutCodeIntegrity() {
     "synthesized rows stay labelled fixture-synthesis with no live claims",
   );
 
+  push(
+    "hidden-discovery-p1-numbered",
+    "discovery",
+    fileHas("src/lib/p1-registry.ts", "export function formatP1Ref") &&
+      fileHas("src/lib/p1-registry.ts", "export function syntheticP1Number") &&
+      fileHas("src/components/lyra/black-owned-scan-bot.tsx", "p1Log.record"),
+    "every P1 anomaly carries its own number, synthesized rows included",
+  );
+  push(
+    "hidden-discovery-p1-menu",
+    "discovery",
+    fileHas("src/components/lyra/anomaly-tracker.tsx", "P1CatalogMenu") &&
+      fileHas("src/lib/p1-registry.ts", "P1_LOG_CAP"),
+    "the full P1 set is reachable from a bounded drop-down submenu",
+  );
+
   // Core module presence (hidden-code surface area)
   const coreFiles = [
     "src/lib/continuous-discovery.ts",
+    "src/lib/p1-registry.ts",
+    "src/components/lyra/p1-catalog-menu.tsx",
     "src/lib/scout-healer.ts",
     "src/components/lyra/scout-bot.tsx",
     "src/components/lyra/live-telemetry-feed.tsx",

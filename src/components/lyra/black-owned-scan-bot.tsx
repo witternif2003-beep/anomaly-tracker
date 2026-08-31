@@ -19,6 +19,7 @@ import {
   type DiscoverySeed,
   type SyntheticBusiness,
 } from "@/lib/continuous-discovery";
+import { formatP1Ref, p1Log, syntheticP1Number } from "@/lib/p1-registry";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -230,7 +231,14 @@ function sortByPriority(rows: QueueRow[]) {
   );
 }
 
-export function BlackOwnedScanBot({ bot }: { bot: BlackOwnedScanBotPayload }) {
+export function BlackOwnedScanBot({
+  bot,
+  /** Baked P1 count — synthesized P1 numbers are reserved above that band. */
+  p1NumberBase = 0,
+}: {
+  bot: BlackOwnedScanBotPayload;
+  p1NumberBase?: number;
+}) {
   const stream = useMemo(() => bot.stream ?? [], [bot.stream]);
   const discoveryPool = useMemo(() => bot.discoveryPool ?? [], [bot.discoveryPool]);
   const seedQueue = useMemo(() => {
@@ -283,6 +291,8 @@ export function BlackOwnedScanBot({ bot }: { bot: BlackOwnedScanBotPayload }) {
   const streamRef = useRef(stream);
   const discoveryPoolRef = useRef(discoveryPool);
   const channelsRef = useRef(bot.discoveryChannels);
+  const p1BaseRef = useRef(p1NumberBase);
+  p1BaseRef.current = p1NumberBase;
   const admittedKeysRef = useRef<Set<string>>(new Set());
   streamRef.current = stream;
   discoveryPoolRef.current = discoveryPool;
@@ -370,6 +380,28 @@ export function BlackOwnedScanBot({ bot }: { bot: BlackOwnedScanBotPayload }) {
           ? synthesizeViolation(synthetic.index, synthetic, synthesis)
           : null;
 
+      // Each synthesized P1 is registered under its own number so the P1 menu can
+      // identify it individually.
+      const p1Ref =
+        violation?.priority === "P1"
+          ? formatP1Ref(syntheticP1Number(p1BaseRef.current, violation.index))
+          : null;
+      if (violation && p1Ref) {
+        p1Log.record({
+          number: syntheticP1Number(p1BaseRef.current, violation.index),
+          ref: p1Ref,
+          id: violation.id,
+          title: violation.title,
+          entityName: violation.businessName,
+          city: violation.city,
+          categoryId: violation.categoryId,
+          categoryLabel: violation.categoryLabel,
+          indicator: violation.indicator,
+          synthetic: true,
+          index: violation.index,
+        });
+      }
+
       discoveryStore.advance({
         discovered: 1,
         autoQueued: 1,
@@ -407,7 +439,7 @@ export function BlackOwnedScanBot({ bot }: { bot: BlackOwnedScanBotPayload }) {
               priority: candidate.priority,
               channel,
               action: violation
-                ? `AUTO-QUEUED + ${violation.categoryLabel}`
+                ? `AUTO-QUEUED + ${p1Ref ? `${p1Ref} · ` : ""}${violation.categoryLabel}`
                 : "AUTO-QUEUED on discover",
             },
             ...prev,
@@ -424,7 +456,7 @@ export function BlackOwnedScanBot({ bot }: { bot: BlackOwnedScanBotPayload }) {
                 | "auto-queued",
               target: { ...candidate, kind: "new-to-scan" as const },
               message: violation
-                ? `NEW VIOLATION · ${violation.title} · discovered via ${channel} → documented`
+                ? `NEW VIOLATION${p1Ref ? ` · ${p1Ref}` : ""} · ${violation.title} · discovered via ${channel} → documented`
                 : `AUTO-QUEUED · ${candidate.name} discovered via ${channel} → scan queue`,
               priority: violation?.priority ?? candidate.priority,
               crimeCategoryId: violation?.categoryId,
