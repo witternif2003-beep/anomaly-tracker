@@ -4,7 +4,7 @@ Serverless subset of [`../wh-tracker`](../wh-tracker) that runs on Vercel: the 3
 viewer (with the wireframe White House), the anomaly API, USAspending and OTX enrichment,
 and a server-sent-events stream in place of the websocket.
 
-Live: https://wh-tracker-vercel.vercel.app
+Live: https://wh-tracker.vercel.app
 
 ## What does not come along
 
@@ -73,7 +73,7 @@ npm run smoke     # exercises handlers in-process (auth, validation, live USAspe
 npm run dev       # vercel dev
 ```
 
-`BASE_URL=https://wh-tracker-vercel.vercel.app npm run smoke` runs the same checks over HTTP
+`BASE_URL=https://wh-tracker.vercel.app npm run smoke` runs the same checks over HTTP
 against a deployment (set `SMOKE_API_KEY` to the deployment's `API_KEY` for the write checks).
 
 ## Deploy
