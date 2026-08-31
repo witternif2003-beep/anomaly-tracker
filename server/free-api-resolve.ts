@@ -2,6 +2,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import type { LegalHit } from "./legal/types";
+import { assertSafeFetchUrl } from "./safe-url";
 import resolutionsDoc from "../data/anomaly/free-api-resolutions.json";
 
 export type FreeResolutionName = keyof typeof resolutionsDoc.resolutions;
@@ -170,8 +171,11 @@ export async function fetchViaJina(targetUrl: string): Promise<{
   markdown: string;
   tool: string;
 }> {
-  const target = targetUrl.startsWith("http") ? targetUrl : `https://${targetUrl}`;
-  const { ok, status, body } = await fetchText(`https://r.jina.ai/${target}`, 15000, {
+  const safe = assertSafeFetchUrl(targetUrl);
+  if (!safe.ok) {
+    return { ok: false, status: 400, markdown: safe.reason, tool: "jina-reader" };
+  }
+  const { ok, status, body } = await fetchText(`https://r.jina.ai/${safe.url}`, 15000, {
     Accept: "text/plain",
   });
   return { ok, status, markdown: body.slice(0, 50_000), tool: "jina-reader" };

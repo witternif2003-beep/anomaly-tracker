@@ -293,7 +293,6 @@ function evaluateHardening(ctx: {
   const hardeningScore = Math.round((okCount / Math.max(results.length, 1)) * 100);
   const scoreFloorOk = hardeningScore >= 95;
   const alignedOk = results.length === gates.length;
-  const allOk = results.every((r) => r.ok) && scoreFloorOk;
 
   for (const row of results) {
     if (row.id === "hardening-score-floor") row.ok = scoreFloorOk;

@@ -178,7 +178,6 @@ export function listPostdocRange(
   const axisId = opts?.axisId?.trim();
   const status = opts?.status?.trim().toLowerCase();
   const sotaOnly = opts?.sotaOnly === true;
-  const end = sotaOnly ? top500 : total;
 
   const matched: PostdocImprovement[] = [];
   // Streaming filter: scan until we fill the page or exhaust catalog.

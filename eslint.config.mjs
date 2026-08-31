@@ -25,6 +25,36 @@ const eslintConfig = defineConfig([
       ],
     },
   },
+  {
+    // Cloudflare Workers runtime: fetch/Response/URL are ambient, there is no `require`.
+    files: ["workers/**/*.js"],
+    languageOptions: {
+      globals: {
+        URL: "readonly",
+        URLSearchParams: "readonly",
+        fetch: "readonly",
+        Request: "readonly",
+        Response: "readonly",
+        Headers: "readonly",
+        crypto: "readonly",
+        console: "readonly",
+      },
+    },
+  },
+  {
+    files: ["scripts/**/*.cjs", "scripts/**/*.mjs", "scripts/**/*.js"],
+    languageOptions: {
+      globals: {
+        process: "readonly",
+        console: "readonly",
+        require: "readonly",
+        module: "writable",
+        __dirname: "readonly",
+        __filename: "readonly",
+      },
+    },
+    rules: { "@typescript-eslint/no-require-imports": "off" },
+  },
 ]);
 
 export default eslintConfig;

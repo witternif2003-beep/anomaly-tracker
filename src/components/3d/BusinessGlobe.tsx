@@ -415,36 +415,6 @@ class GlobeErrorBoundary extends Component<
   }
 }
 
-function CssFallbackGlobe({
-  nodes,
-  events,
-  selectedEntityId,
-  hotEventId,
-  blackOwnedOnly,
-  onSelectEntity,
-  onSelectEvent,
-}: {
-  nodes: SceneNode[];
-  events: SceneEvent[];
-  selectedEntityId: string | null;
-  hotEventId: string | null;
-  blackOwnedOnly: boolean;
-  onSelectEntity: (id: string) => void;
-  onSelectEvent: (id: string) => void;
-}) {
-  return (
-    <OrbitalChamber
-      nodes={nodes}
-      events={events}
-      selectedEntityId={selectedEntityId}
-      hotEventId={hotEventId}
-      blackOwnedOnly={blackOwnedOnly}
-      onSelectEntity={onSelectEntity}
-      onSelectEvent={onSelectEvent}
-    />
-  );
-}
-
 export default function BusinessGlobe({ initialData }: { initialData?: GlobePayload }) {
   const [payload, setPayload] = useState<GlobePayload | null>(initialData ?? null);
   const [error, setError] = useState<string | null>(null);
