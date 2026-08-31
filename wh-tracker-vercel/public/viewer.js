@@ -1,6 +1,7 @@
 import * as THREE from "/vendor/three.module.js";
 import { createScout } from "/scout.js";
 import { mountErrorQueue } from "/error-queue.js";
+import { createFallback2D } from "/topology-2d.js";
 
 const SEVERITY_COLOR = {
   critical: 0xe2504b,
@@ -329,21 +330,48 @@ function createScene() {
   };
 }
 
+// `?render=2d` forces the fallback, which is how the 2D path is exercised on
+// machines that do have WebGL.
+const forced2d = new URLSearchParams(window.location.search).get("render") === "2d";
+
 let scene3d = null;
 try {
+  if (forced2d) throw new Error("2D rendering requested via ?render=2d");
   scene3d = createScene();
 } catch (err) {
-  scout.record({
-    kind: "exception",
-    message: `3D scene unavailable — ${err.message}`,
-    detail: "WebGL context or Three.js initialisation failed; HUD and feeds still update",
-    source: "viewer",
-  });
-  document.getElementById("scene").style.display = "none";
-  document.getElementById("legend").insertAdjacentHTML(
-    "afterbegin",
-    '<div style="color:#e2504b">3D disabled: WebGL unavailable in this browser. Data panels still update.</div>'
-  );
+  if (!forced2d) {
+    scout.record({
+      kind: "exception",
+      message: `3D scene unavailable — ${err.message}`,
+      detail: "WebGL context or Three.js initialisation failed; falling back to the 2D topology",
+      source: "viewer",
+    });
+  }
+  try {
+    scene3d = createFallback2D({
+      canvas: document.getElementById("scene"),
+      getState: () => state,
+      worstSeverity,
+      tooltip: document.getElementById("tooltip"),
+    });
+    document.getElementById("controls-hint").textContent = "scroll to zoom · hover for details";
+    document.getElementById("legend").insertAdjacentHTML(
+      "afterbegin",
+      '<div style="color:#e0b13c">WebGL unavailable — 2D fallback. Enable hardware acceleration for the 3D scene.</div>'
+    );
+  } catch (fallbackErr) {
+    scout.record({
+      kind: "exception",
+      message: `2D fallback unavailable — ${fallbackErr.message}`,
+      detail: "HUD, anomaly feed and error queue still update",
+      source: "viewer",
+    });
+    document.getElementById("scene").style.display = "none";
+    document.getElementById("legend").insertAdjacentHTML(
+      "afterbegin",
+      '<div style="color:#e2504b">Canvas unavailable in this browser. Data panels still update.</div>'
+    );
+  }
 }
 
 function applySnapshot(message) {
