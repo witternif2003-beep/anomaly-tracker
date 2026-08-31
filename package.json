@@ -20,6 +20,8 @@
     "toolchain": "bash scripts/install-toolchain.sh",
     "mcp:install": "bash scripts/install-mcp.sh",
     "mcp:audit": "bash scripts/audit-mcp.sh",
+    "mcp:check": "node scripts/validate-mcp.mjs",
+    "mcp:prefetch": "bash scripts/mcp-prefetch.sh",
     "local-api": "tsx server/index.ts",
     "start:local": "tsx server/index.ts",
     "env:check": "bash scripts/check-env-placeholders.sh",
