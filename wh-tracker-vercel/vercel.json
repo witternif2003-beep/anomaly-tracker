@@ -17,7 +17,7 @@
       "headers": [{ "key": "cache-control", "value": "no-cache" }]
     },
     {
-      "source": "/(viewer|scout|error-queue|topology-2d).js",
+      "source": "/(viewer|scout|error-queue|topology-fallback).js",
       "headers": [{ "key": "cache-control", "value": "no-cache" }]
     },
     {

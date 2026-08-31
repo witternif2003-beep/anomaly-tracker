@@ -43,11 +43,12 @@ The queue holds only failures observed in that browser session — nothing simul
 lives in `sessionStorage`, so no unauthenticated write endpoint is added.
 
 The 3D scene is built in isolation: if WebGL is unavailable (hardware acceleration off,
-blocked GPU) the failure is recorded in the queue and `public/topology-2d.js` draws the same
-graph — severity colours, degree-scaled nodes, White House wireframe, hover tooltips — with
-the 2D canvas context, so the HUD, feed and polling keep working instead of the page freezing
-on "connecting…" with zeroed counters. Append `?render=2d` to force that path on a machine
-that does have WebGL.
+blocked GPU) the failure is recorded in the queue and `public/topology-fallback.js` draws the
+same graph — severity colours, degree-scaled nodes, White House wireframe, hover tooltips — as
+SVG, so the HUD, feed and polling keep working instead of the page freezing on "connecting…"
+with zeroed counters. SVG rather than a 2D canvas deliberately: a canvas whose WebGL context
+request already failed can also refuse a `2d` context. Append `?render=2d` to force the
+fallback on a machine that does have WebGL.
 
 ## No synthetic data
 

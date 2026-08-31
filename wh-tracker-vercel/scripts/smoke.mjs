@@ -159,7 +159,7 @@ check("threat-intel without OTX key 503", res.statusCode === 503 || res.statusCo
 if (savedOtx) process.env.OTX_API_KEY = savedOtx;
 
 // static viewer assets: a missing module leaves the page stuck on "connecting…"
-const assets = ["/index.html", "/viewer.js", "/scout.js", "/error-queue.js", "/topology-2d.js", "/errors.html", "/favicon.svg"];
+const assets = ["/index.html", "/viewer.js", "/scout.js", "/error-queue.js", "/topology-fallback.js", "/errors.html", "/favicon.svg"];
 if (BASE_URL) {
   for (const asset of assets) {
     const response = await fetch(new URL(asset === "/index.html" ? "/" : asset, BASE_URL));

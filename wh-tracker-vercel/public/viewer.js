@@ -1,7 +1,7 @@
 import * as THREE from "/vendor/three.module.js";
 import { createScout } from "/scout.js";
 import { mountErrorQueue } from "/error-queue.js";
-import { createFallback2D } from "/topology-2d.js";
+import { createFallbackTopology } from "/topology-fallback.js";
 
 const SEVERITY_COLOR = {
   critical: 0xe2504b,
@@ -348,8 +348,9 @@ try {
     });
   }
   try {
-    scene3d = createFallback2D({
+    scene3d = createFallbackTopology({
       canvas: document.getElementById("scene"),
+      mount: document.body,
       getState: () => state,
       worstSeverity,
       tooltip: document.getElementById("tooltip"),
@@ -357,19 +358,19 @@ try {
     document.getElementById("controls-hint").textContent = "scroll to zoom · hover for details";
     document.getElementById("legend").insertAdjacentHTML(
       "afterbegin",
-      '<div style="color:#e0b13c">WebGL unavailable — 2D fallback. Enable hardware acceleration for the 3D scene.</div>'
+      '<div style="color:#e0b13c">WebGL unavailable — flat topology fallback. Enable hardware acceleration for the 3D scene.</div>'
     );
   } catch (fallbackErr) {
     scout.record({
       kind: "exception",
-      message: `2D fallback unavailable — ${fallbackErr.message}`,
+      message: `topology fallback unavailable — ${fallbackErr.message}`,
       detail: "HUD, anomaly feed and error queue still update",
       source: "viewer",
     });
     document.getElementById("scene").style.display = "none";
     document.getElementById("legend").insertAdjacentHTML(
       "afterbegin",
-      '<div style="color:#e2504b">Canvas unavailable in this browser. Data panels still update.</div>'
+      '<div style="color:#e2504b">Topology rendering unavailable in this browser. Data panels still update.</div>'
     );
   }
 }
