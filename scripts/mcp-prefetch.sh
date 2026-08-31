@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
-# Warm the npx cache for every npm-launched MCP server so first IDE start does not
-# stall on a download. Package specs are read from .cursor/mcp.json rather than
-# duplicated here, so a new server is prefetched without editing this script.
+# Warm the npm cache with every npm-launched MCP server *and its transitive
+# dependencies* so the first IDE start does not stall on downloads. Package specs
+# are read from .cursor/mcp.json rather than duplicated here, so a new server is
+# prefetched without editing this script. Each package is then re-installed with
+# --offline into a clean prefix to prove npx can materialise it without network.
 set -euo pipefail
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$root"
@@ -33,11 +35,34 @@ print("\n".join(dict.fromkeys(specs)))
 PY
 )
 
+stage="$(mktemp -d)"
+verify="$(mktemp -d)"
+trap 'rm -rf "$stage" "$verify"' EXIT
+
+install_into() {
+  local prefix="$1" pkg="$2"
+  shift 2
+  rm -rf "$prefix/node_modules" "$prefix/package-lock.json"
+  npm install --silent --prefix "$prefix" --no-audit --no-fund --no-save \
+    --ignore-scripts "$@" "$pkg" >/dev/null
+}
+
+failed=()
 for pkg in "${packages[@]}"; do
   echo "  -> $pkg"
-  # Servers speak stdio and have no uniform --help, so cache the tarball instead
-  # of launching them.
-  npm pack --silent --pack-destination "$(mktemp -d)" "$pkg" >/dev/null
+  # Populate the npm cache with the whole dependency tree; `npm pack` would only
+  # cache this package's own tarball, leaving npx to fetch its deps at runtime.
+  install_into "$stage" "$pkg"
+  # Then prove the cache is sufficient: a clean install with the network refused
+  # is what npx has to do on first launch.
+  if ! install_into "$verify" "$pkg" --offline --prefer-offline; then
+    failed+=("$pkg")
+  fi
 done
 
-echo "MCP PREFETCH OK ${#packages[@]} packages cached"
+if ((${#failed[@]})); then
+  echo "MCP PREFETCH FAIL offline install failed: ${failed[*]}" >&2
+  exit 1
+fi
+
+echo "MCP PREFETCH OK ${#packages[@]} packages cached and verified offline"

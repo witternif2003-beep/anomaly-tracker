@@ -126,7 +126,7 @@ npm install -g wrangler@4
 
 ## MCP servers (configured, not authenticated)
 
-`.cursor/mcp.json` lists stdio/OAuth MCP servers. Remote ones need OAuth or API keys injected as environment secrets — nothing is stored in git. Reinstall with `bash scripts/install-mcp.sh`. Audit the research-note wishlist with `npm run mcp:audit` (closest public packages only; Westlaw/Lexis stay wont-do). `npm run mcp:check` validates the config structurally — every server has a command, secret values are `${VAR}` placeholders declared in `.env.example`, no literals — and `npm run mcp:prefetch` warms the npx cache for the packages listed in the config. Neither reads a secret nor hits the network beyond the npm registry, and neither runs during `next build`.
+`.cursor/mcp.json` lists stdio/OAuth MCP servers. Remote ones need OAuth or API keys injected as environment secrets — nothing is stored in git. Reinstall with `bash scripts/install-mcp.sh`. Audit the research-note wishlist with `npm run mcp:audit` (closest public packages only; Westlaw/Lexis stay wont-do). `npm run mcp:check` validates the config structurally — every server has a command, secret values are `${VAR}` placeholders declared in `.env.example`, no literals — and `npm run mcp:prefetch` warms the npm cache with each configured package plus its transitive dependencies, then re-installs every one with `--offline` so a first npx launch is proven to need no network. Neither reads a secret nor hits the network beyond the npm registry, and neither runs during `next build`.
 
 | Server | Purpose | Requested package | Installed | Credentials |
 | --- | --- | --- | --- | --- |
