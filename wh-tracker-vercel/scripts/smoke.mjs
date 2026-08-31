@@ -94,6 +94,13 @@ res = await call("api/anomalies.js");
 check("anomalies GET 200", res.statusCode === 200, `got ${res.statusCode}`);
 check("anomalies GET topology", Array.isArray(res.body?.topology?.entities));
 
+// topology (polling fallback source)
+res = await call("api/topology.js");
+check("topology GET 200", res.statusCode === 200, `got ${res.statusCode}`);
+check("topology GET entities", Array.isArray(res.body?.topology?.entities));
+res = await call("api/topology.js", { method: "POST" });
+check("topology POST 405", res.statusCode === 405, `got ${res.statusCode}`);
+
 // unauthenticated write
 res = await call("api/anomalies.js", { method: "POST", body: { title: "x", severity: "high", score: 10 } });
 check("anomalies POST without key 401", res.statusCode === 401, `got ${res.statusCode}`);

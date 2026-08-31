@@ -16,7 +16,7 @@
       * { box-sizing: border-box; }
       html, body { height: 100%; margin: 0; background: var(--bg); color: var(--text);
         font: 13px/1.5 -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; overflow: hidden; }
-      #scene { position: fixed; inset: 0; }
+      #scene { position: fixed; inset: 0; touch-action: none; }
       .panel { position: fixed; background: var(--panel); border: 1px solid var(--line);
         border-radius: 10px; padding: 14px 16px; backdrop-filter: blur(6px); }
       #hud { top: 16px; left: 16px; min-width: 232px; }
@@ -29,6 +29,7 @@
       #status .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%;
         background: #f0a13c; margin-right: 6px; vertical-align: 1px; }
       #status.live .dot { background: #3ad07f; }
+      #status.polling .dot { background: #4b8ed0; }
       #status.down .dot { background: #e2504b; }
       #feed { top: 16px; right: 16px; width: 330px; max-height: calc(100vh - 32px); overflow: auto; }
       #feed h2 { margin: 0 0 10px; font-size: 12px; text-transform: uppercase; letter-spacing: .1em; color: #7d8da0; }
@@ -42,36 +43,56 @@
       .anomaly.info { border-color: #4b8ed0; }
       #legend { bottom: 16px; left: 16px; font-size: 11px; color: #9fb0c4; }
       #legend b { color: var(--text); font-weight: 600; }
+      #legend button { margin-left: 8px; background: rgba(75, 142, 208, 0.16); color: var(--text);
+        border: 1px solid var(--line); border-radius: 6px; padding: 4px 8px; font: inherit; cursor: pointer; }
       #tooltip { position: fixed; pointer-events: none; background: rgba(8, 12, 18, 0.94);
         border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; font-size: 11px;
         display: none; z-index: 5; }
       .empty { color: #7d8da0; font-style: italic; }
+
+      /* Fixed panels overlap once the viewport is narrower than hud + feed, so
+         below that they stack in a scrollable column over the canvas. */
+      @media (max-width: 720px), (max-height: 520px) {
+        body { overflow: auto; }
+        #panels { position: fixed; inset: 0; display: flex; flex-direction: column; gap: 8px;
+          padding: 8px; overflow-y: auto; pointer-events: none; }
+        #panels > .panel { position: static; width: auto; min-width: 0; max-height: none;
+          padding: 10px 12px; pointer-events: auto; }
+        #hud dl { grid-template-columns: repeat(4, 1fr); text-align: center; gap: 2px 8px; }
+        #hud dt, #hud dd { text-align: center; font-size: 11px; }
+        #feed { max-height: 34vh; overflow: auto; }
+        #legend { order: 3; font-size: 10px; }
+        #tooltip { display: none !important; }
+      }
     </style>
   </head>
   <body>
     <canvas id="scene"></canvas>
 
-    <section class="panel" id="hud">
-      <h1>WH Anomaly Tracker</h1>
-      <div class="sub">entity topology &middot; live</div>
-      <dl>
-        <dt>Entities</dt><dd id="kpi-entities">0</dd>
-        <dt>Links</dt><dd id="kpi-links">0</dd>
-        <dt>Anomalies</dt><dd id="kpi-anomalies">0</dd>
-        <dt>Max score</dt><dd id="kpi-score">0</dd>
-      </dl>
-      <div id="status"><span class="dot"></span><span id="status-text">connecting…</span></div>
-    </section>
+    <div id="panels">
+      <section class="panel" id="hud">
+        <h1>WH Anomaly Tracker</h1>
+        <div class="sub">entity topology &middot; live</div>
+        <dl>
+          <dt>Entities</dt><dd id="kpi-entities">0</dd>
+          <dt>Links</dt><dd id="kpi-links">0</dd>
+          <dt>Anomalies</dt><dd id="kpi-anomalies">0</dd>
+          <dt>Max score</dt><dd id="kpi-score">0</dd>
+        </dl>
+        <div id="status"><span class="dot"></span><span id="status-text">connecting…</span></div>
+      </section>
 
-    <section class="panel" id="feed">
-      <h2>Anomaly feed</h2>
-      <div id="feed-list"><p class="empty">No anomalies recorded.</p></div>
-    </section>
+      <section class="panel" id="feed">
+        <h2>Anomaly feed</h2>
+        <div id="feed-list"><p class="empty">No anomalies recorded.</p></div>
+      </section>
 
-    <section class="panel" id="legend">
-      drag to orbit &middot; scroll to zoom &middot; <b>H</b> toggles the White House wireframe &middot;
-      node size = <b>degree</b>, colour = <b>worst anomaly severity</b>
-    </section>
+      <section class="panel" id="legend">
+        drag to orbit &middot; scroll to zoom &middot; <b>H</b> toggles the White House wireframe &middot;
+        node size = <b>degree</b>, colour = <b>worst anomaly severity</b>
+        <button id="toggle-house" type="button">toggle wireframe</button>
+      </section>
+    </div>
 
     <div id="tooltip"></div>
 
@@ -289,26 +310,61 @@
         renderHud();
       }
 
-      async function bootstrap() {
-        const snapshot = await fetch("/api/anomalies?limit=50").then((r) => r.json());
-        applySnapshot(snapshot);
+      const POLL_MS = 10000;
+      const SSE_OPEN_TIMEOUT_MS = 8000;
+
+      async function fetchSnapshot() {
+        const res = await fetch("/api/topology?limit=50", { cache: "no-store" });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        applySnapshot(await res.json());
+      }
+
+      // Fallback for clients where text/event-stream never arrives (buffering
+      // proxies, EventSource-less environments): poll the read-only snapshot.
+      function startPolling(reason) {
+        if (startPolling.timer) return;
+        setStatus("polling", `polling · ${reason}`);
+        const poll = () =>
+          fetchSnapshot()
+            .then(() => setStatus("polling", `polling · ${reason}`))
+            .catch((err) => setStatus("down", `offline: ${err.message}`));
+        startPolling.timer = setInterval(poll, POLL_MS);
+        poll();
       }
 
       // Serverless functions are request-scoped, so the stream is SSE and ends at the
       // platform duration limit; reconnect on both `reconnect` and transport errors.
+      // Repeated failures before a single successful event mean SSE is unusable here.
+      let sseFailures = 0;
       function connect() {
+        if (typeof EventSource === "undefined") {
+          startPolling("SSE unsupported");
+          return;
+        }
         const source = new EventSource("/api/sse/stream");
         let done = false;
+        let opened = false;
+        let openTimer;
         const restart = (text) => {
           if (done) return;
           done = true;
+          clearTimeout(openTimer);
           source.close();
+          if (opened) sseFailures = 0;
+          else if (++sseFailures >= 2) {
+            startPolling("SSE blocked");
+            return;
+          }
           setStatus("down", text);
           setTimeout(connect, 1000);
         };
+        openTimer = setTimeout(() => restart("stream timed out"), SSE_OPEN_TIMEOUT_MS);
 
         source.addEventListener("open", () => setStatus("live", "live"));
         source.addEventListener("snapshot", (event) => {
+          opened = true;
+          sseFailures = 0;
+          clearTimeout(openTimer);
           setStatus("live", "live");
           applySnapshot(JSON.parse(event.data));
         });
@@ -318,20 +374,47 @@
 
       let dragging = false;
       let last = { x: 0, y: 0 };
+      const touches = new Map();
+      let pinch = 0;
+
+      const pinchSpan = () => {
+        const [a, b] = [...touches.values()];
+        return Math.hypot(a.x - b.x, a.y - b.y);
+      };
+
       canvas.addEventListener("pointerdown", (e) => {
+        touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
+        if (touches.size === 2) {
+          dragging = false;
+          pinch = pinchSpan();
+          return;
+        }
         dragging = true;
         last = { x: e.clientX, y: e.clientY };
         canvas.setPointerCapture(e.pointerId);
       });
-      canvas.addEventListener("pointerup", (e) => {
+      const release = (e) => {
+        touches.delete(e.pointerId);
+        if (touches.size < 2) pinch = 0;
         dragging = false;
-        canvas.releasePointerCapture(e.pointerId);
-      });
+        if (canvas.hasPointerCapture(e.pointerId)) canvas.releasePointerCapture(e.pointerId);
+      };
+      canvas.addEventListener("pointerup", release);
+      canvas.addEventListener("pointercancel", release);
       canvas.addEventListener("pointermove", (e) => {
+        if (touches.has(e.pointerId)) touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
         pointer.x = (e.clientX / window.innerWidth) * 2 - 1;
         pointer.y = -(e.clientY / window.innerHeight) * 2 + 1;
         tooltip.style.left = `${e.clientX + 12}px`;
         tooltip.style.top = `${e.clientY + 12}px`;
+
+        // Two pointers: pinch to zoom, matching the wheel handler's clamp.
+        if (touches.size === 2 && pinch) {
+          const span = pinchSpan();
+          rig.radius = Math.min(140, Math.max(16, rig.radius * (pinch / (span || pinch))));
+          pinch = span;
+          return;
+        }
         if (!dragging) return;
         rig.theta -= (e.clientX - last.x) * 0.005;
         rig.phi = Math.min(Math.PI - 0.15, Math.max(0.15, rig.phi - (e.clientY - last.y) * 0.005));
@@ -346,9 +429,13 @@
         { passive: false }
       );
 
+      const toggleHouse = () => {
+        whiteHouse.visible = !whiteHouse.visible;
+      };
       window.addEventListener("keydown", (e) => {
-        if (e.key === "h" || e.key === "H") whiteHouse.visible = !whiteHouse.visible;
+        if (e.key === "h" || e.key === "H") toggleHouse();
       });
+      document.getElementById("toggle-house").addEventListener("click", toggleHouse);
 
       function resize() {
         const { innerWidth: w, innerHeight: h } = window;
@@ -384,15 +471,10 @@
         requestAnimationFrame(tick);
       }
 
-      bootstrap()
-        .then(() => {
-          connect();
-          tick();
-        })
-        .catch((err) => {
-          setStatus("down", `load failed: ${err.message}`);
-          tick();
-        });
+      fetchSnapshot()
+        .then(() => connect())
+        .catch((err) => startPolling(`retrying after ${err.message}`))
+        .finally(() => tick());
     </script>
   </body>
 </html>

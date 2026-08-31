@@ -11,7 +11,7 @@
     "build": "node scripts/vendor-three.mjs",
     "dev": "npx vercel dev",
     "deploy": "npx vercel deploy --prod",
-    "lint": "node --check api/health.js && node --check api/anomalies.js && node --check api/treasury.js && node --check api/threat-intel.js && node --check api/sse/stream.js && node --check lib/store.js && node --check lib/ids.js",
+    "lint": "node --check api/health.js && node --check api/anomalies.js && node --check api/topology.js && node --check api/treasury.js && node --check api/threat-intel.js && node --check api/sse/stream.js && node --check lib/store.js && node --check lib/ids.js",
     "smoke": "node scripts/smoke.mjs"
   },
   "dependencies": {
