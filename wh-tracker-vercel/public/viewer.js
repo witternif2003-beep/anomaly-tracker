@@ -125,12 +125,23 @@ function createScene() {
     });
   }
 
+  // A narrow viewport stacks the panels over the upper half of the screen, so
+  // pull the camera back — otherwise the building alone fills what is left — and
+  // push the fog out with it so the nodes do not fade into the background.
+  const narrow = Math.min(window.innerWidth, window.innerHeight) < 700;
+
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x070a0f);
-  scene.fog = new THREE.Fog(0x070a0f, 40, 150);
+  scene.fog = new THREE.Fog(0x070a0f, narrow ? 80 : 40, narrow ? 230 : 150);
 
   const camera = new THREE.PerspectiveCamera(55, 1, 0.1, 500);
-  const rig = { radius: 46, theta: 0.8, phi: 1.15, target: new THREE.Vector3(0, 0, 0) };
+  const rig = {
+    radius: narrow ? 82 : 46,
+    theta: 0.8,
+    phi: 1.15,
+    // aim above the graph on a narrow screen so it renders below the stacked panels
+    target: new THREE.Vector3(0, narrow ? 16 : 0, 0),
+  };
 
   scene.add(new THREE.AmbientLight(0x93a6bd, 0.7));
   const key = new THREE.DirectionalLight(0xffffff, 1.1);
