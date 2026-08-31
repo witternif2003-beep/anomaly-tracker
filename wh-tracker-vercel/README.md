@@ -32,6 +32,20 @@ is unavailable or the stream fails to deliver a snapshot twice in a row (bufferi
 never forward `text/event-stream`, so the stream would otherwise sit on "connecting…"). The
 status dot shows which transport is in use: green `live` (SSE), blue `polling`, red offline.
 
+## Scout bot and error queue
+
+`public/scout.js` is a client-side scout bot: it captures uncaught exceptions, rejected
+promises and non-ok/failed requests in the running viewer, and probes `/api/health`,
+`/api/topology` and `/api/reference-topology` every 60s. Findings are deduplicated (with a
+hit count) into an error queue rendered by `public/error-queue.js`, shown as the bottom-right
+panel in the viewer and as a standalone widget at `/errors.html` (embeddable in an iframe).
+The queue holds only failures observed in that browser session — nothing simulated — and it
+lives in `sessionStorage`, so no unauthenticated write endpoint is added.
+
+The 3D scene is built in isolation: if WebGL is unavailable the failure is recorded in the
+queue and the HUD, anomaly feed and polling keep working instead of the page freezing on
+"connecting…" with zeroed counters.
+
 ## No synthetic data
 
 Nothing the viewer or the APIs return is mocked, seeded with invented records, or randomly

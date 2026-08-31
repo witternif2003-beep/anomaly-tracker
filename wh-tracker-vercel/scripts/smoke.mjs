@@ -112,6 +112,12 @@ check(
   JSON.stringify(res.body?.topology?.entities?.[1] || {}).slice(0, 200)
 );
 
+check(
+  "reference-topology anomalies carry detectedAt",
+  (res.body?.anomalies || []).every((a) => !Number.isNaN(new Date(a.detectedAt).getTime())),
+  JSON.stringify(res.body?.anomalies?.[0] || {}).slice(0, 200)
+);
+
 // unauthenticated write
 res = await call("api/anomalies.js", { method: "POST", body: { title: "x", severity: "high", score: 10 } });
 check("anomalies POST without key 401", res.statusCode === 401, `got ${res.statusCode}`);
@@ -151,6 +157,26 @@ delete process.env.OTX_API_KEY;
 res = await call("api/threat-intel.js");
 check("threat-intel without OTX key 503", res.statusCode === 503 || res.statusCode === 200, `got ${res.statusCode}`);
 if (savedOtx) process.env.OTX_API_KEY = savedOtx;
+
+// static viewer assets: a missing module leaves the page stuck on "connecting…"
+const assets = ["/index.html", "/viewer.js", "/scout.js", "/error-queue.js", "/errors.html", "/favicon.svg"];
+if (BASE_URL) {
+  for (const asset of assets) {
+    const response = await fetch(new URL(asset === "/index.html" ? "/" : asset, BASE_URL));
+    check(`asset ${asset} 200`, response.ok, `got ${response.status}`);
+  }
+} else {
+  const { access } = await import("node:fs/promises");
+  for (const asset of assets) {
+    let ok = true;
+    try {
+      await access(new URL(`../public${asset}`, import.meta.url));
+    } catch {
+      ok = false;
+    }
+    check(`asset ${asset} present`, ok);
+  }
+}
 
 console.log(`\n${passed}/${passed + failed} checks passed`);
 if (failed) process.exitCode = 1;
