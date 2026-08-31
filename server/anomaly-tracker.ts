@@ -954,7 +954,7 @@ export function compileAnomalyTracker(opts?: {
         closest: v.closest,
         freeTool: v.freeTool,
       })),
-      configuredCount: env.variables.filter((v) => v.configured).length,
+      configuredCount: env.variables.filter((v) => !v.operatorSecret && v.configured).length,
       freeResolvedCount: env.variables.filter((v) => v.freeResolved).length,
       placeholderCount: env.variables.length,
       requiredCount: env.requiredCount,

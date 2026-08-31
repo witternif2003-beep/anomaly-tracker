@@ -10,8 +10,9 @@ import {
 /**
  * Requested placeholders. Values stay empty in git; inject secrets at runtime.
  * `operatorSecret` names are deploy-time credentials with no free public equivalent: the studio
- * runs without them and they must never reach a browser payload, so they are scored as
- * "expected empty" instead of "unconfigured".
+ * runs without them, so they are excluded from app readiness instead of counted as
+ * "unconfigured". They may legitimately be present in an operator's shell env (wrangler, MCP);
+ * what must never happen is a value reaching a client payload, so no value is emitted here.
  */
 export const ENV_PLACEHOLDERS = [
   {
@@ -187,10 +188,10 @@ export function envPlaceholderStatus() {
     const configured = Boolean(value);
     return {
       name: item.name,
-      configured: operatorSecret ? false : configured,
+      configured,
       operatorSecret,
-      // Operator secrets are satisfied by being absent from the app runtime.
-      satisfied: operatorSecret ? !configured : configured,
+      // Operator secrets carry no app-side requirement: present or absent, the app is fine.
+      satisfied: operatorSecret ? true : configured,
       freeResolved,
       requiredFor: item.requiredFor,
       closest: free ? `${item.closest} → free: ${free.tool}` : item.closest,

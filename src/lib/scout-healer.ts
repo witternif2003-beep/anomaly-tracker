@@ -27,6 +27,8 @@ export type CredentialBadge = {
   operatorSecret?: boolean;
   satisfied?: boolean;
   freeResolved?: boolean;
+  /** Never populated by the compiler — its presence means a credential value leaked. */
+  value?: string;
 };
 
 export type ScoutSnapshot = {
@@ -733,16 +735,14 @@ export function inspectTrackerBook(
         gateGroup: "credentials",
       });
     }
-    // An operator secret reaching the browser payload is a disclosure, not a config gap:
-    // envPlaceholderStatus() marks it unsatisfied and never echoes the value.
-    const leakedOperatorVars = credentialVars.filter(
-      (v) => v.operatorSecret && v.satisfied === false,
-    );
+    // A credential value reaching the browser payload is a disclosure, not a config gap:
+    // envPlaceholderStatus() emits classification metadata only, never a value.
+    const leakedOperatorVars = credentialVars.filter((v) => Boolean(v.value));
     if (leakedOperatorVars.length) {
       push(findings, {
         id: "credentials-operator-secret-exposed",
         severity: "P1",
-        title: "Operator secret present in the app payload",
+        title: "Credential value present in the app payload",
         detail: `exposed=${leakedOperatorVars.map((v) => v.name).join(",")}`,
         healable: false,
         gateGroup: "credentials",
