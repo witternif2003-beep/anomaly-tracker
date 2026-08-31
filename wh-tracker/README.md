@@ -140,3 +140,11 @@ The Alertmanager receivers are deliberately inert placeholders — swap them for
 
 Grafana auto-provisions the Prometheus datasource and the overview dashboard from
 `grafana/provisioning`.
+
+## Dependency audit
+
+`npm audit --omit=dev` is clean except for `extract-zip` (GHSA-jmr9-qjv8-65gv), pulled
+in by `@puppeteer/browsers` under `puppeteer-core`. No published `puppeteer-core`
+release drops that dependency, and the code path is unreachable here: the PDF image
+installs distro Chromium and `pdf-service.js` launches it through `CHROME_PATH`, so
+no browser archive is ever downloaded or extracted.
