@@ -15,6 +15,14 @@
     {
       "source": "/index.html",
       "headers": [{ "key": "cache-control", "value": "no-cache" }]
+    },
+    {
+      "source": "/(viewer|scout|error-queue).js",
+      "headers": [{ "key": "cache-control", "value": "no-cache" }]
+    },
+    {
+      "source": "/errors.html",
+      "headers": [{ "key": "cache-control", "value": "no-cache" }]
     }
   ]
 }

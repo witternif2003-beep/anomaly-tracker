@@ -96,8 +96,10 @@ export default async function handler(req, res) {
   }
 
   const outliers = detectOutliers(recipients, { sigma });
-  const now = Date.now();
-  const anomalies = outliers.map((outlier, index) => ({
+  // Outliers are derived at request time from the FY totals, so the only honest
+  // timestamp is when this payload was computed.
+  const detectedAt = new Date().toISOString();
+  const anomalies = outliers.map((outlier) => ({
     id: `ref-eop-fy${fiscalYear}-${stableKey(outlier.uei || outlier.name)}`,
     title: `Award concentration: ${outlier.name}`,
     severity: severityForZScore(outlier.zScore),
@@ -109,8 +111,7 @@ export default async function handler(req, res) {
     }σ above the EOP recipient mean of $${Math.round(outlier.mean).toLocaleString("en-US")}.`,
     evidence: [RECIPIENT_CATEGORY_URL],
     reference: true,
-    // Ordered, not randomised: newest outlier first, one minute apart.
-    createdAt: new Date(now - index * 60_000).toISOString(),
+    detectedAt,
   }));
 
   res.setHeader("cache-control", "s-maxage=3600, stale-while-revalidate=86400");
