@@ -6,6 +6,7 @@
  */
 
 import { withBasePath } from "@/lib/static-data";
+import { discoveryStore } from "@/lib/continuous-discovery";
 
 export type ScoutSeverity = "P1" | "P2" | "P3";
 
@@ -82,7 +83,7 @@ export const EXPECTED = {
   /** Placeholders the app itself must resolve; the rest are deploy-time operator secrets. */
   envRequiredPlaceholders: 16,
   envFreeResolved: 16,
-  pipelineScripts: 12,
+  pipelineScripts: 13,
   scoutHealActionsMin: 12,
   gateTarget: 98415,
   tickMsMax: 1,
@@ -114,6 +115,7 @@ export const PIPELINE_IDS = [
   "skill-agent-roster",
   "tracker-3d-smoke",
   "tracker-html-budget",
+  "continuous-discovery",
 ] as const;
 
 function push(
@@ -645,6 +647,39 @@ export function inspectTrackerBook(
         detail: `stream=${bot.stream?.length ?? 0}`,
         healable: true,
         healAction: "reload-static",
+        gateGroup: "bo-scan",
+      });
+    }
+    // Continuous discovery: the pool is a seed, so the bake must carry the synthesis
+    // corpora and the store must keep advancing — a frozen count is a P1.
+    const synthesis = bot.discoverySynthesis;
+    if (
+      !synthesis?.namePrefixes?.length ||
+      !synthesis?.nameCores?.length ||
+      !synthesis?.cities?.length ||
+      !synthesis?.categories?.length
+    ) {
+      push(findings, {
+        id: "bo-discovery-synthesis-seed",
+        severity: "P1",
+        title: "Discovery synthesis seed missing from bake",
+        detail: `prefixes=${synthesis?.namePrefixes?.length ?? 0} cores=${synthesis?.nameCores?.length ?? 0} cities=${synthesis?.cities?.length ?? 0}`,
+        healable: true,
+        healAction: "reload-static",
+        gateGroup: "bo-scan",
+      });
+    }
+    // Only a visible tab is judged (see discoveryStore.stalled) and the finding is
+    // not reload-healable: refetching the bake cannot restart a dead interval, so a
+    // healable flag here would just spin the repair loop against nothing.
+    const stallGraceMs = Math.max(60_000, (bot.discoveryTickMs ?? 2200) * 8);
+    if (discoveryStore.stalled(stallGraceMs)) {
+      push(findings, {
+        id: "continuous-discovery-stalled",
+        severity: "P1",
+        title: "Continuous discovery stalled",
+        detail: `no new business in >${Math.round(stallGraceMs / 1000)}s · businesses=${discoveryStore.getSnapshot().businesses}`,
+        healable: false,
         gateGroup: "bo-scan",
       });
     }

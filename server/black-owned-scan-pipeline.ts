@@ -618,6 +618,32 @@ export function buildBlackOwnedScanBot(entities: VerifiedEntity[]) {
     integrityHash,
     metrics,
     hardening,
+    discoverySynthesis: {
+      note: blackOwnedScanBotDoc.synthesis.note,
+      epochMs: Date.parse(blackOwnedScanBotDoc.synthesis.epochIso),
+      tickMs: blackOwnedScanBotDoc.discoveryTickMs,
+      namePrefixes: blackOwnedScanBotDoc.synthesis.namePrefixes,
+      nameCores: blackOwnedScanBotDoc.synthesis.nameCores,
+      nameSuffixes: blackOwnedScanBotDoc.synthesis.nameSuffixes,
+      cities: Array.from(
+        new Set([...verified, ...seeds, ...pool].map((t) => t.city)),
+      ).sort(),
+      sectors: Array.from(
+        new Set([...verified, ...seeds, ...pool].map((t) => t.sector)),
+      ).sort(),
+      entityTypes: Array.from(
+        new Set([...verified, ...seeds, ...pool].map((t) => t.entityType)),
+      ).sort(),
+      channels: blackOwnedScanBotDoc.discoveryChannels.map((c) => ({
+        id: c.id,
+        label: c.label,
+      })),
+      categories: categories.map((c) => ({
+        id: c.id,
+        label: c.label,
+        priority: c.priority,
+      })),
+    },
     targets: [...verified, ...queue],
     discoveryPool: pool,
     queue,

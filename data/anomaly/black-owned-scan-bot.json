@@ -33,6 +33,58 @@
     "discovery-channel-stub",
     "auto-queue-admitter"
   ],
+  "synthesis": {
+    "note": "Unbounded fixture synthesis seed. Same index -> same business on server and client. No live registry, credit, or law-enforcement lookup; synthesized rows are labelled fixture-synthesis.",
+    "epochIso": "2026-01-01T00:00:00.000Z",
+    "namePrefixes": [
+      "Amber",
+      "Cedar",
+      "Harbor",
+      "Lantern",
+      "Meridian",
+      "Northwind",
+      "Prairie",
+      "Quarry",
+      "Riverstone",
+      "Summit",
+      "Trestle",
+      "Umber",
+      "Verdant",
+      "Willow",
+      "Ironwood",
+      "Kestrel"
+    ],
+    "nameCores": [
+      "Forge",
+      "Ledger",
+      "Freight",
+      "Provisions",
+      "Analytics",
+      "Fabrication",
+      "Logistics",
+      "Systems",
+      "Works",
+      "Grid",
+      "Foundry",
+      "Clinic",
+      "Studio",
+      "Supply",
+      "Design",
+      "Networks"
+    ],
+    "nameSuffixes": [
+      "Group",
+      "Collective",
+      "Partners",
+      "Holdings",
+      "Co",
+      "Cooperative",
+      "Alliance",
+      "Union",
+      "Trust",
+      "Labs"
+    ]
+  },
   "discoveryChannels": [
     {
       "id": "supplier-diversity-intake",
@@ -96,60 +148,276 @@
     "harden-verify"
   ],
   "hardeningGates": [
-    { "id": "schema-version", "group": "schema", "detail": "Payload schemaVersion >= 3" },
-    { "id": "auto-queue-flag", "group": "queue", "detail": "autoQueueOnDiscover enabled" },
-    { "id": "tick-bounds", "group": "clock", "detail": "tickMs within 400–5000" },
-    { "id": "discovery-tick-bounds", "group": "clock", "detail": "discoveryTickMs within 800–15000" },
-    { "id": "no-live-surveillance", "group": "policy", "detail": "liveSurveillance=false" },
-    { "id": "no-live-cert", "group": "policy", "detail": "liveCertQueries=false" },
-    { "id": "no-live-crime-feeds", "group": "policy", "detail": "liveCrimeFeeds=false" },
-    { "id": "verified-roster-min", "group": "roster", "detail": "verifiedCount >= 5" },
-    { "id": "seed-candidates-min", "group": "queue", "detail": "seed candidates >= 12" },
-    { "id": "discovery-pool-min", "group": "discovery", "detail": "discoveryPool >= 24" },
-    { "id": "channels-min", "group": "discovery", "detail": "discoveryChannels >= 6" },
-    { "id": "stages-complete", "group": "pipeline", "detail": "pipelineStages includes auto-queue" },
-    { "id": "actions-include-auto-queue", "group": "pipeline", "detail": "scanActions includes auto-queue-admit" },
-    { "id": "dedupe-fingerprints", "group": "integrity", "detail": "Every target has fingerprint" },
-    { "id": "unique-fingerprints", "group": "integrity", "detail": "No duplicate fingerprints in seed+pool" },
-    { "id": "priority-enum", "group": "integrity", "detail": "Priorities only P1|P2|P3" },
-    { "id": "entity-type-present", "group": "integrity", "detail": "entityType non-empty on every candidate" },
-    { "id": "city-present", "group": "integrity", "detail": "city non-empty on every candidate" },
-    { "id": "sector-present", "group": "integrity", "detail": "sector non-empty on every candidate" },
-    { "id": "signal-present", "group": "integrity", "detail": "discovery signal non-empty" },
-    { "id": "channel-bound", "group": "discovery", "detail": "Every discovery row binds a channel id" },
-    { "id": "queue-ids-unique", "group": "queue", "detail": "Queue entry ids unique" },
-    { "id": "queue-status-machine", "group": "queue", "detail": "Statuses in allowed machine" },
-    { "id": "p1-first-ordering", "group": "queue", "detail": "P1 seeds sort ahead of P3" },
-    { "id": "crime-categories-52", "group": "crime", "detail": "crimeCategoryCount == 52" },
-    { "id": "crime-cases-60", "group": "crime", "detail": "crimeCaseCount == 60" },
-    { "id": "crime-ticks-min", "group": "crime", "detail": "crime search/document ticks >= 52" },
-    { "id": "stream-monotonic-seq", "group": "integrity", "detail": "stream seq monotonic from 1" },
-    { "id": "stream-unique-ids", "group": "integrity", "detail": "stream ids unique" },
-    { "id": "auto-queue-ticks", "group": "queue", "detail": "stream contains auto-queued statuses" },
-    { "id": "discovered-ticks", "group": "discovery", "detail": "stream contains discovered statuses" },
-    { "id": "gate-pass-ticks", "group": "hardening", "detail": "stream contains gate-pass statuses" },
-    { "id": "hardening-score-floor", "group": "hardening", "detail": "hardeningScore >= 95" },
-    { "id": "hardening-gates-50", "group": "hardening", "detail": "hardening gate definitions >= 50" },
-    { "id": "hardening-results-aligned", "group": "hardening", "detail": "results length == gate definitions" },
-    { "id": "all-gates-ok", "group": "hardening", "detail": "every hardening result ok" },
-    { "id": "integrity-hash-present", "group": "integrity", "detail": "integrityHash non-empty" },
-    { "id": "queue-capacity", "group": "queue", "detail": "queueCapacity >= seed+pool" },
-    { "id": "retry-policy", "group": "resilience", "detail": "retryPolicy.maxAttempts >= 3" },
-    { "id": "backoff-policy", "group": "resilience", "detail": "retryPolicy.backoffMs >= 250" },
-    { "id": "circuit-breaker", "group": "resilience", "detail": "circuitBreaker configured" },
-    { "id": "idempotent-admit", "group": "queue", "detail": "idempotentAdmit=true" },
-    { "id": "dead-letter-bucket", "group": "resilience", "detail": "deadLetter enabled" },
-    { "id": "observability-metrics", "group": "observability", "detail": "metrics counters present" },
-    { "id": "may-forensic-bind", "group": "pipeline", "detail": "may-forensic-menu-bind in actions" },
-    { "id": "ownership-scan-action", "group": "pipeline", "detail": "ownership-attestation-review in actions" },
-    { "id": "no-classified-flag", "group": "policy", "detail": "classified=false" },
-    { "id": "fixture-clock-mode", "group": "clock", "detail": "mode includes fixture-clock" },
-    { "id": "additive-only", "group": "policy", "detail": "pipeline never drops verified roster" },
-    { "id": "scout-compatible", "group": "interop", "detail": "bot.active + self-heal fields readable" },
-    { "id": "summary-candidate-count", "group": "interop", "detail": "summary mirrors candidateCount" },
-    { "id": "discovery-pool-priorities", "group": "discovery", "detail": "discovery pool has P1 coverage" },
-    { "id": "seed-p1-coverage", "group": "queue", "detail": "seed candidates include P1" },
-    { "id": "normalized-names", "group": "integrity", "detail": "normalizedName present on queue rows" }
+    {
+      "id": "schema-version",
+      "group": "schema",
+      "detail": "Payload schemaVersion >= 3"
+    },
+    {
+      "id": "auto-queue-flag",
+      "group": "queue",
+      "detail": "autoQueueOnDiscover enabled"
+    },
+    {
+      "id": "tick-bounds",
+      "group": "clock",
+      "detail": "tickMs within 400–5000"
+    },
+    {
+      "id": "discovery-tick-bounds",
+      "group": "clock",
+      "detail": "discoveryTickMs within 800–15000"
+    },
+    {
+      "id": "no-live-surveillance",
+      "group": "policy",
+      "detail": "liveSurveillance=false"
+    },
+    {
+      "id": "no-live-cert",
+      "group": "policy",
+      "detail": "liveCertQueries=false"
+    },
+    {
+      "id": "no-live-crime-feeds",
+      "group": "policy",
+      "detail": "liveCrimeFeeds=false"
+    },
+    {
+      "id": "verified-roster-min",
+      "group": "roster",
+      "detail": "verifiedCount >= 5"
+    },
+    {
+      "id": "seed-candidates-min",
+      "group": "queue",
+      "detail": "seed candidates >= 12"
+    },
+    {
+      "id": "discovery-pool-min",
+      "group": "discovery",
+      "detail": "discoveryPool >= 24"
+    },
+    {
+      "id": "channels-min",
+      "group": "discovery",
+      "detail": "discoveryChannels >= 6"
+    },
+    {
+      "id": "stages-complete",
+      "group": "pipeline",
+      "detail": "pipelineStages includes auto-queue"
+    },
+    {
+      "id": "actions-include-auto-queue",
+      "group": "pipeline",
+      "detail": "scanActions includes auto-queue-admit"
+    },
+    {
+      "id": "dedupe-fingerprints",
+      "group": "integrity",
+      "detail": "Every target has fingerprint"
+    },
+    {
+      "id": "unique-fingerprints",
+      "group": "integrity",
+      "detail": "No duplicate fingerprints in seed+pool"
+    },
+    {
+      "id": "priority-enum",
+      "group": "integrity",
+      "detail": "Priorities only P1|P2|P3"
+    },
+    {
+      "id": "entity-type-present",
+      "group": "integrity",
+      "detail": "entityType non-empty on every candidate"
+    },
+    {
+      "id": "city-present",
+      "group": "integrity",
+      "detail": "city non-empty on every candidate"
+    },
+    {
+      "id": "sector-present",
+      "group": "integrity",
+      "detail": "sector non-empty on every candidate"
+    },
+    {
+      "id": "signal-present",
+      "group": "integrity",
+      "detail": "discovery signal non-empty"
+    },
+    {
+      "id": "channel-bound",
+      "group": "discovery",
+      "detail": "Every discovery row binds a channel id"
+    },
+    {
+      "id": "queue-ids-unique",
+      "group": "queue",
+      "detail": "Queue entry ids unique"
+    },
+    {
+      "id": "queue-status-machine",
+      "group": "queue",
+      "detail": "Statuses in allowed machine"
+    },
+    {
+      "id": "p1-first-ordering",
+      "group": "queue",
+      "detail": "P1 seeds sort ahead of P3"
+    },
+    {
+      "id": "crime-categories-52",
+      "group": "crime",
+      "detail": "crimeCategoryCount == 52"
+    },
+    {
+      "id": "crime-cases-60",
+      "group": "crime",
+      "detail": "crimeCaseCount == 60"
+    },
+    {
+      "id": "crime-ticks-min",
+      "group": "crime",
+      "detail": "crime search/document ticks >= 52"
+    },
+    {
+      "id": "stream-monotonic-seq",
+      "group": "integrity",
+      "detail": "stream seq monotonic from 1"
+    },
+    {
+      "id": "stream-unique-ids",
+      "group": "integrity",
+      "detail": "stream ids unique"
+    },
+    {
+      "id": "auto-queue-ticks",
+      "group": "queue",
+      "detail": "stream contains auto-queued statuses"
+    },
+    {
+      "id": "discovered-ticks",
+      "group": "discovery",
+      "detail": "stream contains discovered statuses"
+    },
+    {
+      "id": "gate-pass-ticks",
+      "group": "hardening",
+      "detail": "stream contains gate-pass statuses"
+    },
+    {
+      "id": "hardening-score-floor",
+      "group": "hardening",
+      "detail": "hardeningScore >= 95"
+    },
+    {
+      "id": "hardening-gates-50",
+      "group": "hardening",
+      "detail": "hardening gate definitions >= 50"
+    },
+    {
+      "id": "hardening-results-aligned",
+      "group": "hardening",
+      "detail": "results length == gate definitions"
+    },
+    {
+      "id": "all-gates-ok",
+      "group": "hardening",
+      "detail": "every hardening result ok"
+    },
+    {
+      "id": "integrity-hash-present",
+      "group": "integrity",
+      "detail": "integrityHash non-empty"
+    },
+    {
+      "id": "queue-capacity",
+      "group": "queue",
+      "detail": "queueCapacity >= seed+pool"
+    },
+    {
+      "id": "retry-policy",
+      "group": "resilience",
+      "detail": "retryPolicy.maxAttempts >= 3"
+    },
+    {
+      "id": "backoff-policy",
+      "group": "resilience",
+      "detail": "retryPolicy.backoffMs >= 250"
+    },
+    {
+      "id": "circuit-breaker",
+      "group": "resilience",
+      "detail": "circuitBreaker configured"
+    },
+    {
+      "id": "idempotent-admit",
+      "group": "queue",
+      "detail": "idempotentAdmit=true"
+    },
+    {
+      "id": "dead-letter-bucket",
+      "group": "resilience",
+      "detail": "deadLetter enabled"
+    },
+    {
+      "id": "observability-metrics",
+      "group": "observability",
+      "detail": "metrics counters present"
+    },
+    {
+      "id": "may-forensic-bind",
+      "group": "pipeline",
+      "detail": "may-forensic-menu-bind in actions"
+    },
+    {
+      "id": "ownership-scan-action",
+      "group": "pipeline",
+      "detail": "ownership-attestation-review in actions"
+    },
+    {
+      "id": "no-classified-flag",
+      "group": "policy",
+      "detail": "classified=false"
+    },
+    {
+      "id": "fixture-clock-mode",
+      "group": "clock",
+      "detail": "mode includes fixture-clock"
+    },
+    {
+      "id": "additive-only",
+      "group": "policy",
+      "detail": "pipeline never drops verified roster"
+    },
+    {
+      "id": "scout-compatible",
+      "group": "interop",
+      "detail": "bot.active + self-heal fields readable"
+    },
+    {
+      "id": "summary-candidate-count",
+      "group": "interop",
+      "detail": "summary mirrors candidateCount"
+    },
+    {
+      "id": "discovery-pool-priorities",
+      "group": "discovery",
+      "detail": "discovery pool has P1 coverage"
+    },
+    {
+      "id": "seed-p1-coverage",
+      "group": "queue",
+      "detail": "seed candidates include P1"
+    },
+    {
+      "id": "normalized-names",
+      "group": "integrity",
+      "detail": "normalizedName present on queue rows"
+    }
   ],
   "retryPolicy": {
     "maxAttempts": 5,
@@ -165,7 +433,11 @@
   "deadLetter": {
     "enabled": true,
     "maxSize": 64,
-    "reasons": ["dedupe-collision", "gate-reject", "schema-invalid"]
+    "reasons": [
+      "dedupe-collision",
+      "gate-reject",
+      "schema-invalid"
+    ]
   },
   "newBusinessCandidates": [
     {

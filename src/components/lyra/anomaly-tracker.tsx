@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { LoaderCircleIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -27,6 +27,9 @@ import {
   type MayForensicPacket,
 } from "@/components/lyra/forensic-evidence-popup";
 import { ScoutBotPanel, type ScoutBotPayload } from "@/components/lyra/scout-bot";
+import { discoveryStore } from "@/lib/continuous-discovery";
+import { P1CatalogMenu } from "@/components/lyra/p1-catalog-menu";
+import { bakedP1Entries } from "@/lib/p1-registry";
 
 interface SceneNode {
   id: string;
@@ -388,6 +391,11 @@ export function AnomalyTracker({ initialData }: { initialData?: TrackerBook }) {
   const [priority, setPriority] = useState<string>("");
   const [selected, setSelected] = useState<string | null>(initialData?.p1Queue?.[0]?.id ?? null);
   const [tick, setTick] = useState(0);
+  const discovery = useSyncExternalStore(
+    discoveryStore.subscribe,
+    discoveryStore.getSnapshot,
+    discoveryStore.getServerSnapshot,
+  );
   const [postdocQ, setPostdocQ] = useState("");
   const [postdocAxis, setPostdocAxis] = useState("");
   const [postdocShow, setPostdocShow] = useState(50);
@@ -490,6 +498,13 @@ export function AnomalyTracker({ initialData }: { initialData?: TrackerBook }) {
     if (!book || !selected) return null;
     return book.anomalies.find((a) => a.id === selected) ?? null;
   }, [book, selected]);
+
+  // Every P1 gets its own number, and the number follows the row everywhere it shows.
+  const p1Entries = useMemo(() => bakedP1Entries(book?.anomalies ?? []), [book]);
+  const p1RefById = useMemo(
+    () => new Map(p1Entries.map((entry) => [entry.id, entry.ref])),
+    [p1Entries],
+  );
 
   const filteredPostdoc = useMemo(() => {
     if (!book?.postdocCatalog) return [];
@@ -631,10 +646,21 @@ export function AnomalyTracker({ initialData }: { initialData?: TrackerBook }) {
                 telemetry={book.summary.telemetryActive ? "ACTIVE 24/7" : "off"}
               </Badge>
               <Badge variant="outline">
-                {book.summary.p1Events} P1 · {book.summary.anomalies} events
+                {(book.summary.p1Events + discovery.p1Violations).toLocaleString()} P1 ·{" "}
+                {(book.summary.anomalies + discovery.violations).toLocaleString()} events
+              </Badge>
+              <P1CatalogMenu
+                entries={p1Entries}
+                totalP1={p1Entries.length + discovery.p1Violations}
+                selectedId={selected}
+                onSelect={(id) => setSelected(id)}
+              />
+              <Badge className="bg-sky-500/20 text-sky-100">
+                +{discovery.businesses.toLocaleString()} businesses discovered
               </Badge>
               <Badge variant="outline">
-                {(book.summary.telemetryTicks ?? 0).toLocaleString()} telemetry ticks
+                {((book.summary.telemetryTicks ?? 0) + discovery.ticks).toLocaleString()} telemetry
+                ticks
               </Badge>
               <Badge variant="outline">
                 {book.summary.evidenceElements ?? 0} evidence elements
@@ -645,6 +671,7 @@ export function AnomalyTracker({ initialData }: { initialData?: TrackerBook }) {
               </Badge>
               <Badge variant="outline">{book.summary.entityTypes} entity types</Badge>
               <Badge variant="outline">tick {tick}</Badge>
+              <Badge variant="outline">continuous discovery · never idle</Badge>
             </div>
 
             {book.telemetry ? (
@@ -657,7 +684,9 @@ export function AnomalyTracker({ initialData }: { initialData?: TrackerBook }) {
               />
             ) : null}
 
-            {book.blackOwnedScanBot ? <BlackOwnedScanBot bot={book.blackOwnedScanBot} /> : null}
+            {book.blackOwnedScanBot ? (
+              <BlackOwnedScanBot bot={book.blackOwnedScanBot} p1NumberBase={p1Entries.length} />
+            ) : null}
 
             {book.businessCrimeCatalog ? (
               <BusinessCrimeCatalogPanel catalog={book.businessCrimeCatalog} />
@@ -813,6 +842,11 @@ export function AnomalyTracker({ initialData }: { initialData?: TrackerBook }) {
                     >
                       <div className="flex items-center gap-2">
                         <Badge className={priorityTone(a.priority)}>{a.priority}</Badge>
+                        {p1RefById.has(a.id) ? (
+                          <span className="font-mono text-[10px] tabular-nums text-muted-foreground">
+                            {p1RefById.get(a.id)}
+                          </span>
+                        ) : null}
                         <span className="text-sm font-medium">{a.title}</span>
                       </div>
                       <p className="mt-1 text-xs text-muted-foreground">
@@ -838,6 +872,11 @@ export function AnomalyTracker({ initialData }: { initialData?: TrackerBook }) {
                         <Badge className={priorityTone(selectedAnomaly.priority)}>
                           {selectedAnomaly.priority}
                         </Badge>
+                        {p1RefById.has(selectedAnomaly.id) ? (
+                          <Badge variant="outline" className="font-mono tabular-nums">
+                            {p1RefById.get(selectedAnomaly.id)}
+                          </Badge>
+                        ) : null}
                         <Badge variant="outline">{selectedAnomaly.categoryLabel}</Badge>
                         {selectedAnomaly.fbiCategory ? (
                           <Badge variant="secondary">{selectedAnomaly.fbiCategory}</Badge>
