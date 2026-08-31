@@ -33,8 +33,10 @@ curl http://localhost:3001/api/health   # Grafana
 Then browse the viewer at `http://<host>:3000` and Grafana at `http://<host>:3001`
 (`admin` / `GRAFANA_PASSWORD`).
 
-Only ports you actually want exposed should be published — put the stack behind a reverse
-proxy with TLS and keep 9090/9093 on the internal network in production.
+Only the viewer (3000) and Grafana (3001) are published on all interfaces. `pdf-service`,
+Prometheus and Alertmanager bind to `127.0.0.1` because they are unauthenticated (and
+Chromium runs with `--no-sandbox`); override `PDF_BIND` / `PROMETHEUS_BIND` /
+`ALERTMANAGER_BIND` only behind a reverse proxy with TLS and authentication.
 
 ## Configuration
 
@@ -49,6 +51,8 @@ keys.
 | `TAXII_URL`, `TAXII_USER`, `TAXII_PASS` | optional | STIX bundles are published here; publishing is skipped when unset |
 | `OTX_API_KEY`, `OTX_INDICATORS` | for OTX pipeline | Indicators as `domain:example.com,ip:8.8.8.8` |
 | `*_INTERVAL_MINUTES` | optional | Per-pipeline schedule (FEC 360, Treasury 720, OTX 180) |
+| `*_BIND`, `*_PORT` | optional | Host interface/port per published service |
+| `FEC_MAX_PAGES` | optional | Schedule A pages to walk per committee (default 10) |
 
 ## API
 
@@ -75,7 +79,10 @@ curl -X POST http://localhost:3000/api/report \
 ```
 
 State lives in `data/state.json` (atomic writes, seeded with a small demo graph on first
-boot); structured JSON logs are written to `logs/<service>.log`.
+boot); structured JSON logs are written to `logs/<service>.log`. Under compose both live in
+named volumes (`tracker-data`, `*-logs`) so persistence does not depend on the checkout
+being writable by the image's non-root user — read logs with `docker compose logs` or
+`docker run --rm -v wh-tracker_tracker-logs:/logs busybox cat /logs/tracker.log`.
 
 ## Pipelines
 

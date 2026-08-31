@@ -42,7 +42,7 @@ async function runPipeline(pipeline, tracker) {
     log.warn("pipeline skipped: missing configuration", { pipeline: pipeline.name });
     metrics.pipelineRuns.inc({ pipeline: pipeline.name, result: "skipped" });
     lastRun.set(pipeline.name, { at: new Date().toISOString(), result: "skipped" });
-    return;
+    return "skipped";
   }
   const end = metrics.pipelineDuration.startTimer({ pipeline: pipeline.name });
   try {
@@ -51,10 +51,12 @@ async function runPipeline(pipeline, tracker) {
     metrics.pipelineLastSuccess.set({ pipeline: pipeline.name }, Date.now() / 1000);
     lastRun.set(pipeline.name, { at: new Date().toISOString(), result: "ok", detail: summarize(result) });
     log.info("pipeline ok", { pipeline: pipeline.name, ...summarize(result) });
+    return "ok";
   } catch (err) {
     metrics.pipelineRuns.inc({ pipeline: pipeline.name, result: "error" });
     lastRun.set(pipeline.name, { at: new Date().toISOString(), result: "error", detail: err.message });
     log.error("pipeline failed", { pipeline: pipeline.name, error: err.message });
+    return "error";
   } finally {
     end();
   }
@@ -64,6 +66,17 @@ function summarize(result) {
   if (!result || typeof result !== "object") return {};
   const { anomalies, committees, recipients, indicators } = result;
   return { anomalies, committees, recipients, indicators };
+}
+
+/**
+ * Publish a series for every enabled pipeline so freshness alerts can fire
+ * before the first successful run.
+ */
+function markEnabledPipelines() {
+  for (const pipeline of PIPELINES) {
+    metrics.pipelineEnabled.set({ pipeline: pipeline.name }, pipeline.enabled() ? 1 : 0);
+  }
+  metrics.schedulerStart.set(Date.now() / 1000);
 }
 
 function scheduleAll(tracker) {
@@ -122,14 +135,17 @@ async function main() {
   const selected = only ? only.split("=")[1] : null;
 
   if (once) {
+    let failed = false;
     for (const pipeline of PIPELINES) {
       if (selected && pipeline.name !== selected) continue;
-      await runPipeline(pipeline, tracker);
+      if ((await runPipeline(pipeline, tracker)) === "error") failed = true;
     }
+    if (failed) process.exitCode = 1;
     return;
   }
 
   const server = startStatusServer();
+  markEnabledPipelines();
   const timers = scheduleAll(tracker);
   const shutdown = () => {
     for (const timer of timers) {
@@ -150,4 +166,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { PIPELINES, runPipeline, scheduleAll };
+module.exports = { PIPELINES, runPipeline, scheduleAll, markEnabledPipelines };

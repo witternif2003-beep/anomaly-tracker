@@ -259,7 +259,10 @@
             };
             rebuild();
           } else if (message.type === "anomaly") {
-            state.anomalies = [message.anomaly, ...state.anomalies].slice(0, 200);
+            state.anomalies = [
+              message.anomaly,
+              ...state.anomalies.filter((a) => a.id !== message.anomaly.id),
+            ].slice(0, 200);
             rebuild();
           } else if (message.type === "topology") {
             state.topology = message.topology;

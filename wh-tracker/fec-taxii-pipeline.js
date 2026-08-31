@@ -24,37 +24,73 @@ function fecClient(apiKey) {
   });
 }
 
+function mapReceipt(row) {
+  return {
+    transactionId: row.transaction_id,
+    committeeId: row.committee_id,
+    committeeName: row.committee ? row.committee.name : row.committee_id,
+    contributor: row.contributor_name || row.contributor_employer || "unknown",
+    employer: row.contributor_employer || null,
+    amount: Number(row.contribution_receipt_amount) || 0,
+    date: row.contribution_receipt_date,
+    state: row.contributor_state || null,
+  };
+}
+
 /**
  * Schedule A (itemized receipts) for a committee, largest first.
+ *
+ * Results are sorted by descending amount and followed through the FEC's
+ * keyset pagination until a page drops below `minAmount` (0 disables the
+ * early stop) or `maxPages` is reached.
  */
-async function fetchReceipts({ committeeId, cycle, perPage = 50, apiKey } = {}) {
-  try {
-    const { data } = await fecClient(apiKey).get("/v1/schedules/schedule_a/", {
-      params: {
-        committee_id: committeeId,
-        two_year_transaction_period: cycle,
-        sort: "-contribution_receipt_amount",
-        per_page: perPage,
-      },
-    });
-    return (data.results || []).map((row) => ({
-      transactionId: row.transaction_id,
-      committeeId: row.committee_id,
-      committeeName: row.committee ? row.committee.name : row.committee_id,
-      contributor: row.contributor_name || row.contributor_employer || "unknown",
-      employer: row.contributor_employer || null,
-      amount: Number(row.contribution_receipt_amount) || 0,
-      date: row.contribution_receipt_date,
-      state: row.contributor_state || null,
-    }));
-  } catch (err) {
-    metrics.upstreamErrors.inc({ upstream: "fec" });
-    log.error("fec request failed", {
-      status: err.response ? err.response.status : "network",
-      error: err.message,
-    });
-    throw err;
+async function fetchReceipts({
+  committeeId,
+  cycle,
+  perPage = 50,
+  apiKey,
+  maxPages = Number(process.env.FEC_MAX_PAGES || 10),
+  minAmount = LARGE_CONTRIBUTION_USD,
+} = {}) {
+  const client = fecClient(apiKey);
+  const receipts = [];
+  let cursor = {};
+
+  for (let page = 0; page < Math.max(1, maxPages); page += 1) {
+    let data;
+    try {
+      ({ data } = await client.get("/v1/schedules/schedule_a/", {
+        params: {
+          committee_id: committeeId,
+          two_year_transaction_period: cycle,
+          sort: "-contribution_receipt_amount",
+          per_page: perPage,
+          ...cursor,
+        },
+      }));
+    } catch (err) {
+      metrics.upstreamErrors.inc({ upstream: "fec" });
+      log.error("fec request failed", {
+        status: err.response ? err.response.status : "network",
+        error: err.message,
+      });
+      throw err;
+    }
+
+    const rows = (data.results || []).map(mapReceipt);
+    receipts.push(...rows);
+    if (!rows.length) break;
+
+    // Sorted descending, so once a page ends below the threshold no later
+    // receipt can qualify.
+    if (minAmount > 0 && rows[rows.length - 1].amount < minAmount) break;
+
+    const next = data.pagination && data.pagination.last_indexes;
+    if (!next || !Object.keys(next).length) break;
+    cursor = next;
   }
+
+  return receipts;
 }
 
 function severityForAmount(amount) {
@@ -111,7 +147,7 @@ async function publishToTaxii(bundle, { url, user, pass } = {}) {
   try {
     const { data, status } = await axios.post(
       endpoint.replace(/\/$/, "") + "/objects/",
-      { objects: bundle.objects },
+      bundle,
       {
         timeout: 30000,
         headers: {

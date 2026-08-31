@@ -73,6 +73,19 @@ const pipelineLastSuccess = new client.Gauge({
   registers: [registry],
 });
 
+const pipelineEnabled = new client.Gauge({
+  name: "wh_pipeline_enabled",
+  help: "1 when a pipeline is configured to run, 0 when it is skipped",
+  labelNames: ["pipeline"],
+  registers: [registry],
+});
+
+const schedulerStart = new client.Gauge({
+  name: "wh_scheduler_start_timestamp_seconds",
+  help: "Unix timestamp of the last scheduler start",
+  registers: [registry],
+});
+
 const upstreamErrors = new client.Counter({
   name: "wh_upstream_errors_total",
   help: "Errors returned by upstream open-data APIs",
@@ -129,6 +142,8 @@ module.exports = {
   pipelineRuns,
   pipelineDuration,
   pipelineLastSuccess,
+  pipelineEnabled,
+  schedulerStart,
   upstreamErrors,
   pdfReports,
   pdfDuration,
