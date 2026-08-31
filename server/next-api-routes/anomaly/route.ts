@@ -1,4 +1,7 @@
-import { compileAnomalyTracker } from "../../../../server/anomaly-tracker";
+// Not mounted under src/app/api: compileAnomalyTracker walks the repo at request time
+// (server/scout-code-integrity.ts), which no serverless bundle can carry. The client reads
+// the prebaked public/static/anomaly.json instead; the Express server exposes GET /v1/anomaly.
+import { compileAnomalyTracker } from "../../anomaly-tracker";
 
 export async function GET(request: Request) {
   const url = new URL(request.url);

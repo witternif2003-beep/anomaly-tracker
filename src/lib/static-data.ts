@@ -1,23 +1,10 @@
-/** Base path + static JSON helpers for GitHub Pages (`output: 'export'`). */
+/** Base path + static JSON helpers. `NEXT_PUBLIC_BASE_PATH` is only set for subpath hosts. */
 
-function runtimeBasePath(): string {
-  const fromEnv = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
-  if (fromEnv) return fromEnv.replace(/\/$/, "");
-  if (typeof window !== "undefined") {
-    // Derive from the project Pages subpath when env was stripped.
-    const match = window.location.pathname.match(/^(\/[^/]+)/);
-    if (match && match[1] !== "/tracker" && match[1] !== "/corporate" && match[1] !== "/inventory" && match[1] !== "/aip") {
-      return match[1];
-    }
-  }
-  return "";
-}
-
-export const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+export const BASE_PATH = (process.env.NEXT_PUBLIC_BASE_PATH ?? "").replace(/\/$/, "");
 
 export function withBasePath(path: string): string {
   const normalized = path.startsWith("/") ? path : `/${path}`;
-  const base = runtimeBasePath();
+  const base = BASE_PATH;
   if (!base) return normalized;
   if (normalized.startsWith(`${base}/`) || normalized === base) return normalized;
   return `${base}${normalized}`;
@@ -31,8 +18,8 @@ function looksLikeJson(response: Response): boolean {
 }
 
 /**
- * Prefer prebuilt `/static/*.json` on GitHub Pages (no Node server).
- * Live `/api/*` is only used when it actually returns JSON.
+ * Uses live `/api/*` when it returns JSON and prebuilt `/static/*.json` otherwise
+ * (static hosts have no Node server). `NEXT_PUBLIC_STATIC_SITE=1` inverts the order.
  */
 export async function fetchJsonWithStaticFallback<T>(
   apiPath: string,

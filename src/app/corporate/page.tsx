@@ -1,6 +1,10 @@
-import fs from "node:fs/promises";
-import path from "node:path";
 import type { ReactElement } from "react";
+
+import corporateTaxonomy from "../../../data/legal/corporate-taxonomy.json";
+import fixtures from "../../../data/anomaly/fixtures.json";
+import evidenceCorpus from "../../../data/anomaly/evidence-corpus.json";
+import improvementSeeds from "../../../data/anomaly/improvement-seeds.json";
+import inventoryLedger from "../../../data/anomaly/inventory-ledger.json";
 
 export const metadata = {
   title: "Corporate taxonomy — Lyra",
@@ -16,46 +20,41 @@ interface TaxonomySource {
   entries?: unknown;
 }
 
-async function loadSource(file: string): Promise<TaxonomySource> {
-  try {
-    const raw = await fs.readFile(path.join(process.cwd(), file), "utf-8");
-    const entries = JSON.parse(raw) as Record<string, unknown>;
-    let summary = `${Object.keys(entries).length} top-level keys`;
-    if (Array.isArray(entries.categories)) {
-      summary = `${entries.categories.length} taxonomy categories`;
-    } else if (Array.isArray(entries.fbiToCorporate)) {
-      summary = `${entries.fbiToCorporate.length} FBI→corporate maps · ${(entries.elements as unknown[] | undefined)?.length ?? 0} evidence elements`;
-    } else if (Array.isArray(entries.entityTypes)) {
-      summary = `${entries.entityTypes.length} entity types · ${(entries.entities as unknown[] | undefined)?.length ?? 0} fixtures`;
-    } else if (entries.mcpServers && typeof entries.mcpServers === "object") {
-      summary = `${Object.keys(entries.mcpServers as object).length} MCP servers`;
-    } else if (Array.isArray(entries.seeds)) {
-      summary = `${entries.seeds.length} improvement seeds`;
-    }
-    return {
-      name: file,
-      status: "loaded",
-      size: Buffer.byteLength(raw),
-      summary,
-      entries,
-    };
-  } catch {
-    return { name: file, status: "missing", size: 0 };
+function describe(entries: Record<string, unknown>): string {
+  if (Array.isArray(entries.categories)) {
+    return `${entries.categories.length} taxonomy categories`;
   }
+  if (Array.isArray(entries.fbiToCorporate)) {
+    return `${entries.fbiToCorporate.length} FBI→corporate maps · ${(entries.elements as unknown[] | undefined)?.length ?? 0} evidence elements`;
+  }
+  if (Array.isArray(entries.entityTypes)) {
+    return `${entries.entityTypes.length} entity types · ${(entries.entities as unknown[] | undefined)?.length ?? 0} fixtures`;
+  }
+  if (Array.isArray(entries.seeds)) {
+    return `${entries.seeds.length} improvement seeds`;
+  }
+  return `${Object.keys(entries).length} top-level keys`;
 }
 
-// Runs ONCE during `next build`, baked into static HTML.
-export default async function CorporatePage(): Promise<ReactElement> {
-  const sources = [
-    "data/legal/corporate-taxonomy.json",
-    "data/anomaly/fixtures.json",
-    "data/anomaly/evidence-corpus.json",
-    "data/anomaly/improvement-seeds.json",
-    "data/anomaly/inventory-ledger.json",
-    ".cursor/mcp.json",
-  ];
+function compileSource(name: string, entries: Record<string, unknown>): TaxonomySource {
+  return {
+    name,
+    status: "loaded",
+    size: Buffer.byteLength(JSON.stringify(entries)),
+    summary: describe(entries),
+    entries,
+  };
+}
 
-  const compiled = await Promise.all(sources.map((file) => loadSource(file)));
+// Fixtures are imported, so they are bundled at build time and baked into static HTML.
+export default function CorporatePage(): ReactElement {
+  const compiled = [
+    compileSource("data/legal/corporate-taxonomy.json", corporateTaxonomy),
+    compileSource("data/anomaly/fixtures.json", fixtures),
+    compileSource("data/anomaly/evidence-corpus.json", evidenceCorpus),
+    compileSource("data/anomaly/improvement-seeds.json", improvementSeeds),
+    compileSource("data/anomaly/inventory-ledger.json", inventoryLedger),
+  ];
   const taxonomy = compiled.find((s) => s.name.includes("corporate-taxonomy.json"));
   const evidence = compiled.find((s) => s.name.includes("evidence-corpus.json"));
   const categories =
