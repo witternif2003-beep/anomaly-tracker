@@ -1,6 +1,7 @@
 "use strict";
 
 const axios = require("axios");
+const { createHash } = require("crypto");
 const metrics = require("./metrics");
 const { createLogger } = require("./logger");
 
@@ -134,6 +135,7 @@ async function run({ tracker, fiscalYear, sigma = 2, limit = 25 } = {}) {
         weight: Math.min(8, Math.round(outlier.zScore)),
       });
       await tracker.addAnomaly({
+        id: `usaspending-fy${fy}-${stableKey(outlier.recipient)}`,
         title: `Award concentration outlier: ${outlier.recipient}`,
         severity: severityForZScore(outlier.zScore),
         score: Math.min(100, Math.round(outlier.zScore * 12)),
@@ -150,6 +152,15 @@ async function run({ tracker, fiscalYear, sigma = 2, limit = 25 } = {}) {
 
   log.info("treasury pipeline complete", { fiscalYear: fy, recipients: recipients.length, anomalies: written });
   return { fiscalYear: fy, recipients: recipients.length, anomalies: written, outliers };
+}
+
+/**
+ * Slug plus a digest of the full value, so truncated or normalised names keep
+ * distinct ids across runs.
+ */
+function stableKey(value) {
+  const digest = createHash("sha1").update(String(value)).digest("hex").slice(0, 8);
+  return `${slug(value)}-${digest}`;
 }
 
 function slug(value) {
@@ -169,4 +180,5 @@ module.exports = {
   severityForZScore,
   run,
   slug,
+  stableKey,
 };

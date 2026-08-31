@@ -20,7 +20,9 @@ git clone https://github.com/witternif2003-beep/wh-tracker.git
 cd wh-tracker
 
 cp .env.example .env
-# At minimum set API_KEY and GRAFANA_PASSWORD; compose refuses to start without them.
+# API_KEY and GRAFANA_PASSWORD ship empty and compose refuses to start until they
+# are set — generate them, do not reuse the example file's values.
+printf 'API_KEY=%s\nGRAFANA_PASSWORD=%s\n' "$(openssl rand -hex 32)" "$(openssl rand -base64 24)" >> .env
 $EDITOR .env
 
 docker compose up -d --build
@@ -37,6 +39,11 @@ Only the viewer (3000) and Grafana (3001) are published on all interfaces. `pdf-
 Prometheus and Alertmanager bind to `127.0.0.1` because they are unauthenticated (and
 Chromium runs with `--no-sandbox`); override `PDF_BIND` / `PROMETHEUS_BIND` /
 `ALERTMANAGER_BIND` only behind a reverse proxy with TLS and authentication.
+
+The viewer's read paths (`GET /api/*`, `/ws`) are intentionally unauthenticated so the
+dashboard works without a login — they disclose topology, anomalies and evidence to anyone
+who can reach port 3000. If the data is sensitive, front the tracker with proxy auth (or set
+`TRACKER_BIND=127.0.0.1`) rather than exposing it publicly.
 
 ## Configuration
 
