@@ -10,6 +10,7 @@ import {
   backlogCounters,
   discoveryIndexAt,
   discoveryStore,
+  p1RatioFromSeed,
   synthesizeBusiness,
   synthesizeViolation,
   type DiscoverySeed,
@@ -47,15 +48,30 @@ const a = synthesizeBusiness(12_345, seed);
 const b = synthesizeBusiness(12_345, seed);
 check(JSON.stringify(a) === JSON.stringify(b), "synthesis is not deterministic");
 
-// Violations bind to the real taxonomy and stay labelled fixture.
+// Violations bind to the real taxonomy, cover all of it, and stay labelled fixture.
 const categoryIds = new Set(seed.categories.map((c) => c.id));
+const covered = new Set<string>();
+let p1Seen = 0;
 for (let i = 0; i < 2_000; i += 1) {
   const business = synthesizeBusiness(i, seed);
   const violation = synthesizeViolation(i, business, seed);
   check(categoryIds.has(violation.categoryId), `violation ${i} off-taxonomy`);
   check(violation.source === "fixture-synthesis", `violation ${i} unlabelled`);
   check(violation.businessId === business.id, `violation ${i} unbound`);
+  covered.add(violation.categoryId);
+  if (violation.priority === "P1") p1Seen += 1;
 }
+check(
+  covered.size === categoryIds.size,
+  `synthesis reaches only ${covered.size}/${categoryIds.size} categories — stride shares a factor with the taxonomy`,
+);
+
+// The backlog P1 floor must be measured off the same mapping, not a guessed ratio.
+const measuredRatio = p1RatioFromSeed(seed, 2_000);
+check(
+  Math.abs(measuredRatio - p1Seen / 2_000) < 1e-9,
+  `p1RatioFromSeed=${measuredRatio} disagrees with the synthesized sequence`,
+);
 
 // Wall clock: the index and the backlog both advance while nobody is watching.
 const now = Date.now();
@@ -65,8 +81,12 @@ check(
     discoveryIndexAt(now, seed.tickMs, seed.epochMs),
   "discovery index does not advance with wall clock",
 );
-const nowFloor = backlogCounters(now, seed.epochMs);
-const laterFloor = backlogCounters(later, seed.epochMs);
+const nowFloor = backlogCounters(now, seed.epochMs, measuredRatio);
+const laterFloor = backlogCounters(later, seed.epochMs, measuredRatio);
+check(
+  nowFloor.p1Violations <= nowFloor.violations,
+  "backlog P1 floor exceeds the violations floor",
+);
 check(nowFloor.businesses > 0, "backlog floor is zero — dashboard would start frozen");
 check(laterFloor.businesses > nowFloor.businesses, "backlog businesses do not grow");
 check(laterFloor.violations > nowFloor.violations, "backlog violations do not grow");
@@ -86,7 +106,7 @@ check(!discoveryStore.stalled(60_000, now + 1_000), "stall fired inside the grac
 check(discoveryStore.stalled(60_000, now + 120_000), "stall gate never fires when discovery freezes");
 
 // Reload behaviour: a fresh mount re-floors from wall clock, so it can only be higher.
-const afterReload = backlogCounters(later, seed.epochMs);
+const afterReload = backlogCounters(later, seed.epochMs, measuredRatio);
 check(
   afterReload.businesses >= nowFloor.businesses,
   "reload would show fewer businesses than an earlier visit",

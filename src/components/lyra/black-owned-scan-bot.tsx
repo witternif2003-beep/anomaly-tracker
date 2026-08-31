@@ -12,6 +12,7 @@ import {
   backlogCounters,
   discoveryIndexAt,
   discoveryStore,
+  p1RatioFromSeed,
   seedFromScanPayload,
   synthesizeBusiness,
   synthesizeViolation,
@@ -256,10 +257,21 @@ export function BlackOwnedScanBot({ bot }: { bot: BlackOwnedScanBotPayload }) {
   const [poolCursor, setPoolCursor] = useState(0);
   const [discoveryLog, setDiscoveryLog] = useState<DiscoveryLog[]>([]);
   const [autoQueuedCount, setAutoQueuedCount] = useState(seedQueue.length);
-  const [newCount, setNewCount] = useState(0);
-  const [docCount, setDocCount] = useState(0);
-  const [discoverCount, setDiscoverCount] = useState(0);
   const synthesis = useMemo(() => seedFromScanPayload(bot), [bot]);
+  // Baked baselines are counted by unique entity, never by replayed stream ticks —
+  // the finite log loops forever, so tick counts would inflate without discovering
+  // anything. Only the discovery store may add to these.
+  const bakedBaselines = useMemo(() => {
+    const documented = new Set<string>();
+    const discovered = new Set<string>();
+    for (const tick of stream) {
+      const key = tick.target?.id;
+      if (!key) continue;
+      if (tick.status === "documented") documented.add(key);
+      if (tick.status === "discovered" || tick.status === "auto-queued") discovered.add(key);
+    }
+    return { documented: documented.size, discovered: discovered.size };
+  }, [stream]);
   const counters = useSyncExternalStore(
     discoveryStore.subscribe,
     discoveryStore.getSnapshot,
@@ -291,9 +303,6 @@ export function BlackOwnedScanBot({ bot }: { bot: BlackOwnedScanBotPayload }) {
     cursorRef.current = 0;
     setLog([{ ...first, renderKey: `${first.id}-boot-${Date.now()}` }]);
     setCursor(0);
-    setNewCount(first?.status === "logged-new" || first?.status === "auto-queued" ? 1 : 0);
-    setDocCount(first?.status === "documented" ? 1 : 0);
-    setDiscoverCount(first?.status === "discovered" ? 1 : 0);
     setClock(new Date().toISOString());
     const id = window.setInterval(() => {
       const rows = streamRef.current;
@@ -305,11 +314,6 @@ export function BlackOwnedScanBot({ bot }: { bot: BlackOwnedScanBotPayload }) {
       setLog((prev) =>
         [{ ...row, renderKey: `${row.id}-${row.seq}-${Date.now()}-${prev.length}` }, ...prev].slice(0, 36),
       );
-      if (row.status === "logged-new" || row.status === "auto-queued") {
-        setNewCount((n) => n + 1);
-      }
-      if (row.status === "documented") setDocCount((n) => n + 1);
-      if (row.status === "discovered") setDiscoverCount((n) => n + 1);
       setClock(new Date().toISOString());
     }, tickMs);
     return () => window.clearInterval(id);
@@ -317,7 +321,13 @@ export function BlackOwnedScanBot({ bot }: { bot: BlackOwnedScanBotPayload }) {
 
   // Credit the 24/7 backlog earned while the console was closed, then never go back down.
   useEffect(() => {
-    discoveryStore.floor(backlogCounters(Date.now(), synthesis?.epochMs));
+    discoveryStore.floor(
+      backlogCounters(
+        Date.now(),
+        synthesis?.epochMs,
+        synthesis ? p1RatioFromSeed(synthesis) : undefined,
+      ),
+    );
   }, [synthesis]);
 
   // 24/7 discovery → auto-queue. Plain interval + refs only (no useEffectEvent — React #440 under concurrent render).
@@ -509,7 +519,7 @@ export function BlackOwnedScanBot({ bot }: { bot: BlackOwnedScanBotPayload }) {
             </div>
             <div className="rounded-lg border border-emerald-400/30 bg-emerald-500/5 px-2 py-2">
               <p className="font-display text-lg text-emerald-100">
-                {(verified.length + newCount + counters.businesses).toLocaleString()}
+                {(verified.length + counters.businesses).toLocaleString()}
               </p>
               <p className="text-[10px] tracking-[0.14em] text-muted-foreground uppercase">Businesses</p>
             </div>
@@ -525,13 +535,13 @@ export function BlackOwnedScanBot({ bot }: { bot: BlackOwnedScanBotPayload }) {
             </div>
             <div className="rounded-lg border border-border/40 px-2 py-2">
               <p className="font-display text-lg">
-                {(discoverCount + counters.discovered).toLocaleString()}
+                {(bakedBaselines.discovered + counters.discovered).toLocaleString()}
               </p>
               <p className="text-[10px] tracking-[0.14em] text-muted-foreground uppercase">Discovered</p>
             </div>
             <div className="rounded-lg border border-border/40 px-2 py-2">
               <p className="font-display text-lg">
-                {(docCount + counters.documented).toLocaleString()}
+                {(bakedBaselines.documented + counters.documented).toLocaleString()}
               </p>
               <p className="text-[10px] tracking-[0.14em] text-muted-foreground uppercase">Documented</p>
             </div>

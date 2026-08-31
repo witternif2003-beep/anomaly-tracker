@@ -669,15 +669,17 @@ export function inspectTrackerBook(
         gateGroup: "bo-scan",
       });
     }
-    const stallGraceMs = Math.max(15_000, (bot.discoveryTickMs ?? 2200) * 8);
+    // Only a visible tab is judged (see discoveryStore.stalled) and the finding is
+    // not reload-healable: refetching the bake cannot restart a dead interval, so a
+    // healable flag here would just spin the repair loop against nothing.
+    const stallGraceMs = Math.max(60_000, (bot.discoveryTickMs ?? 2200) * 8);
     if (discoveryStore.stalled(stallGraceMs)) {
       push(findings, {
         id: "continuous-discovery-stalled",
         severity: "P1",
         title: "Continuous discovery stalled",
         detail: `no new business in >${Math.round(stallGraceMs / 1000)}s · businesses=${discoveryStore.getSnapshot().businesses}`,
-        healable: true,
-        healAction: "reload-static",
+        healable: false,
         gateGroup: "bo-scan",
       });
     }

@@ -110,6 +110,15 @@ function tuple(index: number, radices: number[]): number[] {
   });
 }
 
+/** Smallest stride > 1 coprime with `n`, so index → category is a full cycle. */
+function coprimeStride(n: number): number {
+  const gcd = (a: number, b: number): number => (b ? gcd(b, a % b) : a);
+  for (let stride = 7; stride < 7 + Math.max(1, n); stride += 1) {
+    if (gcd(stride, Math.max(1, n)) === 1) return stride;
+  }
+  return 1;
+}
+
 function priorityFor(index: number): "P1" | "P2" | "P3" {
   if (index % 3 === 0) return "P1";
   return index % 2 === 0 ? "P2" : "P3";
@@ -166,7 +175,9 @@ export function synthesizeViolation(
   seed: DiscoverySeed,
 ): SyntheticViolation {
   const slot = Math.max(0, Math.floor(index));
-  const category = pick(seed.categories, slot * 7 + business.index);
+  // Stride must be coprime with the taxonomy length or whole categories are never
+  // reachable (the caller passes the same index twice, so any shared factor bites).
+  const category = pick(seed.categories, slot * coprimeStride(seed.categories.length));
   const priority = (category.priority === "P1" || category.priority === "P2"
     ? category.priority
     : business.priority) as "P1" | "P2" | "P3";
@@ -212,13 +223,19 @@ function readHighWater(): DiscoveryCounters {
   }
 }
 
-function writeHighWater(counters: DiscoveryCounters) {
-  if (typeof window === "undefined") return;
+/**
+ * Merge against whatever another tab persisted before writing, so the high-water
+ * mark is monotonic across contexts and not just within this one.
+ */
+function writeHighWater(counters: DiscoveryCounters): DiscoveryCounters {
+  if (typeof window === "undefined") return counters;
+  const merged = clampUp(counters, readHighWater());
   try {
-    window.localStorage.setItem(STORE_KEY, JSON.stringify(counters));
+    window.localStorage.setItem(STORE_KEY, JSON.stringify(merged));
   } catch {
     // Private mode / quota — counters stay monotonic in memory.
   }
+  return merged;
 }
 
 /** Monotonic merge: a counter never moves down, whatever the caller passes. */
@@ -245,6 +262,7 @@ function clampUp(
 function createStore() {
   let snapshot: DiscoveryCounters = ZERO;
   let hydrated = false;
+  let crossTab = false;
   const listeners = new Set<() => void>();
 
   const emit = () => {
@@ -256,8 +274,7 @@ function createStore() {
       (key) => next[key] !== snapshot[key],
     );
     if (!changed) return;
-    snapshot = Object.freeze(next);
-    writeHighWater(snapshot);
+    snapshot = Object.freeze(writeHighWater(next));
     emit();
   };
 
@@ -269,6 +286,14 @@ function createStore() {
         if (stored !== ZERO) snapshot = Object.freeze(clampUp(snapshot, stored));
       }
       listeners.add(listener);
+      if (typeof window !== "undefined" && !crossTab) {
+        crossTab = true;
+        // Another tab advanced the shared high-water mark — adopt it, never lower ours.
+        window.addEventListener("storage", (event) => {
+          if (event.key !== STORE_KEY) return;
+          commit(clampUp(snapshot, readHighWater()));
+        });
+      }
       return () => {
         listeners.delete(listener);
       };
@@ -297,9 +322,16 @@ function createStore() {
       }
       commit(clampUp(snapshot, additive));
     },
-    /** True when the search has visibly stopped advancing — the frozen-fixture regression. */
+    /**
+     * True when the search has visibly stopped advancing — the frozen-fixture
+     * regression. Only meaningful for a visible tab: browsers throttle or freeze
+     * background timers, which is a paused search, not a broken one.
+     */
     stalled(graceMs: number, nowMs = Date.now()) {
       if (!snapshot.lastAdvanceMs) return false;
+      if (typeof document !== "undefined" && document.visibilityState !== "visible") {
+        return false;
+      }
       return nowMs - snapshot.lastAdvanceMs > graceMs;
     },
   };
@@ -314,6 +346,8 @@ export const discoveryStore = createStore();
 export function backlogCounters(
   nowMs = Date.now(),
   epochMs: number = DISCOVERY_EPOCH_MS,
+  /** Share of synthesized violations that land on P1 — measure it, don't assume 1/3. */
+  p1Ratio = 1 / 3,
 ): DiscoveryCounters {
   const backlog = discoveryIndexAt(nowMs, DISCOVERY_BACKLOG_TICK_MS, epochMs);
   return {
@@ -322,10 +356,20 @@ export function backlogCounters(
     autoQueued: backlog,
     documented: backlog,
     violations: backlog,
-    p1Violations: Math.ceil(backlog / 3),
+    p1Violations: Math.floor(backlog * Math.min(1, Math.max(0, p1Ratio))),
     ticks: 0,
     lastAdvanceMs: 0,
   };
+}
+
+/** Measured P1 share of the deterministic sequence — feeds the backlog floor. */
+export function p1RatioFromSeed(seed: DiscoverySeed, sample = 300): number {
+  let p1 = 0;
+  for (let i = 0; i < sample; i += 1) {
+    const business = synthesizeBusiness(i, seed);
+    if (synthesizeViolation(i, business, seed).priority === "P1") p1 += 1;
+  }
+  return p1 / Math.max(1, sample);
 }
 
 export function seedFromScanPayload(payload: {
