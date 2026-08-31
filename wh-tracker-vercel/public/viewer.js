@@ -343,7 +343,7 @@ try {
     scout.record({
       kind: "exception",
       message: `3D scene unavailable — ${err.message}`,
-      detail: "WebGL context or Three.js initialisation failed; falling back to the 2D topology",
+      detail: "WebGL context or Three.js initialisation failed; falling back to the flat SVG topology",
       source: "viewer",
     });
   }
