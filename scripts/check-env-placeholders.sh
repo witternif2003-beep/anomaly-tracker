@@ -80,4 +80,39 @@ for needle in ("applyFreeApiDefaults", "searchCourtListenerFree", "searchGoogleP
     if needle not in resolve_mod:
         raise SystemExit(f"ENV FAIL: free-api-resolve missing {needle}")
 print("PIPELINE OK free-api-resolutions", len(need_free), "mapped")
+
+operator_secrets = ("CLOUDFLARE_API_TOKEN", "CLOUDFLARE_ACCOUNT_ID")
+loader = Path("server/load-env.ts").read_text()
+for name in operator_secrets:
+    block = re.search(rf'name: "{name}".*?\}}', loader, re.S)
+    if not block or "operatorSecret: true" not in block.group(0):
+        raise SystemExit(f"ENV FAIL: {name} must be marked operatorSecret in server/load-env.ts")
+for name in required:
+    if name in operator_secrets:
+        continue
+    block = re.search(rf'name: "{name}".*?\}}', loader, re.S)
+    if block and "operatorSecret" in block.group(0):
+        raise SystemExit(f"ENV FAIL: {name} is free-resolvable and must not be an operatorSecret")
+
+# The static bake is world-readable: operator secrets must never be reported as configured there.
+bake = Path("public/static/anomaly.json")
+if bake.exists():
+    credentials = json.loads(bake.read_text()).get("credentials") or {}
+    variables = {v["name"]: v for v in credentials.get("variables", [])}
+    for name in operator_secrets:
+        var = variables.get(name)
+        if var is None:
+            raise SystemExit(f"ENV FAIL: bake missing credential badge {name}")
+        if var.get("operatorSecret") is not True:
+            raise SystemExit(f"ENV FAIL: bake must mark {name} operatorSecret")
+        if var.get("configured") is not False:
+            raise SystemExit(f"ENV FAIL: bake leaks operator secret state for {name}")
+    unsatisfied = [v["name"] for v in credentials.get("variables", []) if v.get("satisfied") is False]
+    if unsatisfied:
+        raise SystemExit(f"ENV FAIL: unsatisfied credential badges in bake: {unsatisfied}")
+    if credentials.get("requiredCount") != len(need_free):
+        raise SystemExit(
+            f"ENV FAIL: bake requiredCount={credentials.get('requiredCount')} expected {len(need_free)}"
+        )
+print("PIPELINE OK operator-secret-classification", len(operator_secrets), "held outside the app")
 PY

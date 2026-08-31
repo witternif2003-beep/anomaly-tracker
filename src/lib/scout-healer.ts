@@ -20,6 +20,15 @@ export type ScoutFinding = {
   gateGroup?: string;
 };
 
+/** One credential badge as baked into the tracker book / static payload. */
+export type CredentialBadge = {
+  name: string;
+  configured?: boolean;
+  operatorSecret?: boolean;
+  satisfied?: boolean;
+  freeResolved?: boolean;
+};
+
 export type ScoutSnapshot = {
   sceneNodeCount: number;
   sceneEventCount: number;
@@ -68,6 +77,8 @@ export const EXPECTED = {
   boHardeningGates: 50,
   boHardeningScore: 95,
   envPlaceholders: 18,
+  /** Placeholders the app itself must resolve; the rest are deploy-time operator secrets. */
+  envRequiredPlaceholders: 16,
   envFreeResolved: 16,
   pipelineScripts: 12,
   scoutHealActionsMin: 12,
@@ -672,12 +683,13 @@ export function inspectTrackerBook(
         gateGroup: "credentials",
       });
     }
-    if ((credentials.configuredCount ?? 0) > 0 && credentials.configuredCount < EXPECTED.envPlaceholders) {
+    const requiredPlaceholders = credentials.requiredCount ?? EXPECTED.envRequiredPlaceholders;
+    if ((credentials.configuredCount ?? 0) > 0 && credentials.configuredCount < requiredPlaceholders) {
       push(findings, {
-        id: "credentials-configured-18",
+        id: "credentials-configured-required",
         severity: "P1",
-        title: "Env placeholders not fully configured",
-        detail: `configured=${credentials.configuredCount}/${credentials.placeholderCount}`,
+        title: "App env placeholders not fully configured",
+        detail: `configured=${credentials.configuredCount}/${requiredPlaceholders} app placeholders`,
         healable: true,
         healAction: "reload-static",
         gateGroup: "credentials",
@@ -708,15 +720,31 @@ export function inspectTrackerBook(
         gateGroup: "credentials",
       });
     }
-    const emptyVars = (credentials.variables ?? []).filter((v: any) => !v.configured);
+    const credentialVars: CredentialBadge[] = credentials.variables ?? [];
+    const emptyVars = credentialVars.filter((v) => !v.operatorSecret && !v.configured);
     if (emptyVars.length) {
       push(findings, {
         id: "credentials-no-empty",
         severity: "P1",
-        title: "Empty credential badges remain",
-        detail: `empty=${emptyVars.map((v: any) => v.name).join(",")}`,
+        title: "Empty app credential badges remain",
+        detail: `empty=${emptyVars.map((v) => v.name).join(",")}`,
         healable: true,
         healAction: "reload-static",
+        gateGroup: "credentials",
+      });
+    }
+    // An operator secret reaching the browser payload is a disclosure, not a config gap:
+    // envPlaceholderStatus() marks it unsatisfied and never echoes the value.
+    const leakedOperatorVars = credentialVars.filter(
+      (v) => v.operatorSecret && v.satisfied === false,
+    );
+    if (leakedOperatorVars.length) {
+      push(findings, {
+        id: "credentials-operator-secret-exposed",
+        severity: "P1",
+        title: "Operator secret present in the app payload",
+        detail: `exposed=${leakedOperatorVars.map((v) => v.name).join(",")}`,
+        healable: false,
         gateGroup: "credentials",
       });
     }
@@ -1214,6 +1242,7 @@ export async function runScoutHeal(
           mayPackets: EXPECTED.mayPackets,
           postdoc: EXPECTED.postdoc,
           envPlaceholders: EXPECTED.envPlaceholders,
+          envRequiredPlaceholders: EXPECTED.envRequiredPlaceholders,
           envFreeResolved: EXPECTED.envFreeResolved,
           pipelineScripts: EXPECTED.pipelineScripts,
           gateTarget: EXPECTED.gateTarget,

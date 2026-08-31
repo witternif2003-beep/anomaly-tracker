@@ -947,6 +947,8 @@ export function compileAnomalyTracker(opts?: {
       variables: env.variables.map((v) => ({
         name: v.name,
         configured: v.configured,
+        operatorSecret: v.operatorSecret,
+        satisfied: v.satisfied,
         freeResolved: v.freeResolved,
         requiredFor: v.requiredFor,
         closest: v.closest,
@@ -955,6 +957,9 @@ export function compileAnomalyTracker(opts?: {
       configuredCount: env.variables.filter((v) => v.configured).length,
       freeResolvedCount: env.variables.filter((v) => v.freeResolved).length,
       placeholderCount: env.variables.length,
+      requiredCount: env.requiredCount,
+      operatorSecretCount: env.operatorSecretCount,
+      operatorSecretNames: env.variables.filter((v) => v.operatorSecret).map((v) => v.name),
       cjis: {
         liveQueries: cjis.liveQueries,
         certifiedInterface: cjis.certifiedInterface,
@@ -1138,9 +1143,9 @@ export function compileAnomalyTracker(opts?: {
           id: "credentials-free-api",
           ok:
             env.variables.length === 18 &&
-            env.variables.every((v) => v.configured) &&
+            env.variables.every((v) => v.satisfied) &&
             env.variables.filter((v) => v.freeResolved).length >= 16,
-          detail: `${env.variables.filter((v) => v.configured).length}/18 configured · ${env.variables.filter((v) => v.freeResolved).length} free-API resolutions`,
+          detail: `${env.variables.filter((v) => !v.operatorSecret && v.configured).length}/${env.requiredCount} app placeholders configured · ${env.variables.filter((v) => v.freeResolved).length} free-API resolutions · ${env.operatorSecretCount} operator secrets held outside the app`,
         },
         {
           id: "pipeline-roster-12",

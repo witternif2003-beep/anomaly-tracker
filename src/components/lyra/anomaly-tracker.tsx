@@ -348,6 +348,8 @@ interface TrackerBook {
     note: string;
     placeholderCount?: number;
     configuredCount?: number;
+    requiredCount?: number;
+    operatorSecretCount?: number;
     freeResolvedCount?: number;
     secretsSkippedByOperator?: boolean;
     vault?: { status: string; shipped: string; note: string; exampleFile?: string };
@@ -360,7 +362,14 @@ interface TrackerBook {
     cjis?: { liveQueries: boolean; certifiedInterface: boolean };
     wontDo?: Array<{ id: string; title: string; reason: string }>;
     commands?: string[];
-    variables: Array<{ name: string; configured: boolean; freeResolved?: boolean; freeTool?: string }>;
+    variables: Array<{
+      name: string;
+      configured: boolean;
+      operatorSecret?: boolean;
+      satisfied?: boolean;
+      freeResolved?: boolean;
+      freeTool?: string;
+    }>;
   };
 }
 
@@ -1485,7 +1494,7 @@ export function AnomalyTracker({ initialData }: { initialData?: TrackerBook }) {
                 <CardTitle className="text-base">5. Credentials & security</CardTitle>
                     <CardDescription>
                   {book.credentials
-                    ? `${book.credentials.configuredCount ?? 0}/${book.credentials.placeholderCount ?? book.credentials.variables.length} configured (${book.credentials.freeResolvedCount ?? 0} free) · vault=${book.credentials.vault?.status ?? "wont-deploy"} · cjisLive=${String(book.credentials.cjis?.liveQueries ?? false)}`
+                    ? `${book.credentials.configuredCount ?? 0}/${book.credentials.requiredCount ?? book.credentials.placeholderCount ?? book.credentials.variables.length} app placeholders configured (${book.credentials.freeResolvedCount ?? 0} free) · ${book.credentials.operatorSecretCount ?? 0} operator-held · vault=${book.credentials.vault?.status ?? "wont-deploy"} · cjisLive=${String(book.credentials.cjis?.liveQueries ?? false)}`
                     : "Placeholders only"}
                 </CardDescription>
               </CardHeader>
@@ -1516,9 +1525,15 @@ export function AnomalyTracker({ initialData }: { initialData?: TrackerBook }) {
                     ))}
                     <div className="flex flex-wrap gap-2">
                       {book.credentials.variables.map((v) => (
-                        <Badge key={v.name} variant={v.configured ? "secondary" : "outline"}>
+                        <Badge key={v.name} variant={v.configured || v.operatorSecret ? "secondary" : "outline"}>
                           {v.name}
-                          {v.configured ? (v.freeResolved ? "=free" : "=set") : "=empty"}
+                          {v.operatorSecret
+                            ? "=operator"
+                            : v.configured
+                              ? v.freeResolved
+                                ? "=free"
+                                : "=set"
+                              : "=empty"}
                         </Badge>
                       ))}
                     </div>
