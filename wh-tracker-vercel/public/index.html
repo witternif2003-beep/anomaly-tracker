@@ -279,52 +279,41 @@
         document.getElementById("status-text").textContent = text;
       }
 
-      async function bootstrap() {
-        const [topology, anomalies, summary] = await Promise.all([
-          fetch("/api/topology").then((r) => r.json()),
-          fetch("/api/anomalies?limit=50").then((r) => r.json()),
-          fetch("/api/summary").then((r) => r.json()),
-        ]);
-        state = { topology, anomalies: anomalies.anomalies || [], summary };
+      function applySnapshot(message) {
+        state = {
+          topology: message.topology,
+          anomalies: message.anomalies || [],
+          summary: message.summary,
+        };
         rebuild();
         renderHud();
       }
 
+      async function bootstrap() {
+        const snapshot = await fetch("/api/anomalies?limit=50").then((r) => r.json());
+        applySnapshot(snapshot);
+      }
+
+      // Serverless functions are request-scoped, so the stream is SSE and ends at the
+      // platform duration limit; reconnect on both `reconnect` and transport errors.
       function connect() {
-        const proto = location.protocol === "https:" ? "wss" : "ws";
-        const socket = new WebSocket(`${proto}://${location.host}/ws`);
-        socket.addEventListener("open", () => setStatus("live", "live"));
-        socket.addEventListener("close", () => {
-          setStatus("down", "reconnecting…");
-          setTimeout(connect, 3000);
+        const source = new EventSource("/api/sse/stream");
+        let done = false;
+        const restart = (text) => {
+          if (done) return;
+          done = true;
+          source.close();
+          setStatus("down", text);
+          setTimeout(connect, 1000);
+        };
+
+        source.addEventListener("open", () => setStatus("live", "live"));
+        source.addEventListener("snapshot", (event) => {
+          setStatus("live", "live");
+          applySnapshot(JSON.parse(event.data));
         });
-        socket.addEventListener("message", (event) => {
-          const message = JSON.parse(event.data);
-          if (message.type === "snapshot") {
-            state = {
-              topology: message.topology,
-              anomalies: message.anomalies || [],
-              summary: message.summary,
-            };
-            rebuild();
-          } else if (message.type === "anomaly") {
-            state.anomalies = [
-              message.anomaly,
-              ...state.anomalies.filter((a) => a.id !== message.anomaly.id),
-            ].slice(0, 200);
-            rebuild();
-          } else if (message.type === "topology") {
-            state.topology = message.topology;
-            rebuild();
-          }
-          fetch("/api/summary")
-            .then((r) => r.json())
-            .then((summary) => {
-              state.summary = summary;
-              renderHud();
-            })
-            .catch(() => renderHud());
-        });
+        source.addEventListener("reconnect", () => restart("reconnecting…"));
+        source.addEventListener("error", () => restart("reconnecting…"));
       }
 
       let dragging = false;
