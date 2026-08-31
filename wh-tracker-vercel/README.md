@@ -32,15 +32,23 @@ is unavailable or the stream fails to deliver a snapshot twice in a row (bufferi
 never forward `text/event-stream`, so the stream would otherwise sit on "connecting…"). The
 status dot shows which transport is in use: green `live` (SSE), blue `polling`, red offline.
 
+## No synthetic data
+
+Nothing the viewer or the APIs return is mocked, seeded with invented records, or randomly
+generated. The baseline graph is only the upstream feeds themselves (EOP, USAspending, OTX),
+each carrying the URL it represents, and every further entity, link and anomaly comes from a
+real FEC, USAspending or OTX response. Node tooltips show each node's `source`, and any
+non-live payload is flagged (`reference: true`) and labelled in the HUD.
+
 ## Reference topology instead of seed data
 
-When the store holds nothing but the three baseline nodes, the viewer loads
+When the store holds nothing but the three baseline feed nodes, the viewer loads
 `/api/reference-topology` and labels the HUD `reference topology · USAspending FY<year>`.
 It is built at request time from three USAspending endpoints (agency profile, sub-agency
 breakdown, `spending_by_category/recipient`); every entity carries the URL it came from and
 the anomalies are the same `mean + σ·stddev` award-concentration outliers `/api/treasury`
-computes. Nothing is fabricated and nothing is written to the store, so demo output stays
-attributable — no invented intelligence-sharing nodes or incidents.
+computes. Nothing is fabricated and nothing is written to the store, so the empty-state view
+stays attributable — no invented intelligence-sharing nodes or incidents.
 
 ## State
 

@@ -96,7 +96,12 @@ curl -X POST http://localhost:3000/api/report \
   -d '{"title":"Weekly review"}' -o report.pdf
 ```
 
-State lives in `data/state.json` (atomic writes, seeded with a small demo graph on first
+No part of the graph is mocked or synthetic: on first boot the store holds only the upstream
+feeds the pipelines read (EOP, USAspending, FEC Schedule A, OTX), each carrying its source
+URL, and every further entity, link and anomaly is produced by a real pipeline response. Node
+tooltips show each node's `source`.
+
+State lives in `data/state.json` (atomic writes, the feed baseline written on first
 boot); structured JSON logs are written to `logs/<service>.log`. Under compose both live in
 named volumes (`tracker-data`, `*-logs`) so persistence does not depend on the checkout
 being writable by the image's non-root user — read logs with `docker compose logs` or

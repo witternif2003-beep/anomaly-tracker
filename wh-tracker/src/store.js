@@ -29,19 +29,40 @@ function load() {
   return state;
 }
 
+// Baseline graph: only the upstream feeds the pipelines read from, each carrying
+// its source URL. Entities beyond these come from a pipeline run, so an idle
+// tracker shows the feeds it is wired to rather than invented vendors.
 function seed(target) {
   const entities = [
-    { id: "ent-treasury", label: "US Treasury", kind: "agency" },
-    { id: "ent-fec", label: "FEC Committees", kind: "registry" },
-    { id: "ent-vendor-a", label: "Northgate Holdings", kind: "vendor" },
-    { id: "ent-vendor-b", label: "Halberd Logistics", kind: "vendor" },
-    { id: "ent-pac-a", label: "Meridian PAC", kind: "committee" },
+    {
+      id: "ent-eop",
+      label: "Executive Office of the President",
+      kind: "office",
+      source: "https://api.usaspending.gov/api/v2/agency/1100/",
+    },
+    {
+      id: "ent-treasury",
+      label: "USAspending.gov",
+      kind: "feed",
+      source: "https://api.usaspending.gov",
+    },
+    {
+      id: "ent-fec",
+      label: "FEC Schedule A",
+      kind: "feed",
+      source: "https://api.open.fec.gov/v1/schedules/schedule_a/",
+    },
+    {
+      id: "ent-otx",
+      label: "AlienVault OTX",
+      kind: "feed",
+      source: "https://otx.alienvault.com/api/v1",
+    },
   ];
   const links = [
-    { id: "lnk-1", source: "ent-treasury", target: "ent-vendor-a", kind: "award", weight: 4 },
-    { id: "lnk-2", source: "ent-treasury", target: "ent-vendor-b", kind: "award", weight: 2 },
-    { id: "lnk-3", source: "ent-pac-a", target: "ent-vendor-a", kind: "contribution", weight: 3 },
-    { id: "lnk-4", source: "ent-fec", target: "ent-pac-a", kind: "filing", weight: 1 },
+    { id: "lnk-1", source: "ent-eop", target: "ent-treasury", kind: "spending", weight: 3 },
+    { id: "lnk-2", source: "ent-eop", target: "ent-fec", kind: "filing", weight: 1 },
+    { id: "lnk-3", source: "ent-eop", target: "ent-otx", kind: "feed", weight: 1 },
   ];
   target.entities = entities;
   target.links = links;

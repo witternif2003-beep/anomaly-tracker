@@ -435,9 +435,10 @@
         if (hit) {
           const { entity, severity, degree } = hit.object.userData;
           tooltip.style.display = "block";
-          tooltip.innerHTML = `<b>${escapeHtml(entity.label)}</b><br>${escapeHtml(entity.kind)} &middot; ${degree} links<br>worst severity: ${escapeHtml(
-            severity
-          )}`;
+          tooltip.innerHTML =
+            `<b>${escapeHtml(entity.label)}</b><br>${escapeHtml(entity.kind)} &middot; ${degree} links<br>` +
+            `worst severity: ${escapeHtml(severity)}` +
+            (entity.source ? `<br>source: ${escapeHtml(entity.source)}` : "");
         } else {
           tooltip.style.display = "none";
         }

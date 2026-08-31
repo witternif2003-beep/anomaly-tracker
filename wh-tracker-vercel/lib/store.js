@@ -14,13 +14,30 @@ export const store = sql ? "neon" : "memory";
 const SEVERITIES = ["info", "low", "medium", "high", "critical"];
 const SEVERITY_RANK = { info: 1, low: 2, medium: 3, high: 4, critical: 5 };
 
+// Baseline graph: only the upstream feeds the endpoints read from, each carrying
+// its source URL. Everything else arrives from a real pipeline call.
 function seed() {
   return {
     updatedAt: new Date().toISOString(),
     entities: [
-      { id: "ent-wh", label: "Executive Office of the President", kind: "office" },
-      { id: "ent-treasury", label: "USAspending.gov", kind: "agency" },
-      { id: "ent-otx", label: "AlienVault OTX", kind: "feed" },
+      {
+        id: "ent-wh",
+        label: "Executive Office of the President",
+        kind: "office",
+        source: "https://api.usaspending.gov/api/v2/agency/1100/",
+      },
+      {
+        id: "ent-treasury",
+        label: "USAspending.gov",
+        kind: "feed",
+        source: "https://api.usaspending.gov",
+      },
+      {
+        id: "ent-otx",
+        label: "AlienVault OTX",
+        kind: "feed",
+        source: "https://otx.alienvault.com/api/v1",
+      },
     ],
     links: [
       { source: "ent-wh", target: "ent-treasury", kind: "spending", weight: 3 },

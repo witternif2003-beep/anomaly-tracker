@@ -63,7 +63,7 @@ async function main() {
         severity: "low",
         score: 12,
         source: "smoke",
-        entityId: "ent-vendor-a",
+        entityId: "ent-treasury",
       }),
     });
     record("tracker accepts authenticated writes", created.res.status === 201);
