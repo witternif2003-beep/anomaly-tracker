@@ -6,7 +6,7 @@ cd "$root"
 
 python3 - <<'PY'
 from pathlib import Path
-import json, re, sys
+import json, os, re, sys
 
 example = Path(".env.example").read_text()
 required = [
@@ -80,4 +80,47 @@ for needle in ("applyFreeApiDefaults", "searchCourtListenerFree", "searchGoogleP
     if needle not in resolve_mod:
         raise SystemExit(f"ENV FAIL: free-api-resolve missing {needle}")
 print("PIPELINE OK free-api-resolutions", len(need_free), "mapped")
+
+operator_secrets = ("CLOUDFLARE_API_TOKEN", "CLOUDFLARE_ACCOUNT_ID")
+loader = Path("server/load-env.ts").read_text()
+for name in operator_secrets:
+    block = re.search(rf'name: "{name}".*?\}}', loader, re.S)
+    if not block or "operatorSecret: true" not in block.group(0):
+        raise SystemExit(f"ENV FAIL: {name} must be marked operatorSecret in server/load-env.ts")
+for name in required:
+    if name in operator_secrets:
+        continue
+    block = re.search(rf'name: "{name}".*?\}}', loader, re.S)
+    if block and "operatorSecret" in block.group(0):
+        raise SystemExit(f"ENV FAIL: {name} is free-resolvable and must not be an operatorSecret")
+
+# The static bake is world-readable: it may carry classification metadata but never a value.
+bake = Path("public/static/anomaly.json")
+if bake.exists():
+    raw = bake.read_text()
+    credentials = json.loads(raw).get("credentials") or {}
+    variables = {v["name"]: v for v in credentials.get("variables", [])}
+    for name in operator_secrets:
+        var = variables.get(name)
+        if var is None:
+            raise SystemExit(f"ENV FAIL: bake missing credential badge {name}")
+        if var.get("operatorSecret") is not True:
+            raise SystemExit(f"ENV FAIL: bake must mark {name} operatorSecret")
+    for var in credentials.get("variables", []):
+        leaked = [k for k in ("value", "token", "secret") if var.get(k)]
+        if leaked:
+            raise SystemExit(f"ENV FAIL: bake badge {var['name']} carries {leaked}")
+    # If this machine holds real credentials, prove none of them landed in the bake.
+    for name in required:
+        live = (os.environ.get(name) or "").strip()
+        if live and not live.startswith("free:") and live in raw:
+            raise SystemExit(f"ENV FAIL: bake contains the live value of {name}")
+    unsatisfied = [v["name"] for v in credentials.get("variables", []) if v.get("satisfied") is False]
+    if unsatisfied:
+        raise SystemExit(f"ENV FAIL: unsatisfied credential badges in bake: {unsatisfied}")
+    if credentials.get("requiredCount") != len(need_free):
+        raise SystemExit(
+            f"ENV FAIL: bake requiredCount={credentials.get('requiredCount')} expected {len(need_free)}"
+        )
+print("PIPELINE OK operator-secret-classification", len(operator_secrets), "held outside the app")
 PY

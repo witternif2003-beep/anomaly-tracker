@@ -224,7 +224,7 @@ export function ScoutBotPanel({
       );
     }
 
-    const remaining = lastResult.findings.filter((f) => f.healable && !f.healed);
+    const remaining = lastResult.findings.filter((f) => !f.healed && (f.healable || f.severity === "P1"));
     setStatus(remaining.length ? (totalHealed ? "healing" : "degraded") : "healthy");
     } finally {
       inFlightRef.current = false;

@@ -119,7 +119,7 @@ export function installNotebook() {
   const bot = suggestionBotStatus();
 
   const legalLive = legal.filter((s) => s.status === "live").length;
-  const envSet = env.variables.filter((v) => v.configured).length;
+  const envSet = env.variables.filter((v) => !v.operatorSecret && v.configured).length;
   const assetsOk = inventory.assets.filter((a) => a.install?.ok).length;
 
   return {
@@ -139,6 +139,8 @@ export function installNotebook() {
       legalSources: legal.length,
       legalLive,
       envPlaceholders: env.variables.length,
+      envRequired: env.requiredCount,
+      envOperatorSecrets: env.operatorSecretCount,
       envConfigured: envSet,
       dockerAvailable: install.dockerAvailable,
       cuckooLiveSandbox: false,
@@ -233,7 +235,10 @@ export function installNotebook() {
         };
       }
       if (item.id === "optional-keys") {
-        return { ...item, live: `${envSet}/${env.variables.length} placeholders currently set` };
+        return {
+          ...item,
+          live: `${envSet}/${env.requiredCount} app placeholders set · ${env.operatorSecretCount} operator secrets held outside the app`,
+        };
       }
       return { ...item, live: item.status };
     }),

@@ -7,17 +7,25 @@ import {
   isFreeResolutionValue,
 } from "./free-api-resolve";
 
-/** Requested placeholders. Values stay empty in git; inject secrets at runtime. */
+/**
+ * Requested placeholders. Values stay empty in git; inject secrets at runtime.
+ * `operatorSecret` names are deploy-time credentials with no free public equivalent: the studio
+ * runs without them, so they are excluded from app readiness instead of counted as
+ * "unconfigured". They may legitimately be present in an operator's shell env (wrangler, MCP);
+ * what must never happen is a value reaching a client payload, so no value is emitted here.
+ */
 export const ENV_PLACEHOLDERS = [
   {
     name: "CLOUDFLARE_API_TOKEN",
     requiredFor: "Cloudflare MCP",
     closest: "CLOUDFLARE_API_TOKEN (@cloudflare/mcp-server-cloudflare, wrangler)",
+    operatorSecret: true,
   },
   {
     name: "CLOUDFLARE_ACCOUNT_ID",
     requiredFor: "Cloudflare MCP",
     closest: "CLOUDFLARE_ACCOUNT_ID (@cloudflare/mcp-server-cloudflare, wrangler)",
+    operatorSecret: true,
   },
   {
     name: "DATABASE_URI",
@@ -103,6 +111,14 @@ export const ENV_PLACEHOLDERS = [
 
 export type EnvPlaceholderName = (typeof ENV_PLACEHOLDERS)[number]["name"];
 
+export const OPERATOR_SECRET_NAMES: readonly string[] = ENV_PLACEHOLDERS.filter(
+  (item) => "operatorSecret" in item && item.operatorSecret,
+).map((item) => item.name);
+
+export const REQUIRED_PLACEHOLDER_NAMES: readonly string[] = ENV_PLACEHOLDERS.filter(
+  (item) => !OPERATOR_SECRET_NAMES.includes(item.name),
+).map((item) => item.name);
+
 function stripQuotes(value: string): string {
   if (
     (value.startsWith('"') && value.endsWith('"')) ||
@@ -164,23 +180,32 @@ export function loadEnvFiles(root = path.join(path.dirname(fileURLToPath(import.
 
 export function envPlaceholderStatus() {
   applyFreeApiDefaults();
+  const variables = ENV_PLACEHOLDERS.map((item) => {
+    const operatorSecret = OPERATOR_SECRET_NAMES.includes(item.name);
+    const value = process.env[item.name]?.trim() ?? "";
+    const free = freeResolutionMeta(item.name);
+    const freeResolved = isFreeResolutionValue(value);
+    const configured = Boolean(value);
+    return {
+      name: item.name,
+      configured,
+      operatorSecret,
+      // Operator secrets carry no app-side requirement: present or absent, the app is fine.
+      satisfied: operatorSecret ? true : configured,
+      freeResolved,
+      requiredFor: item.requiredFor,
+      closest: free ? `${item.closest} → free: ${free.tool}` : item.closest,
+      freeTool: free?.tool,
+      freeEndpoint: free?.endpoint,
+    };
+  });
+
   return {
     object: "env.placeholders" as const,
     secretsInGit: false,
-    note: "Every placeholder resolves via a free public tool when no paid secret is injected. .env.example stays empty; free: sentinels are not secrets.",
-    variables: ENV_PLACEHOLDERS.map((item) => {
-      const value = process.env[item.name]?.trim() ?? "";
-      const free = freeResolutionMeta(item.name);
-      const freeResolved = isFreeResolutionValue(value);
-      return {
-        name: item.name,
-        configured: Boolean(value),
-        freeResolved,
-        requiredFor: item.requiredFor,
-        closest: free ? `${item.closest} → free: ${free.tool}` : item.closest,
-        freeTool: free?.tool,
-        freeEndpoint: free?.endpoint,
-      };
-    }),
+    note: "Every app placeholder resolves via a free public tool when no paid secret is injected. Cloudflare deploy credentials are operator secrets: never loaded here, never emitted to a client. .env.example stays empty; free: sentinels are not secrets.",
+    requiredCount: REQUIRED_PLACEHOLDER_NAMES.length,
+    operatorSecretCount: OPERATOR_SECRET_NAMES.length,
+    variables,
   };
 }
