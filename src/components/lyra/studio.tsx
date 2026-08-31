@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState, type ReactNode } from "react";
-import Link from "next/link";
 import {
   ArrowRightIcon,
   LoaderCircleIcon,
@@ -39,7 +38,6 @@ import type {
 import { optimize } from "@/lib/optimize";
 import { ghostHandEngaged, parseMode } from "@/lib/optimize/types";
 import type { AipScan } from "@/lib/aip-sigma0/scanner";
-import { cn } from "@/lib/utils";
 import { withBasePath } from "@/lib/static-data";
 
 const PHASES: FourDPhase[] = ["deconstruct", "diagnose", "develop", "deliver"];

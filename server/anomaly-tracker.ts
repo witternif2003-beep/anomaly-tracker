@@ -260,7 +260,7 @@ function buildMayForensicPacket(entity: FixtureEntity) {
   };
 }
 
-function corpusToAnomaly(el: EvidenceElement, index: number): CompiledAnomalyBase {
+function corpusToAnomaly(el: EvidenceElement, _index: number): CompiledAnomalyBase {
   const constrained = el.collectionStatus === "constrained";
   const wontDo =
     "wontDo" in el && typeof el.wontDo === "string"

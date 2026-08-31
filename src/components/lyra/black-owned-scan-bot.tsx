@@ -220,7 +220,7 @@ export function BlackOwnedScanBot({ bot }: { bot: BlackOwnedScanBotPayload }) {
   const [poolCursor, setPoolCursor] = useState(0);
   const [discoveryLog, setDiscoveryLog] = useState<DiscoveryLog[]>([]);
   const [autoQueuedCount, setAutoQueuedCount] = useState(seedQueue.length);
-  const [newCount, setNewCount] = useState(0);
+  const [, setNewCount] = useState(0);
   const [docCount, setDocCount] = useState(0);
   const [discoverCount, setDiscoverCount] = useState(0);
   const cursorRef = useRef(0);

@@ -1,5 +1,6 @@
 import cors from "cors";
 import express from "express";
+import { timingSafeEqual } from "node:crypto";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { legalSearch, legalSearchStatus } from "./legal-search";
@@ -11,6 +12,7 @@ import {
   searchFreeDocs,
 } from "./free-api-resolve";
 import { cjisStatus, policyStatus, refuseCjisQuery } from "./policy";
+import { assertSafeFetchUrl } from "./safe-url";
 import {
   chunkText,
   completeChat,
@@ -35,16 +37,48 @@ import { runAipDeepDive } from "../src/lib/aip-sigma0/dive";
 loadEnvFiles();
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const HOST = process.env.LOCAL_API_HOST ?? "0.0.0.0";
+const HOST = process.env.LOCAL_API_HOST ?? "127.0.0.1";
 const PORT = Number(process.env.LOCAL_API_PORT ?? 4040);
+const TOKEN = process.env.LOCAL_API_TOKEN?.trim() ?? "";
+const LOOPBACK_HOSTS = new Set(["127.0.0.1", "::1", "localhost"]);
+const ALLOWED_ORIGINS = (process.env.LOCAL_API_ALLOWED_ORIGINS ?? `http://127.0.0.1:${PORT},http://localhost:${PORT},http://127.0.0.1:43127,http://localhost:43127`)
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+if (!LOOPBACK_HOSTS.has(HOST) && !TOKEN) {
+  console.error(
+    `Refusing to bind ${HOST}: set LOCAL_API_TOKEN before exposing the local API off loopback.`,
+  );
+  process.exit(1);
+}
 
 const app = express();
 app.disable("x-powered-by");
-app.use(cors());
+app.use(
+  cors({
+    origin(origin, callback) {
+      if (!origin || ALLOWED_ORIGINS.includes(origin)) {
+        callback(null, true);
+        return;
+      }
+      callback(null, false);
+    },
+  }),
+);
 app.use(express.json({ limit: "1mb" }));
 
-app.use((req, _res, next) => {
-  void req.headers.authorization;
+app.use((req, res, next) => {
+  if (!TOKEN || req.path === "/health" || req.path.startsWith("/favicon")) {
+    next();
+    return;
+  }
+  const header = req.headers.authorization ?? "";
+  const presented = header.startsWith("Bearer ") ? header.slice("Bearer ".length).trim() : "";
+  if (presented.length !== TOKEN.length || !timingSafeEqual(Buffer.from(presented), Buffer.from(TOKEN))) {
+    res.status(401).json({ error: "Unauthorized." });
+    return;
+  }
   next();
 });
 
@@ -209,12 +243,12 @@ app.get("/v1/env/free", (_req, res) => {
 });
 
 app.get("/v1/free/firecrawl", async (req, res) => {
-  const target = String(req.query.url ?? "").trim();
-  if (!target) {
-    res.status(400).json({ ok: false, error: "url query required", tool: "jina-reader" });
+  const safe = assertSafeFetchUrl(String(req.query.url ?? ""));
+  if (!safe.ok) {
+    res.status(400).json({ ok: false, error: safe.reason, tool: "jina-reader" });
     return;
   }
-  const result = await fetchViaJina(target);
+  const result = await fetchViaJina(safe.url);
   res.status(result.ok ? 200 : 502).json({ object: "free.firecrawl", replaces: "FIRECRAWL_API_KEY", ...result });
 });
 

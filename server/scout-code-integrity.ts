@@ -302,7 +302,7 @@ export function compileScoutCodeIntegrity() {
 
   // Free-API resolutions file present for all non-CF placeholders
   const freeDoc = read("data/anomaly/free-api-resolutions.json");
-  let freeOk = false;
+  let freeOk: boolean;
   try {
     const parsed = JSON.parse(freeDoc) as { resolutions?: Record<string, unknown> };
     freeOk = Object.keys(parsed.resolutions ?? {}).length >= 16;
@@ -448,7 +448,7 @@ export function compileScoutCodeIntegrity() {
 
   // Scout ×729 tick pressure in config source of truth
   const scoutJson = read("data/anomaly/scout-bot.json");
-  let tickOk = false;
+  let tickOk: boolean;
   let gateOk = false;
   let passesOk = false;
   let hiddenOk = false;
@@ -569,9 +569,9 @@ export function compileScoutCodeIntegrity() {
     seen.add(rel);
     const idSafe = rel.replace(/[^a-zA-Z0-9]+/g, "-").replace(/^-|-$/g, "");
     let text = "";
-    let nonempty = false;
-    let noNull = true;
-    let endsNl = true;
+    let nonempty: boolean;
+    let noNull: boolean;
+    let endsNl: boolean;
     try {
       const buf = readFileSync(full);
       noNull = !buf.includes(0);
@@ -667,7 +667,7 @@ export function compileScoutCodeIntegrity() {
     }
 
     if (isJson) {
-      let jsonOk = false;
+      let jsonOk: boolean;
       try {
         JSON.parse(text);
         jsonOk = true;
@@ -793,7 +793,6 @@ export function compileScoutCodeIntegrity() {
         if (axis === "postdoc-virtual") {
           ok = ok && (pipe !== "tracker-3d-smoke" || /995500|postdoc|PIPELINE OK/i.test(body));
         }
-        if (axis === "cache-bust" || axis === "false-heal-guard" || axis === "inflight-guard") ok = ok;
         if (axis === "extreme-mode") {
           ok = ok && (pipe !== "tracker-3d-smoke" || /x729|extreme|PIPELINE OK/i.test(body));
         }
@@ -806,7 +805,6 @@ export function compileScoutCodeIntegrity() {
         if (axis === "heal-roster") {
           ok = ok && (pipe !== "tracker-3d-smoke" || /healActions|healed-actions|PIPELINE OK/i.test(body));
         }
-        if (axis === "pages-bake" || axis === "scroll-stable") ok = ok;
         push(
           `hidden-matrix-${pipe}-${axis}-${shard}`,
           "deep-matrix",
