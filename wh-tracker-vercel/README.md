@@ -21,6 +21,7 @@ there is no long-lived websocket. Use `../wh-tracker` (docker compose) for the f
 | `/api/treasury` | GET, POST | EOP (toptier `1100`) profile, sub-agencies, top recipients, `mean + σ·stddev` outliers; POST persists them (auth) |
 | `/api/threat-intel` | GET, POST | OTX subscribed pulses, or per-indicator enrichment via `?indicators=domain:example.com,ip:8.8.8.8`; POST persists (auth) |
 | `/api/topology` | GET | same snapshot as `GET /api/anomalies`, for clients that poll instead of streaming |
+| `/api/reference-topology` | GET | EOP sub-agencies + top award recipients built live from USAspending, every node carrying its upstream URL and flagged `reference: true`; used when the store is empty |
 | `/api/sse/stream` | GET | snapshot + change-driven updates, ends before the function limit with a `reconnect` event |
 
 Writes require `X-API-Key`; without a configured `API_KEY` they fail closed with 503.
@@ -30,6 +31,16 @@ The viewer prefers SSE and falls back to polling `/api/topology` every 10s when 
 is unavailable or the stream fails to deliver a snapshot twice in a row (buffering proxies
 never forward `text/event-stream`, so the stream would otherwise sit on "connecting…"). The
 status dot shows which transport is in use: green `live` (SSE), blue `polling`, red offline.
+
+## Reference topology instead of seed data
+
+When the store holds nothing but the three baseline nodes, the viewer loads
+`/api/reference-topology` and labels the HUD `reference topology · USAspending FY<year>`.
+It is built at request time from three USAspending endpoints (agency profile, sub-agency
+breakdown, `spending_by_category/recipient`); every entity carries the URL it came from and
+the anomalies are the same `mean + σ·stddev` award-concentration outliers `/api/treasury`
+computes. Nothing is fabricated and nothing is written to the store, so demo output stays
+attributable — no invented intelligence-sharing nodes or incidents.
 
 ## State
 

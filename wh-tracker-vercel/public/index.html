@@ -72,7 +72,7 @@
     <div id="panels">
       <section class="panel" id="hud">
         <h1>WH Anomaly Tracker</h1>
-        <div class="sub">entity topology &middot; live</div>
+        <div class="sub" id="source-label">entity topology &middot; live</div>
         <dl>
           <dt>Entities</dt><dd id="kpi-entities">0</dd>
           <dt>Links</dt><dd id="kpi-links">0</dd>
@@ -306,6 +306,9 @@
           anomalies: message.anomalies || [],
           summary: message.summary,
         };
+        document.getElementById("source-label").textContent = message.reference
+          ? message.label || "reference topology · USAspending"
+          : "entity topology · live";
         rebuild();
         renderHud();
       }
@@ -313,10 +316,24 @@
       const POLL_MS = 10000;
       const SSE_OPEN_TIMEOUT_MS = 8000;
 
+      // An empty store (no Neon, fresh instance) would render a blank canvas, so
+      // fall back to the USAspending-derived reference topology. It is labelled
+      // as reference data and never written back to the store.
       async function fetchSnapshot() {
         const res = await fetch("/api/topology?limit=50", { cache: "no-store" });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        applySnapshot(await res.json());
+        const snapshot = await res.json();
+        if ((snapshot.topology?.entities || []).length > 3 || snapshot.anomalies?.length) {
+          applySnapshot(snapshot);
+          return;
+        }
+        try {
+          const reference = await fetch("/api/reference-topology");
+          if (!reference.ok) throw new Error(`HTTP ${reference.status}`);
+          applySnapshot(await reference.json());
+        } catch {
+          applySnapshot(snapshot);
+        }
       }
 
       // Fallback for clients where text/event-stream never arrives (buffering
@@ -366,7 +383,12 @@
           sseFailures = 0;
           clearTimeout(openTimer);
           setStatus("live", "live");
-          applySnapshot(JSON.parse(event.data));
+          const snapshot = JSON.parse(event.data);
+          // Keep the reference topology on screen rather than replacing it with
+          // an empty live snapshot.
+          if ((snapshot.topology?.entities || []).length > 3 || snapshot.anomalies?.length) {
+            applySnapshot(snapshot);
+          }
         });
         source.addEventListener("reconnect", () => restart("reconnecting…"));
         source.addEventListener("error", () => restart("reconnecting…"));

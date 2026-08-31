@@ -7,9 +7,18 @@
 
 import { addAnomaly, upsertEntity, upsertLink, requireApiKey, applyCors } from "../lib/store.js";
 import { stableKey } from "../lib/ids.js";
-
-const BASE_URL = process.env.USASPENDING_URL || "https://api.usaspending.gov";
-const EOP = process.env.AGENCY_CODE || "1100";
+import {
+  EOP,
+  RECIPIENT_CATEGORY_URL,
+  agencyProfileUrl,
+  currentFiscalYear,
+  detectOutliers,
+  getJson,
+  postJson,
+  recipientQuery,
+  severityForZScore,
+  subAgencyUrl,
+} from "../lib/usaspending.js";
 
 export const config = { maxDuration: 60 };
 
@@ -31,17 +40,9 @@ export default async function handler(req, res) {
   let recipientPage;
   try {
     [agency, subAgencies, recipientPage] = await Promise.all([
-      getJson(`${BASE_URL}/api/v2/agency/${EOP}/?fiscal_year=${fiscalYear}`),
-      getJson(
-        `${BASE_URL}/api/v2/agency/${EOP}/sub_agency/?fiscal_year=${fiscalYear}&limit=${limit}`
-      ),
-      postJson(`${BASE_URL}/api/v2/search/spending_by_category/recipient/`, {
-        filters: {
-          time_period: [{ start_date: `${fiscalYear - 1}-10-01`, end_date: `${fiscalYear}-09-30` }],
-          agencies: [{ type: "awarding", tier: "toptier", name: "Executive Office of the President" }],
-        },
-        limit,
-      }),
+      getJson(agencyProfileUrl(fiscalYear)),
+      getJson(subAgencyUrl(fiscalYear, limit)),
+      postJson(RECIPIENT_CATEGORY_URL, recipientQuery(fiscalYear, limit)),
     ]);
   } catch (err) {
     res.status(502).json({ error: `usaspending request failed: ${err.message}` });
@@ -87,7 +88,7 @@ export default async function handler(req, res) {
           detail: `FY${fiscalYear} award obligations of $${outlier.obligated.toLocaleString("en-US")} sit ${
             outlier.zScore
           }σ above the EOP recipient mean of $${Math.round(outlier.mean).toLocaleString("en-US")}.`,
-          evidence: [`${BASE_URL}/api/v2/search/spending_by_category/recipient/`],
+          evidence: [RECIPIENT_CATEGORY_URL],
         })
       );
     }
@@ -112,49 +113,3 @@ export default async function handler(req, res) {
   });
 }
 
-async function getJson(url) {
-  const response = await fetch(url, { headers: { accept: "application/json" } });
-  if (!response.ok) throw new Error(`status ${response.status} for ${url}`);
-  return response.json();
-}
-
-async function postJson(url, body) {
-  const response = await fetch(url, {
-    method: "POST",
-    headers: { accept: "application/json", "content-type": "application/json" },
-    body: JSON.stringify(body),
-  });
-  if (!response.ok) throw new Error(`status ${response.status} for ${url}`);
-  return response.json();
-}
-
-export function currentFiscalYear() {
-  const now = new Date();
-  return now.getUTCMonth() >= 9 ? now.getUTCFullYear() + 1 : now.getUTCFullYear();
-}
-
-/** Entries at or above `mean + sigma * stddev` of the peer group. */
-export function detectOutliers(rows, { sigma = 2 } = {}) {
-  if (rows.length < 3) return [];
-  const amounts = rows.map((r) => r.obligated);
-  const mean = amounts.reduce((a, b) => a + b, 0) / amounts.length;
-  const variance = amounts.reduce((acc, v) => acc + (v - mean) ** 2, 0) / amounts.length;
-  const stddev = Math.sqrt(variance);
-  if (stddev === 0) return [];
-  return rows
-    .filter((r) => r.obligated >= mean + sigma * stddev)
-    .map((r) => ({
-      name: r.name,
-      obligated: r.obligated,
-      zScore: Number(((r.obligated - mean) / stddev).toFixed(2)),
-      mean,
-      stddev,
-    }));
-}
-
-export function severityForZScore(zScore) {
-  if (zScore >= 6) return "critical";
-  if (zScore >= 4) return "high";
-  if (zScore >= 3) return "medium";
-  return "low";
-}

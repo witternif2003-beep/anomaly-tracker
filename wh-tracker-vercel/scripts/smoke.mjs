@@ -101,6 +101,17 @@ check("topology GET entities", Array.isArray(res.body?.topology?.entities));
 res = await call("api/topology.js", { method: "POST" });
 check("topology POST 405", res.statusCode === 405, `got ${res.statusCode}`);
 
+// reference topology: real USAspending-derived nodes, flagged as reference data
+res = await call("api/reference-topology.js", { query: { limit: 8 } });
+check("reference-topology GET 200", res.statusCode === 200, `got ${res.statusCode}`);
+check("reference-topology flagged reference", res.body?.reference === true);
+check(
+  "reference-topology nodes cite a source",
+  (res.body?.topology?.entities || []).length > 1 &&
+    res.body.topology.entities.every((e) => typeof e.source === "string" && e.source.includes("usaspending.gov")),
+  JSON.stringify(res.body?.topology?.entities?.[1] || {}).slice(0, 200)
+);
+
 // unauthenticated write
 res = await call("api/anomalies.js", { method: "POST", body: { title: "x", severity: "high", score: 10 } });
 check("anomalies POST without key 401", res.statusCode === 401, `got ${res.statusCode}`);
