@@ -87,10 +87,43 @@ function renderHud() {
 // disabled, hardened browser). Building it in one place lets the HUD, feed and
 // error queue keep working when it throws instead of the whole script dying and
 // leaving the viewer stuck on "connecting…" with zeroed counters.
+// Phones (iOS Safari in particular) cap the GPU memory a WebGL context may
+// claim, so a desktop-tuned context — devicePixelRatio 3, MSAA, an alpha buffer,
+// a high-performance GPU request — is a common reason for "Error creating WebGL
+// context" there. Ask for the cheapest context that still looks right, and retry
+// once with everything off before giving up on 3D entirely.
+const IS_MOBILE =
+  /Android|iPhone|iPad|iPod|Mobile|Silk/i.test(navigator.userAgent) ||
+  (navigator.maxTouchPoints > 1 && /Macintosh/.test(navigator.userAgent));
+
+function createRenderer(canvas, antialias) {
+  const renderer = new THREE.WebGLRenderer({
+    canvas,
+    antialias,
+    alpha: false,
+    powerPreference: IS_MOBILE ? "low-power" : "high-performance",
+    failIfMajorPerformanceCaveat: false,
+  });
+  renderer.setPixelRatio(IS_MOBILE ? 1 : Math.min(window.devicePixelRatio, 2));
+  return renderer;
+}
+
 function createScene() {
   const canvas = document.getElementById("scene");
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  let renderer;
+  try {
+    renderer = createRenderer(canvas, !IS_MOBILE);
+  } catch (err) {
+    // Retry silently and only report if the cheaper context actually works —
+    // otherwise the caller's own record is the single honest entry.
+    renderer = createRenderer(canvas, false);
+    scout.record({
+      kind: "exception",
+      message: `WebGL context needed reduced settings — ${err.message}`,
+      detail: "multisampling raises the memory a context needs; the scene runs without it",
+      source: "viewer",
+    });
+  }
 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x070a0f);
@@ -294,7 +327,24 @@ function createScene() {
   window.addEventListener("resize", resize);
   resize();
 
+  // A phone can drop the context after it was created (backgrounded tab, GPU
+  // memory pressure). Without this the scene silently freezes; instead stop the
+  // loop, record it and hand over to the flat renderer.
+  let contextLost = false;
+  canvas.addEventListener("webglcontextlost", (e) => {
+    e.preventDefault();
+    contextLost = true;
+    scout.record({
+      kind: "exception",
+      message: "WebGL context lost — switching to the flat topology",
+      detail: "the GPU dropped the context after the scene was built (memory pressure or tab suspension)",
+      source: "viewer",
+    });
+    mountFallback();
+  });
+
   function tick() {
+    if (contextLost) return;
     if (!dragging) rig.theta += 0.0008;
     camera.position.set(
       rig.radius * Math.sin(rig.phi) * Math.cos(rig.theta),
@@ -321,11 +371,20 @@ function createScene() {
   }
 
   return {
+    mode: "webgl",
     rebuild,
     start: tick,
     toggleHouse() {
       whiteHouse.visible = !whiteHouse.visible;
       return whiteHouse.visible;
+    },
+    // Re-rendering in the same task keeps the drawing buffer readable without
+    // paying for `preserveDrawingBuffer` on every frame.
+    async snapshotBlob() {
+      renderer.render(scene, camera);
+      return new Promise((resolve, reject) => {
+        canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error("canvas encoding failed"))), "image/png");
+      });
     },
   };
 }
@@ -335,18 +394,8 @@ function createScene() {
 const forced2d = new URLSearchParams(window.location.search).get("render") === "2d";
 
 let scene3d = null;
-try {
-  if (forced2d) throw new Error("2D rendering requested via ?render=2d");
-  scene3d = createScene();
-} catch (err) {
-  if (!forced2d) {
-    scout.record({
-      kind: "exception",
-      message: `3D scene unavailable — ${err.message}`,
-      detail: "WebGL context or Three.js initialisation failed; falling back to the flat SVG topology",
-      source: "viewer",
-    });
-  }
+
+function mountFallback() {
   try {
     scene3d = createFallbackTopology({
       canvas: document.getElementById("scene"),
@@ -355,12 +404,14 @@ try {
       worstSeverity,
       tooltip: document.getElementById("tooltip"),
     });
+    scene3d.rebuild();
     document.getElementById("controls-hint").textContent = "scroll to zoom · hover for details";
     document.getElementById("legend").insertAdjacentHTML(
       "afterbegin",
       '<div style="color:#e0b13c">WebGL unavailable — flat topology fallback. Enable hardware acceleration for the 3D scene.</div>'
     );
   } catch (fallbackErr) {
+    scene3d = null;
     scout.record({
       kind: "exception",
       message: `topology fallback unavailable — ${fallbackErr.message}`,
@@ -373,6 +424,21 @@ try {
       '<div style="color:#e2504b">Topology rendering unavailable in this browser. Data panels still update.</div>'
     );
   }
+}
+
+try {
+  if (forced2d) throw new Error("2D rendering requested via ?render=2d");
+  scene3d = createScene();
+} catch (err) {
+  if (!forced2d) {
+    scout.record({
+      kind: "exception",
+      message: `3D scene unavailable — ${err.message}`,
+      detail: "WebGL context or Three.js initialisation failed; falling back to the flat SVG topology",
+      source: "viewer",
+    });
+  }
+  mountFallback();
 }
 
 function applySnapshot(message) {
@@ -488,6 +554,35 @@ window.addEventListener("keydown", (e) => {
   if (e.key === "h" || e.key === "H") toggleHouse();
 });
 document.getElementById("toggle-house").addEventListener("click", toggleHouse);
+
+// Export whatever is actually on screen — the WebGL frame or the flat SVG — so a
+// snapshot carries the same data and source label as the viewer.
+const exportButton = document.getElementById("export-png");
+exportButton.addEventListener("click", async () => {
+  if (!scene3d?.snapshotBlob) return;
+  const label = exportButton.textContent;
+  exportButton.disabled = true;
+  exportButton.textContent = "exporting…";
+  try {
+    const blob = await scene3d.snapshotBlob();
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `wh-topology-${new Date().toISOString().replace(/[:.]/g, "-")}.png`;
+    link.click();
+    // Safari aborts the download if the blob URL is revoked in the same task.
+    setTimeout(() => URL.revokeObjectURL(link.href), 10_000);
+  } catch (err) {
+    scout.record({
+      kind: "exception",
+      message: `topology export failed — ${err.message}`,
+      detail: "the on-screen renderer could not be encoded to PNG in this browser",
+      source: "viewer",
+    });
+  } finally {
+    exportButton.disabled = false;
+    exportButton.textContent = label;
+  }
+});
 
 fetchSnapshot()
   .then(() => connect())

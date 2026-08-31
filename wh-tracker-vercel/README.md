@@ -50,6 +50,13 @@ with zeroed counters. SVG rather than a 2D canvas deliberately: a canvas whose W
 request already failed can also refuse a `2d` context. Append `?render=2d` to force the
 fallback on a machine that does have WebGL.
 
+Mobile browsers cap the memory a WebGL context may claim, so the context is requested with
+`powerPreference: "low-power"`, no alpha buffer, `devicePixelRatio` pinned to 1 and
+multisampling off on touch devices, retrying once without multisampling before falling back;
+a context lost after startup also hands over to the SVG renderer instead of freezing the
+scene. "Export PNG" in the legend rasterises whatever is on screen — the WebGL frame via
+`canvas.toBlob`, or the serialised SVG drawn onto an offscreen canvas.
+
 ## No synthetic data
 
 Nothing the viewer or the APIs return is mocked, seeded with invented records, or randomly

@@ -164,5 +164,36 @@ export function createFallbackTopology({ canvas, mount, getState, worstSeverity,
       house.style.display = visible ? "none" : "";
       return !visible;
     },
+    // Rasterise the live SVG. Nothing external is referenced (no <image>, no
+    // foreignObject), so the canvas stays untainted and `toBlob` is allowed.
+    async snapshotBlob() {
+      const clone = svg.cloneNode(true);
+      clone.setAttribute("width", VIEW.w);
+      clone.setAttribute("height", VIEW.h);
+      clone.setAttribute("viewBox", `0 0 ${VIEW.w} ${VIEW.h}`);
+      const markup = new XMLSerializer().serializeToString(clone);
+      const url = URL.createObjectURL(new Blob([markup], { type: "image/svg+xml;charset=utf-8" }));
+      try {
+        const image = new Image();
+        await new Promise((resolve, reject) => {
+          image.onload = resolve;
+          image.onerror = () => reject(new Error("SVG rasterisation failed"));
+          image.src = url;
+        });
+        const target = document.createElement("canvas");
+        target.width = VIEW.w;
+        target.height = VIEW.h;
+        const ctx = target.getContext("2d");
+        if (!ctx) throw new Error("2D canvas context unavailable");
+        ctx.fillStyle = "#070a0f";
+        ctx.fillRect(0, 0, VIEW.w, VIEW.h);
+        ctx.drawImage(image, 0, 0, VIEW.w, VIEW.h);
+        return await new Promise((resolve, reject) => {
+          target.toBlob((blob) => (blob ? resolve(blob) : reject(new Error("canvas encoding failed"))), "image/png");
+        });
+      } finally {
+        URL.revokeObjectURL(url);
+      }
+    },
   };
 }
