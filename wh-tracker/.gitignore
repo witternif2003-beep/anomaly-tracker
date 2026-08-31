@@ -1,0 +1,10 @@
+node_modules/
+data/*
+!data/.gitkeep
+logs/*
+!logs/.gitkeep
+backups/
+*.env
+!.env.example
+certs/
+reports/
