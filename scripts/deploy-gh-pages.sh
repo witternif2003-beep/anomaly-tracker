@@ -21,10 +21,12 @@ echo "==> generate static JSON"
 npx --no-install tsx scripts/generate-static-site-data.ts
 
 echo "==> static export build"
-if [[ -d src/app/api ]]; then
-  echo "Moving leftover src/app/api -> server/next-api-routes"
-  rm -rf server/next-api-routes
-  mv src/app/api server/next-api-routes
+# next.config.ts targets Vercel (no output: "export"), so this deploy cannot build ./out.
+# It used to `mv src/app/api server/next-api-routes` here, which deleted the live API routes.
+if ! grep -q 'output: *"export"' next.config.ts; then
+  echo "REFUSED: next.config.ts has no output: \"export\" — deploy to Vercel instead." >&2
+  echo "Add an export-only config if Pages hosting is needed; never move src/app/api." >&2
+  exit 1
 fi
 
 rm -rf out
