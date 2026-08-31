@@ -69,7 +69,8 @@
     </section>
 
     <section class="panel" id="legend">
-      drag to orbit &middot; scroll to zoom &middot; node size = <b>degree</b>, colour = <b>worst anomaly severity</b>
+      drag to orbit &middot; scroll to zoom &middot; <b>H</b> toggles the White House wireframe &middot;
+      node size = <b>degree</b>, colour = <b>worst anomaly severity</b>
     </section>
 
     <div id="tooltip"></div>
@@ -109,6 +110,54 @@
 
       const graph = new THREE.Group();
       scene.add(graph);
+
+      // Wireframe White House at the centre of the telemetry sphere: residence
+      // block, North Portico, balustrade, wings and flagpole, all drawn as line
+      // geometry so entity nodes stay readable through it.
+      const whiteHouse = (() => {
+        const group = new THREE.Group();
+        const line = new THREE.LineBasicMaterial({ color: 0x6fd3ff, transparent: true, opacity: 0.55 });
+        const faint = new THREE.LineBasicMaterial({ color: 0x3f6f92, transparent: true, opacity: 0.4 });
+
+        const edges = (geometry, material, [x, y, z], rotation) => {
+          const mesh = new THREE.LineSegments(new THREE.EdgesGeometry(geometry, 1), material);
+          mesh.position.set(x, y, z);
+          if (rotation) mesh.rotation.set(rotation[0], rotation[1], rotation[2]);
+          group.add(mesh);
+          return mesh;
+        };
+        const cage = (geometry, material, [x, y, z]) => {
+          const mesh = new THREE.LineSegments(new THREE.WireframeGeometry(geometry), material);
+          mesh.position.set(x, y, z);
+          group.add(mesh);
+          return mesh;
+        };
+
+        edges(new THREE.BoxGeometry(17, 7, 8), line, [0, 0, 0]);
+        edges(new THREE.BoxGeometry(17.6, 0.5, 8.6), faint, [0, 3.7, 0]); // balustrade
+        edges(new THREE.BoxGeometry(15, 0.2, 8.6), faint, [0, 0.4, 0]); // floor band
+        edges(new THREE.BoxGeometry(9, 5, 6), line, [-13, -1, 0]); // west wing
+        edges(new THREE.BoxGeometry(9, 5, 6), line, [13, -1, 0]); // east wing
+
+        // North Portico: pediment over six columns.
+        const column = new THREE.CylinderGeometry(0.35, 0.35, 6, 8, 1, true);
+        for (let i = 0; i < 6; i += 1) cage(column, line, [-4.5 + i * 1.8, -0.5, 5.4]);
+        edges(new THREE.BoxGeometry(11.5, 0.6, 2.4), line, [0, 2.8, 5.4]);
+        edges(new THREE.CylinderGeometry(0, 3.4, 1.8, 3), line, [0, 4, 5.4], [0, Math.PI / 2, 0]);
+
+        // South Portico bow.
+        edges(new THREE.CylinderGeometry(4, 4, 7, 16, 1, true), faint, [0, 0, -5]);
+
+        const pole = new THREE.BufferGeometry().setFromPoints([
+          new THREE.Vector3(0, 3.7, 0),
+          new THREE.Vector3(0, 9, 0),
+        ]);
+        group.add(new THREE.LineSegments(pole, line));
+
+        group.scale.setScalar(1.15);
+        scene.add(group);
+        return group;
+      })();
 
       const nodeGeometry = new THREE.SphereGeometry(1, 32, 24);
       const raycaster = new THREE.Raycaster();
@@ -307,6 +356,10 @@
         },
         { passive: false }
       );
+
+      window.addEventListener("keydown", (e) => {
+        if (e.key === "h" || e.key === "H") whiteHouse.visible = !whiteHouse.visible;
+      });
 
       function resize() {
         const { innerWidth: w, innerHeight: h } = window;

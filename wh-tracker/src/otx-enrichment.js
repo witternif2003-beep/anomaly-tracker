@@ -3,7 +3,7 @@
 const axios = require("axios");
 const metrics = require("./metrics");
 const { createLogger } = require("./logger");
-const { slug, stableKey } = require("./treasury-api");
+const { stableKey } = require("./treasury-api");
 
 const log = createLogger("otx-enrichment");
 const BASE_URL = process.env.OTX_URL || "https://otx.alienvault.com";
@@ -79,7 +79,7 @@ async function run({ tracker, indicators, apiKey } = {}) {
     results.push(result);
     if (result.pulseCount === 0) continue;
 
-    const entityId = `ent-indicator-${slug(indicator.value)}`;
+    const entityId = `ent-indicator-${indicator.type}-${stableKey(indicator.value)}`;
     if (tracker) {
       await tracker.upsertEntity({ id: entityId, label: indicator.value, kind: "indicator" });
       await tracker.addAnomaly({

@@ -134,7 +134,38 @@ app.use((err, req, res, next) => {
 });
 
 const server = http.createServer(app);
-const wss = new WebSocketServer({ server, path: "/ws" });
+
+const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || "")
+  .split(",")
+  .map((o) => o.trim().replace(/\/$/, ""))
+  .filter(Boolean);
+
+/**
+ * Browsers always send Origin on a websocket upgrade, so a cross-site page can
+ * otherwise read the feed through a visitor's browser. Same-origin upgrades and
+ * non-browser clients (no Origin) pass; anything else needs ALLOWED_ORIGINS.
+ */
+function originAllowed(req) {
+  const origin = req.headers.origin;
+  if (!origin) return true;
+  const normalized = origin.replace(/\/$/, "");
+  if (ALLOWED_ORIGINS.includes(normalized)) return true;
+  try {
+    return new URL(normalized).host === req.headers.host;
+  } catch {
+    return false;
+  }
+}
+
+const wss = new WebSocketServer({
+  server,
+  path: "/ws",
+  verifyClient: ({ req }, done) => {
+    if (originAllowed(req)) return done(true);
+    log.warn("websocket upgrade rejected", { origin: req.headers.origin });
+    return done(false, 403, "origin not allowed");
+  },
+});
 
 function broadcast(message) {
   const data = JSON.stringify(message);

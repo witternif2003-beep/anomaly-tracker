@@ -33,7 +33,9 @@ curl http://localhost:3001/api/health   # Grafana
 ```
 
 Then browse the viewer at `http://<host>:3000` and Grafana at `http://<host>:3001`
-(`admin` / `GRAFANA_PASSWORD`).
+(`admin` / `GRAFANA_PASSWORD`). In the viewer: drag to orbit, scroll to zoom, hover a node
+for its detail, and press `H` to hide/show the wireframe White House at the centre of the
+scene.
 
 Only the viewer (3000) and Grafana (3001) are published on all interfaces. `pdf-service`,
 Prometheus and Alertmanager bind to `127.0.0.1` because they are unauthenticated (and
@@ -44,6 +46,14 @@ The viewer's read paths (`GET /api/*`, `/ws`) are intentionally unauthenticated 
 dashboard works without a login — they disclose topology, anomalies and evidence to anyone
 who can reach port 3000. If the data is sensitive, front the tracker with proxy auth (or set
 `TRACKER_BIND=127.0.0.1`) rather than exposing it publicly.
+
+`/ws` upgrades are still restricted by `Origin`: same-origin requests and non-browser clients
+pass, anything else has to be listed in `ALLOWED_ORIGINS` (comma-separated), so a third-party
+page cannot read the feed through a visitor's browser.
+
+Grafana and the viewer are published over plain HTTP, so a remote Grafana login sends its
+credentials in the clear. Terminate TLS at a reverse proxy (or set `GRAFANA_BIND=127.0.0.1`
+and tunnel) before logging in from anywhere but the host itself.
 
 ## Configuration
 
@@ -58,6 +68,7 @@ keys.
 | `TAXII_URL`, `TAXII_USER`, `TAXII_PASS` | optional | STIX bundles are published here; publishing is skipped when unset |
 | `OTX_API_KEY`, `OTX_INDICATORS` | for OTX pipeline | Indicators as `domain:example.com,ip:8.8.8.8` |
 | `*_INTERVAL_MINUTES` | optional | Per-pipeline schedule (FEC 360, Treasury 720, OTX 180) |
+| `ALLOWED_ORIGINS` | optional | Extra browser origins allowed to open `/ws` (same-origin always passes) |
 | `*_BIND`, `*_PORT` | optional | Host interface/port per published service |
 | `FEC_MAX_PAGES` | optional | Schedule A pages to walk per committee (default 10) |
 

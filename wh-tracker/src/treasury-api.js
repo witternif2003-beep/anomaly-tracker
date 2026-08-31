@@ -125,7 +125,7 @@ async function run({ tracker, fiscalYear, sigma = 2, limit = 25 } = {}) {
   let written = 0;
 
   for (const outlier of outliers) {
-    const entityId = `ent-treasury-${slug(outlier.recipient)}`;
+    const entityId = `ent-treasury-${stableKey(outlier.recipient)}`;
     if (tracker) {
       await tracker.upsertEntity({ id: entityId, label: outlier.recipient, kind: "vendor" });
       await tracker.upsertLink({

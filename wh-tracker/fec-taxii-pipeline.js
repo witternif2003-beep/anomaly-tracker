@@ -8,7 +8,7 @@ const stix = require("./src/stix");
 const metrics = require("./src/metrics");
 const { createLogger } = require("./src/logger");
 const { createTrackerClient } = require("./src/tracker-client");
-const { slug } = require("./src/treasury-api");
+const { slug, stableKey } = require("./src/treasury-api");
 
 const log = createLogger("fec-taxii");
 const FEC_URL = process.env.FEC_URL || "https://api.open.fec.gov";
@@ -26,6 +26,7 @@ function fecClient(apiKey) {
 
 function mapReceipt(row) {
   return {
+    subId: row.sub_id || null,
     transactionId: row.transaction_id,
     committeeId: row.committee_id,
     committeeName: row.committee ? row.committee.name : row.committee_id,
@@ -93,6 +94,23 @@ async function fetchReceipts({
   return receipts;
 }
 
+// FEC committee ids are 9-character identifiers, so slug() cannot truncate them.
+function committeeEntityId(committeeId) {
+  return `ent-committee-${slug(committeeId)}`;
+}
+
+/**
+ * FEC's `sub_id` uniquely identifies a filed receipt; without it fall back to a
+ * digest of every distinguishing field so same-day contributions stay distinct.
+ */
+function receiptKey(receipt) {
+  if (receipt.subId) return String(receipt.subId);
+  if (receipt.transactionId) return `${slug(receipt.committeeId)}-${receipt.transactionId}`;
+  return stableKey(
+    [receipt.committeeId, receipt.contributor, receipt.employer, receipt.date, receipt.amount, receipt.state].join("|")
+  );
+}
+
 function severityForAmount(amount) {
   if (amount >= LARGE_CONTRIBUTION_USD * 10) return "critical";
   if (amount >= LARGE_CONTRIBUTION_USD * 4) return "high";
@@ -104,12 +122,12 @@ function toAnomalies(receipts) {
   return receipts
     .filter((r) => r.amount >= LARGE_CONTRIBUTION_USD)
     .map((r) => ({
-      id: `fec-${r.transactionId || slug(`${r.committeeId}-${r.contributor}-${r.date}`)}`,
+      id: `fec-${receiptKey(r)}`,
       title: `Large contribution: ${r.contributor} → ${r.committeeName}`,
       severity: severityForAmount(r.amount),
       score: Math.min(100, Math.round((r.amount / LARGE_CONTRIBUTION_USD) * 25)),
       source: "fec",
-      entityId: `ent-committee-${slug(r.committeeId)}`,
+      entityId: committeeEntityId(r.committeeId),
       detail: `$${r.amount.toLocaleString("en-US")} received ${r.date}${
         r.employer ? ` from an employee of ${r.employer}` : ""
       }.`,
@@ -137,6 +155,8 @@ function toStixBundle(anomalies) {
  * Publish a STIX bundle to a TAXII 2.1 collection. No-op when TAXII_URL is unset.
  */
 async function publishToTaxii(bundle, { url, user, pass } = {}) {
+  // TAXII 2.1 replaced the STIX bundle with an envelope for Add Objects, so the
+  // request body carries only `objects`.
   const endpoint = url || process.env.TAXII_URL;
   if (!endpoint) {
     log.warn("TAXII_URL unset; skipping publish", { objects: bundle.objects.length });
@@ -147,7 +167,7 @@ async function publishToTaxii(bundle, { url, user, pass } = {}) {
   try {
     const { data, status } = await axios.post(
       endpoint.replace(/\/$/, "") + "/objects/",
-      bundle,
+      { objects: bundle.objects },
       {
         timeout: 30000,
         headers: {
@@ -186,13 +206,13 @@ async function run({ tracker, committeeIds, cycle, apiKey, publish = true } = {}
     if (tracker) {
       const first = receipts[0];
       await tracker.upsertEntity({
-        id: `ent-committee-${slug(committeeId)}`,
+        id: committeeEntityId(committeeId),
         label: first ? first.committeeName : committeeId,
         kind: "committee",
       });
       await tracker.upsertLink({
         source: "ent-fec",
-        target: `ent-committee-${slug(committeeId)}`,
+        target: committeeEntityId(committeeId),
         kind: "filing",
         weight: Math.min(8, anomalies.length || 1),
       });
