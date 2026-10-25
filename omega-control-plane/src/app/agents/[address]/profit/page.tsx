@@ -131,7 +131,7 @@ export default function ProfitLive() {
                   <dt>value</dt>
                   <dd className="break-words text-fg">{String(g.value)}</dd>
                   <dt>reason</dt>
-                  <dd className="break-words">{String(g.reason)}</dd>
+                  <dd className="break-words">{g.reason == null ? "—" : String(g.reason)}</dd>
                 </dl>
               </li>
             ))}
