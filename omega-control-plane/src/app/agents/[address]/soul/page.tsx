@@ -4,7 +4,7 @@ import { useMe } from "@/components/auth";
 import { Card, Empty, ErrorBox, RowsTable } from "@/components/ui";
 import { api, short, useApi } from "@/lib/client";
 import { buildCommandMessage } from "@/lib/command-message";
-import { connect } from "@/lib/wallet";
+import { connect, walletErrorText } from "@/lib/wallet";
 import { TotpCodeInput, useTotpStatus } from "@/components/totp";
 import { useAgentAddress } from "../use-agent";
 
@@ -42,7 +42,7 @@ export default function SoulPage() {
       setMsg(`Queued as command #${r.commandId}. The agent applies it via its own updateSoul() on the next omega-sync --apply run.`);
       reload();
     } catch (e) {
-      setErr((e as Error).message.split("\n")[0]);
+      setErr(walletErrorText(e));
     }
   };
 

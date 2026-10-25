@@ -3,10 +3,14 @@ import { verifyMessage, type Hex } from "viem";
 import { sameAddress } from "./address";
 import { parseCommandMessage, pullMessage, type CommandEnvelope } from "./command-message";
 import { HttpError } from "./env";
+import { checkSecondFactor } from "./second-factor";
 import type { SnapshotPayload } from "./snapshot";
 import { readUsdcUnits } from "./chain";
 import { isPayoutAmount, PAYOUT_WALLET, usdcUnits } from "./payout";
 import { TOPUP_TIERS_USD } from "./survival";
+
+/** A connection or an open transaction. */
+export type Db = postgres.Sql | postgres.TransactionSql;
 
 export interface AgentRow {
   address: string;
@@ -60,7 +64,7 @@ export async function latestSnapshot(sql: postgres.Sql, address: string): Promis
   return row ?? null;
 }
 
-export async function getPolicy(sql: postgres.Sql, address: string): Promise<TreasuryPolicy> {
+export async function getPolicy(sql: Db, address: string): Promise<TreasuryPolicy> {
   const [row] = await sql<TreasuryPolicy[]>`
     SELECT max_topup_usd, daily_topup_cap_usd, surplus_threshold_usd, updated_by, updated_at
     FROM treasury_policies WHERE agent_address = ${address}`;
@@ -74,7 +78,7 @@ export function requireCreator(agent: AgentRow, user: string): void {
 
 /** Validates a creator-signed command against the agent, the signer and the treasury policy. */
 export async function validateCommand(
-  sql: postgres.Sql,
+  sql: Db,
   agent: AgentRow,
   user: string,
   message: string,
@@ -135,6 +139,30 @@ export async function validateCommand(
     }
   }
   return env;
+}
+
+/**
+ * Validates and queues a creator command in one transaction, under a per-agent lock so concurrent
+ * requests cannot both pass the topup cap / payout surplus checks. The 2FA code is consumed only
+ * once the command itself is valid, and is rolled back if the insert fails.
+ */
+export async function queueCommand(
+  sql: postgres.Sql,
+  agent: AgentRow,
+  user: string,
+  body: { message: string; signature: string; totp?: string },
+  type: CommandEnvelope["type"],
+): Promise<{ id: string; cmd: CommandEnvelope }> {
+  return sql.begin(async (tx) => {
+    await tx`SELECT pg_advisory_xact_lock(hashtext(${"omega-cmd:" + agent.address}))`;
+    const cmd = await validateCommand(tx, agent, user, body.message, body.signature, type);
+    await checkSecondFactor(tx, user, body.totp);
+    const [row] = await tx<{ id: string }[]>`
+      INSERT INTO agent_commands (agent_address, type, payload, message, creator_signature, created_by)
+      VALUES (${agent.address}, ${type}, ${tx.json(cmd.payload as never)}, ${body.message}, ${body.signature}, ${user})
+      RETURNING id`;
+    return { id: String(row.id), cmd };
+  }) as Promise<{ id: string; cmd: CommandEnvelope }>;
 }
 
 /** Verifies the agent-signed pull header (x-omega-ts, x-omega-sig). */

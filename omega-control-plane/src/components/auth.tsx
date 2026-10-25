@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { createSiweMessage } from "viem/siwe";
 import { api, short } from "@/lib/client";
-import { connect, hasWallet, NoWalletError, phantomBrowseUrl } from "@/lib/wallet";
+import { connect, hasWallet, NoWalletError, phantomBrowseUrl, walletErrorText } from "@/lib/wallet";
 
 let listeners: Array<(a: string | null) => void> = [];
 let current: string | null | undefined;
@@ -44,7 +44,7 @@ export function AuthBar() {
         statement: "Sign in to the Omega control plane. This signature does not move funds.",
         uri: window.location.origin,
         version: "1",
-        chainId: 8453,
+        chainId: w.chainId,
         nonce,
         issuedAt: new Date(),
       });
@@ -53,7 +53,7 @@ export function AuthBar() {
       refresh();
     } catch (e) {
       setNoWallet(e instanceof NoWalletError);
-      setErr(e instanceof Error ? e.message.split("\n")[0] : String(e));
+      setErr(walletErrorText(e));
     } finally {
       setBusy(false);
     }

@@ -28,7 +28,7 @@ export async function totpEnabled(sql: postgres.Sql, address: string): Promise<b
  * Consumes a TOTP code for `address`. Each time step is accepted once (last_step only moves forward).
  * `pending` checks a not-yet-enabled secret (enrolment); otherwise it is a no-op for creators without 2FA.
  */
-export async function checkSecondFactor(sql: postgres.Sql, address: string, code: string | undefined, pending = false): Promise<void> {
+export async function checkSecondFactor(sql: postgres.Sql | postgres.TransactionSql, address: string, code: string | undefined, pending = false): Promise<void> {
   const [row] = await sql<{ secret_enc: string; enabled: boolean; last_step: string }[]>`
     SELECT secret_enc, enabled, last_step FROM creator_totp WHERE address = ${address.toLowerCase()}`;
   if (!row || row.enabled === pending) {

@@ -1,5 +1,5 @@
 "use client";
-import { createWalletClient, custom, type Address, type EIP1193Provider } from "viem";
+import { createWalletClient, custom, type Address, type EIP1193Provider, type WalletClient } from "viem";
 import { base } from "viem/chains";
 
 type Injected = EIP1193Provider & { isPhantom?: boolean };
@@ -30,11 +30,35 @@ export function phantomBrowseUrl(): string {
   return `https://phantom.com/ul/browse/${encodeURIComponent(window.location.href)}?ref=${encodeURIComponent(window.location.origin)}`;
 }
 
-export async function connect(): Promise<{ address: Address; sign: (message: string) => Promise<`0x${string}`> }> {
+export async function connect(): Promise<{ address: Address; chainId: number; sign: (message: string) => Promise<`0x${string}`> }> {
   const provider = getProvider();
   if (!provider) throw new NoWalletError("No wallet in this browser. Open this page in Phantom (or another Ethereum wallet app) to sign in.");
   const client = createWalletClient({ chain: base, transport: custom(provider) });
   const [address] = await client.requestAddresses();
   if (!address) throw new Error("wallet returned no account");
-  return { address, sign: (message: string) => client.signMessage({ account: address, message }) };
+  const chainId = await preferBase(client);
+  return { address, chainId, sign: (message: string) => client.signMessage({ account: address, message }) };
+}
+
+/** Asks the wallet to switch to Base, then returns the chain it is actually on so SIWE "Chain ID" matches it. */
+async function preferBase(client: WalletClient): Promise<number> {
+  try {
+    if ((await client.getChainId()) !== base.id) await client.switchChain({ id: base.id });
+  } catch {
+    // Wallet declined or cannot switch; sign on the chain it reports.
+  }
+  try {
+    return await client.getChainId();
+  } catch {
+    return base.id;
+  }
+}
+
+/** Wallet/RPC error as one line, keeping the provider's own code and detail (viem's short message alone hides them). */
+export function walletErrorText(e: unknown): string {
+  if (!(e instanceof Error)) return String(e);
+  const x = e as Error & { shortMessage?: string; details?: string; code?: number };
+  const head = (x.shortMessage ?? x.message).split("\n")[0];
+  const extra = [x.code != null ? `code ${x.code}` : null, x.details && !head.includes(x.details) ? x.details : null].filter(Boolean).join(": ");
+  return extra ? `${head} (${extra})` : head;
 }

@@ -6,7 +6,7 @@ import { api, useApi, when } from "@/lib/client";
 import { buildCommandMessage } from "@/lib/command-message";
 import { isPayoutAmount, PAYOUT_WALLET } from "@/lib/payout";
 import { TOPUP_TIERS_USD } from "@/lib/survival";
-import { connect } from "@/lib/wallet";
+import { connect, walletErrorText } from "@/lib/wallet";
 import { TotpCodeInput, TwoFactorCard, useTotpStatus } from "@/components/totp";
 import { useAgentAddress } from "../use-agent";
 
@@ -62,7 +62,7 @@ export default function Treasury() {
       setMsg(`Command #${r.commandId} queued. ${r.note}`);
       econ.reload();
     } catch (e) {
-      setErr((e as Error).message.split("\n")[0]);
+      setErr(walletErrorText(e));
     }
   };
 
@@ -82,7 +82,7 @@ export default function Treasury() {
       setPayoutMsg(`Command #${r.commandId} queued. ${r.note}`);
       pol.reload();
     } catch (e) {
-      setPayoutErr((e as Error).message.split("\n")[0]);
+      setPayoutErr(walletErrorText(e));
     }
   };
 
