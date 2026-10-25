@@ -5,6 +5,7 @@ import { Card, Empty, ErrorBox, RowsTable } from "@/components/ui";
 import { api, short, useApi } from "@/lib/client";
 import { buildCommandMessage } from "@/lib/command-message";
 import { connect } from "@/lib/wallet";
+import { TotpCodeInput, useTotpStatus } from "@/components/totp";
 import { useAgentAddress } from "../use-agent";
 
 interface Soul {
@@ -23,6 +24,8 @@ function Editor({ initial, children }: { initial: string; children: (draft: stri
 export default function SoulPage() {
   const address = useAgentAddress();
   const { address: me } = useMe();
+  const twoFa = useTotpStatus(me);
+  const [totp, setTotp] = useState("");
   const { data, error, reload } = useApi<Soul>(`/api/agents/${address}/soul`);
   const [msg, setMsg] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
@@ -35,7 +38,7 @@ export default function SoulPage() {
       const w = await connect();
       const message = buildCommandMessage({ agent: address, type: "soul_update", payload: { content: draft }, nonce: crypto.randomUUID(), issuedAt: new Date().toISOString() });
       const signature = await w.sign(message);
-      const r = await api<{ commandId: string }>(`/api/agents/${address}/soul`, { method: "PUT", body: JSON.stringify({ message, signature }) });
+      const r = await api<{ commandId: string }>(`/api/agents/${address}/soul`, { method: "PUT", body: JSON.stringify({ message, signature, totp: totp || undefined }) });
       setMsg(`Queued as command #${r.commandId}. The agent applies it via its own updateSoul() on the next omega-sync --apply run.`);
       reload();
     } catch (e) {
@@ -46,6 +49,7 @@ export default function SoulPage() {
   return (
     <div className="space-y-4">
       <ErrorBox error={error} />
+      {isCreator && twoFa.enabled && <TotpCodeInput value={totp} onChange={setTotp} what="every SOUL.md update" />}
       <Card title="SOUL.md" right={<span className="text-xs text-dim">creator {short(data?.creatorAddress)}</span>} source={data?.source}>
         {data && data.content == null && <Empty>No SOUL.md in the latest snapshot.</Empty>}
         <Editor key={data?.content ?? ""} initial={data?.content ?? ""}>

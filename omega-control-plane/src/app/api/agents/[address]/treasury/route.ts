@@ -6,6 +6,7 @@ import { db } from "@/lib/db";
 import { PAYOUT_WALLET } from "@/lib/payout";
 import { HttpError } from "@/lib/env";
 import { clientIp, handle, json, readJson } from "@/lib/http";
+import { checkSecondFactor } from "@/lib/second-factor";
 import { requireUser } from "@/lib/session";
 
 export const GET = handle(async (_req: Request, ctx: RouteContext<"/api/agents/[address]/treasury">) => {
@@ -24,6 +25,7 @@ const Body = z.object({
   max_topup_usd: z.number().int().min(0).max(2500),
   daily_topup_cap_usd: z.number().int().min(0).max(10_000),
   surplus_threshold_usd: z.number().int().min(0).max(1_000_000),
+  totp: z.string().regex(/^\d{6}$/).optional(),
 });
 
 export const PUT = handle(async (req: Request, ctx: RouteContext<"/api/agents/[address]/treasury">) => {
@@ -33,8 +35,10 @@ export const PUT = handle(async (req: Request, ctx: RouteContext<"/api/agents/[a
   const sql = await db();
   const agent = await getAgent(sql, normalizeAddress((await ctx.params).address));
   requireCreator(agent, user);
+  await checkSecondFactor(sql, user, body.data.totp);
   const before = await getPolicy(sql, agent.address);
-  const p = body.data;
+  const { max_topup_usd, daily_topup_cap_usd, surplus_threshold_usd } = body.data;
+  const p = { max_topup_usd, daily_topup_cap_usd, surplus_threshold_usd };
   await sql`
     INSERT INTO treasury_policies (agent_address, max_topup_usd, daily_topup_cap_usd, surplus_threshold_usd, updated_by, updated_at)
     VALUES (${agent.address}, ${p.max_topup_usd}, ${p.daily_topup_cap_usd}, ${p.surplus_threshold_usd}, ${user}, now())

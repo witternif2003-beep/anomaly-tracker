@@ -7,6 +7,7 @@ import { buildCommandMessage } from "@/lib/command-message";
 import { isPayoutAmount, PAYOUT_WALLET } from "@/lib/payout";
 import { TOPUP_TIERS_USD } from "@/lib/survival";
 import { connect } from "@/lib/wallet";
+import { TotpCodeInput, TwoFactorCard, useTotpStatus } from "@/components/totp";
 import { useAgentAddress } from "../use-agent";
 
 interface Policy {
@@ -20,6 +21,8 @@ interface Policy {
 export default function Treasury() {
   const address = useAgentAddress();
   const { address: me } = useMe();
+  const twoFa = useTotpStatus(me);
+  const [totp, setTotp] = useState("");
   const status = useApi<{ agent?: { creator_address: string | null }; onchain: { usdcBalance: { value?: string; source: string } } }>(`/api/agents/${address}/status`);
   const pol = useApi<{ policy: Policy; payout: { wallet: string; inflightUsd: number; history: Record<string, unknown>[] } }>(`/api/agents/${address}/treasury`);
   const econ = useApi<{ topups: Record<string, unknown>[] }>(`/api/agents/${address}/economics`);
@@ -39,7 +42,7 @@ export default function Treasury() {
     try {
       await api(`/api/agents/${address}/treasury`, {
         method: "PUT",
-        body: JSON.stringify({ max_topup_usd: p!.max_topup_usd, daily_topup_cap_usd: p!.daily_topup_cap_usd, surplus_threshold_usd: p!.surplus_threshold_usd }),
+        body: JSON.stringify({ max_topup_usd: p!.max_topup_usd, daily_topup_cap_usd: p!.daily_topup_cap_usd, surplus_threshold_usd: p!.surplus_threshold_usd, totp: totp || undefined }),
       });
       setMsg("Policy saved (audit-logged).");
       pol.reload();
@@ -55,7 +58,7 @@ export default function Treasury() {
       const w = await connect();
       const message = buildCommandMessage({ agent: address, type: "topup", payload: { amountUsd: amount }, nonce: crypto.randomUUID(), issuedAt: new Date().toISOString() });
       const signature = await w.sign(message);
-      const r = await api<{ commandId: string; note: string }>(`/api/agents/${address}/topup`, { method: "POST", body: JSON.stringify({ message, signature }) });
+      const r = await api<{ commandId: string; note: string }>(`/api/agents/${address}/topup`, { method: "POST", body: JSON.stringify({ message, signature, totp: totp || undefined }) });
       setMsg(`Command #${r.commandId} queued. ${r.note}`);
       econ.reload();
     } catch (e) {
@@ -75,7 +78,7 @@ export default function Treasury() {
       const w = await connect();
       const message = buildCommandMessage({ agent: address, type: "payout", payload: { amountUsd, to: PAYOUT_WALLET }, nonce: crypto.randomUUID(), issuedAt: new Date().toISOString() });
       const signature = await w.sign(message);
-      const r = await api<{ commandId: string; note: string }>(`/api/agents/${address}/payout`, { method: "POST", body: JSON.stringify({ message, signature }) });
+      const r = await api<{ commandId: string; note: string }>(`/api/agents/${address}/payout`, { method: "POST", body: JSON.stringify({ message, signature, totp: totp || undefined }) });
       setPayoutMsg(`Command #${r.commandId} queued. ${r.note}`);
       pol.reload();
     } catch (e) {
@@ -100,6 +103,7 @@ export default function Treasury() {
   return (
     <div className="space-y-4">
       <ErrorBox error={status.error ?? pol.error} />
+      {isCreator && twoFa.enabled && <TotpCodeInput value={totp} onChange={setTotp} what="every policy change, topup and payout" />}
       <div className="rounded-md border border-line bg-panel p-3 text-xs text-dim">
         The control plane holds no keys and moves no funds. A topup or payout is a request signed by the creator wallet, checked against the policy below, and executed by the agent with its own wallet
         (automaton <span className="font-mono">topupCredits()</span> → x402 <span className="font-mono">/pay/&#123;usd&#125;/&#123;address&#125;</span>) when it next runs <span className="font-mono">omega-sync --apply</span>.
@@ -180,6 +184,7 @@ export default function Treasury() {
       <Card title="Topup history" source="control-plane agent_commands type=topup">
         <RowsTable rows={econ.data?.topups} columns={["id", "status", "payload", "created_by", "created_at", "updated_at", "result"]} empty="No topup requests." />
       </Card>
+      {isCreator && <TwoFactorCard status={twoFa} />}
     </div>
   );
 }

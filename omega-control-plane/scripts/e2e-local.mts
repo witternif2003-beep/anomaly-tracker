@@ -7,6 +7,7 @@ import { execFileSync } from "node:child_process";
 import { privateKeyToAccount } from "viem/accounts";
 import { createSiweMessage } from "viem/siwe";
 import { buildCommandMessage } from "../src/lib/command-message.ts";
+import { totpCode, totpStep } from "../src/lib/totp.ts";
 import { loadLocal } from "../agent/omega-sync.mts";
 
 const url = process.env.OMEGA_URL!;
@@ -70,6 +71,20 @@ const after = await call(`/api/agents/${agent.address}/soul`);
 console.log("soul_update statuses:", after.updates.map((u: { id: string; status: string }) => `${u.id}:${u.status}`).join(", "));
 const econ = await call(`/api/agents/${agent.address}/economics`);
 console.log("topup statuses:", econ.topups.map((u: { id: string; status: string; result: unknown }) => `${u.id}:${u.status}:${JSON.stringify(u.result)}`).join(" | "));
+// TOTP 2FA: once on, creator commands need a fresh code; a time step is accepted once.
+const tf = await call("/api/auth/totp", { method: "POST", body: JSON.stringify({ action: "setup" }) });
+const t0 = Date.now() / 1000;
+await call("/api/auth/totp", { method: "POST", body: JSON.stringify({ action: "enable", code: totpCode(tf.secret, t0) }) });
+const tfMsg = cmd("topup", { amountUsd: 5 });
+const tfSig = await creator.signMessage({ message: tfMsg });
+await call(`/api/agents/${agent.address}/topup`, { method: "POST", body: JSON.stringify({ message: tfMsg, signature: tfSig }) }, [401]);
+const nextCode = totpCode(tf.secret, t0 + 30);
+await call(`/api/agents/${agent.address}/topup`, { method: "POST", body: JSON.stringify({ message: tfMsg, signature: tfSig, totp: nextCode }) }, [202, 403]);
+const tfMsg2 = cmd("topup", { amountUsd: 5 });
+await call(`/api/agents/${agent.address}/topup`, { method: "POST", body: JSON.stringify({ message: tfMsg2, signature: await creator.signMessage({ message: tfMsg2 }), totp: nextCode }) }, [409]);
+await new Promise((r) => setTimeout(r, Math.max(0, (totpStep(t0) + 1) * 30 - Date.now() / 1000) * 1000 + 1000));
+await call("/api/auth/totp", { method: "POST", body: JSON.stringify({ action: "disable", code: totpCode(tf.secret, (totpStep(t0) + 2) * 30) }) });
+
 const audit = await call("/api/audit");
 console.log("audit:", JSON.stringify(audit.verification));
 if (!audit.verification.ok) process.exit(1);

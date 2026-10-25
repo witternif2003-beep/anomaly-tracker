@@ -58,6 +58,15 @@ CREATE INDEX IF NOT EXISTS idx_commands_agent ON agent_commands(agent_address, s
 ALTER TABLE agent_commands DROP CONSTRAINT IF EXISTS agent_commands_type_check;
 ALTER TABLE agent_commands ADD CONSTRAINT agent_commands_type_check CHECK (type IN ('topup','soul_update','payout'));
 
+CREATE TABLE IF NOT EXISTS creator_totp (
+  address TEXT PRIMARY KEY,
+  secret_enc TEXT NOT NULL,
+  enabled BOOLEAN NOT NULL DEFAULT false,
+  last_step BIGINT NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  enabled_at TIMESTAMPTZ
+);
+
 CREATE TABLE IF NOT EXISTS audit_log (
   seq BIGSERIAL PRIMARY KEY,
   at TIMESTAMPTZ NOT NULL DEFAULT now(),

@@ -5,15 +5,17 @@ import { appendAudit } from "@/lib/audit";
 import { db } from "@/lib/db";
 import { HttpError } from "@/lib/env";
 import { clientIp, handle, json, readJson } from "@/lib/http";
+import { checkSecondFactor } from "@/lib/second-factor";
 import { requireUser } from "@/lib/session";
 
-const Body = z.object({ message: z.string().max(2000), signature: z.string().regex(/^0x[0-9a-fA-F]+$/) });
+const Body = z.object({ message: z.string().max(2000), signature: z.string().regex(/^0x[0-9a-fA-F]+$/), totp: z.string().regex(/^\d{6}$/).optional() });
 
 export const POST = handle(async (req: Request, ctx: RouteContext<"/api/agents/[address]/payout">) => {
   const user = await requireUser();
   const body = Body.safeParse(await readJson(req, 10_000));
   if (!body.success) throw new HttpError(400, "expected {message, signature}");
   const sql = await db();
+  await checkSecondFactor(sql, user, body.data.totp);
   const agent = await getAgent(sql, normalizeAddress((await ctx.params).address));
   const cmd = await validateCommand(sql, agent, user, body.data.message, body.data.signature, "payout");
   const [row] = await sql<{ id: string }[]>`

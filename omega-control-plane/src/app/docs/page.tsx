@@ -47,7 +47,7 @@ POST /api/agents/:a/snapshots        agent-signed snapshot ingest`}</Code>
       </Card>
       <Card title="Not built">
         <p className="text-sm text-dim">
-          HSM/KMS custody, Fireblocks/Ledger, CoreWeave confidential compute, Redis, TOTP 2FA and autonomous fund movement are not part of this app. There are no profit projections; Economics shows realised P&amp;L from the agent&apos;s own ledger only.
+          HSM/KMS custody, Fireblocks/Ledger and CoreWeave confidential compute need the operator&apos;s own paid accounts and credentials, so they are not connected. Redis is not used: sessions, replay protection and the audit chain run on Postgres. The control plane never moves funds by itself; the agent acts only on creator-signed commands or its own local keep-alive. Optional TOTP 2FA (Treasury tab) adds a 6-digit code to every topup, payout, policy change and SOUL.md update. There are no profit projections; Economics shows realised P&amp;L from the agent&apos;s own ledger only.
         </p>
       </Card>
     </div>
