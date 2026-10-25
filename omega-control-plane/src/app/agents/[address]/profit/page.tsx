@@ -28,6 +28,8 @@ interface Profit {
 
 const tone = (c?: number | null) => (c == null ? undefined : c >= 0 ? ("good" as const) : ("bad" as const));
 const GATE_TONE: Record<string, string> = { PASS: "text-good", REJECT: "text-bad", NOT_COMPUTABLE: "text-warn" };
+/** With zero observations nothing has failed yet: show every non-pass gate neutral instead of as an error. */
+const gateTone = (status: string, n: number) => (status !== "PASS" && n === 0 ? "text-dim" : GATE_TONE[status]);
 
 export default function ProfitLive() {
   const address = useAgentAddress();
@@ -107,14 +109,19 @@ export default function ProfitLive() {
         <Card
           title="Edge check — is the profit distinguishable from luck?"
           source="daily net P&L series · PSR/MinTRL: Bailey & López de Prado (2012); DSR: (2014); PBO: Bailey, Borwein, López de Prado & Zhu; haircut: Harvey & Liu"
-          right={<span className={`font-mono text-xs ${v.label === "verified_structural_soundness" ? "text-good" : "text-warn"}`}>{v.label}</span>}
+          right={<span className={`font-mono text-xs ${v.label === "verified_structural_soundness" ? "text-good" : v.n === 0 ? "text-dim" : "text-warn"}`}>{v.label}</span>}
         >
           <div className="mb-3 grid grid-cols-2 gap-2 md:grid-cols-4">
             <Stat label="Daily obs (N)" value={v.n} />
             <Stat label="Daily Sharpe" value={v.sharpeDaily == null ? "NULL" : v.sharpeDaily.toFixed(3)} hint="mean ÷ sd of daily net $ (not annualised)" />
-            <Stat label="Gate status" value={v.gateStatus} tone={v.gateStatus === "PASS" ? "good" : "warn"} />
+            <Stat label="Gate status" value={v.gateStatus} tone={v.gateStatus === "PASS" ? "good" : v.n === 0 ? undefined : "warn"} />
             <Stat label="MinTRL (95%)" value={v.minTrl == null || !Number.isFinite(v.minTrl) ? "+∞" : v.minTrl.toFixed(1)} hint="daily obs needed" />
           </div>
+          {v.n === 0 && (
+            <p className="mb-3 text-xs text-dim">
+              Waiting for data, not an error: these checks need a real agent&apos;s daily results. They turn green only when that data passes them.
+            </p>
+          )}
           <div className="hidden md:block">
             <RowsTable rows={v.gates as unknown as Record<string, unknown>[]} columns={["gate", "threshold", "value", "status", "reason"]} />
           </div>
@@ -123,7 +130,7 @@ export default function ProfitLive() {
               <li key={g.gate} className="rounded border border-line p-2 text-xs">
                 <div className="flex items-start justify-between gap-2">
                   <span className="font-medium">{g.gate}</span>
-                  <span className={`font-mono ${GATE_TONE[g.status]}`}>{g.status}</span>
+                  <span className={`font-mono ${gateTone(g.status, v.n)}`}>{g.status}</span>
                 </div>
                 <dl className="mt-1 grid grid-cols-[5rem_1fr] gap-x-2 gap-y-0.5 font-mono text-dim">
                   <dt>threshold</dt>
@@ -138,7 +145,7 @@ export default function ProfitLive() {
           </ul>
           <div className="mt-2 flex flex-wrap gap-3 text-[11px]">
             {v.gates.map((g) => (
-              <span key={g.gate} className={GATE_TONE[g.status]}>
+              <span key={g.gate} className={gateTone(g.status, v.n)}>
                 {g.gate}: {g.status}
               </span>
             ))}

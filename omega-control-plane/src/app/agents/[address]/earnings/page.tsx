@@ -71,7 +71,7 @@ export default function EarningsPage() {
           <Card
             title="Daily net vs operator target"
             source={`target ${usd(targetCents)}/day is the operator's goal (DAILY_TARGET_USD, src/lib/pnl.ts), not a forecast or guarantee · ${data.sources.daily}`}
-            right={<span className={`font-mono text-xs ${data.sampleLabel.startsWith("statistically") ? "text-warn" : "text-good"}`}>{data.sampleLabel}</span>}
+            right={<span className={`font-mono text-xs ${!data.sampleLabel.startsWith("statistically") ? "text-good" : data.observedDays === 0 ? "text-dim" : "text-warn"}`}>{data.sampleLabel}</span>}
           >
             <div className="mb-3 grid grid-cols-2 gap-2 md:grid-cols-4">
               <Stat label="Days recorded" value={data.observedDays} hint="fewer than 30 = indistinguishable from noise" />

@@ -62,3 +62,27 @@ export function walletErrorText(e: unknown): string {
   const extra = [x.code != null ? `code ${x.code}` : null, x.details && !head.includes(x.details) ? x.details : null].filter(Boolean).join(": ");
   return extra ? `${head} (${extra})` : head;
 }
+
+const erc20Transfer = [
+  {
+    type: "function",
+    name: "transfer",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "to", type: "address" },
+      { name: "value", type: "uint256" },
+    ],
+    outputs: [{ name: "", type: "bool" }],
+  },
+] as const;
+
+/** Asks the connected wallet to send USDC on Base; the user approves it in the wallet. Returns the tx hash. */
+export async function sendUsdcOnBase(usdc: Address, to: Address, units: bigint): Promise<`0x${string}`> {
+  const provider = getProvider();
+  if (!provider) throw new NoWalletError("No wallet in this browser. Open this page in Phantom (or another Ethereum wallet app), or send to the address above from any wallet.");
+  const client = createWalletClient({ chain: base, transport: custom(provider) });
+  const [account] = await client.requestAddresses();
+  if (!account) throw new Error("wallet returned no account");
+  if ((await preferBase(client)) !== base.id) throw new Error("Switch your wallet to the Base network, then try again.");
+  return await client.writeContract({ account, address: usdc, abi: erc20Transfer, functionName: "transfer", args: [to, units] });
+}
