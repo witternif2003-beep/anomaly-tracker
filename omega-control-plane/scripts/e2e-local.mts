@@ -86,6 +86,19 @@ await call(soulPath, { method: "PUT", body: JSON.stringify({ message: tfMsg2, si
 await new Promise((r) => setTimeout(r, Math.max(0, (totpStep(t0) + 1) * 30 - Date.now() / 1000) * 1000 + 1000));
 await call("/api/auth/totp", { method: "POST", body: JSON.stringify({ action: "disable", code: totpCode(tf.secret, (totpStep(t0) + 2) * 30) }) });
 
+// Cross-browser sign-in handoff: issue in the signed-in browser, redeem from a fresh cookie jar, single use.
+const handoff = await call("/api/auth/handoff", { method: "POST" });
+const walletCookie = cookie;
+cookie = "";
+await call("/api/auth/handoff", { method: "PUT", body: JSON.stringify({ token: handoff.token }) });
+const me2 = await call("/api/auth/me");
+if (me2.address !== creator.address) throw new Error(`handoff signed in as ${me2.address}`);
+cookie = "";
+await call("/api/auth/handoff", { method: "PUT", body: JSON.stringify({ token: handoff.token }) }, [401]);
+await call("/api/auth/handoff", { method: "PUT", body: JSON.stringify({ token: "x".repeat(43) }) }, [401]);
+await call("/api/auth/handoff", { method: "POST" }, [401]);
+cookie = walletCookie;
+
 const audit = await call("/api/audit");
 console.log("audit:", JSON.stringify(audit.verification));
 if (!audit.verification.ok) process.exit(1);
