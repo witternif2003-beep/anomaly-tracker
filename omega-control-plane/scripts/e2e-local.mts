@@ -62,6 +62,7 @@ await call(`/api/agents/${agent.address}/payout`, { method: "POST", body: JSON.s
 const noSurplus = cmd("payout", { amountUsd: 1, to: PAYOUT });
 await call(`/api/agents/${agent.address}/payout`, { method: "POST", body: JSON.stringify({ message: noSurplus, signature: await creator.signMessage({ message: noSurplus }) }) }, [403]);
 await call(`/api/agents/${agent.address}/commands`, {}, [401]);
+await call(`/api/agents/${agent.address}/profit`, {}, [200]);
 
 sync("--apply", "--automaton-dist", dist);
 sync();

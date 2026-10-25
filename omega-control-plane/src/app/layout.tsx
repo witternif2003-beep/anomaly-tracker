@@ -22,6 +22,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             <nav className="flex gap-3 text-sm text-dim">
               <Link href="/" className="hover:text-fg">Fleet</Link>
               <Link href="/audit" className="hover:text-fg">Audit</Link>
+              <Link href="/research" className="hover:text-fg">Research</Link>
               <Link href="/docs" className="hover:text-fg">Connect</Link>
             </nav>
             <div className="ml-auto">

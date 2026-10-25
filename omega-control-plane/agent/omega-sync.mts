@@ -100,6 +100,10 @@ const AGGREGATES: Record<string, { tables: string[]; sql: string }> = {
     tables: ["transactions"],
     sql: "SELECT type, COUNT(*) AS n, SUM(amount_cents) AS total_cents FROM transactions GROUP BY type",
   },
+  transactions_by_day: {
+    tables: ["transactions"],
+    sql: "SELECT substr(created_at,1,10) AS day, type, COUNT(*) AS n, SUM(amount_cents) AS total_cents FROM transactions GROUP BY day, type ORDER BY day DESC LIMIT 3000",
+  },
   event_stream_by_type: {
     tables: ["event_stream"],
     sql: "SELECT type, COUNT(*) AS n, SUM(token_count) AS tokens FROM event_stream GROUP BY type ORDER BY n DESC",

@@ -110,6 +110,29 @@ export function Bars({ data, label, value, format = (n) => String(n) }: { data: 
   );
 }
 
+export function SignedBars({ data, label, value, format = (n) => String(n) }: { data: Record<string, unknown>[]; label: string; value: string; format?: (n: number) => string }) {
+  if (!data.length) return <Empty>No data in this snapshot.</Empty>;
+  const max = Math.max(...data.map((d) => Math.abs(Number(d[value]) || 0)), 1);
+  return (
+    <div className="space-y-1">
+      {data.map((d, i) => {
+        const n = Number(d[value]) || 0;
+        const w = `${(Math.abs(n) / max) * 50}%`;
+        return (
+          <div key={i} className="grid grid-cols-[minmax(0,6.5rem)_1fr_auto] items-center gap-2 text-xs">
+            <span className="truncate font-mono text-dim">{String(d[label] ?? "—")}</span>
+            <div className="relative h-2 rounded bg-line">
+              <div className="absolute top-0 h-2 w-px bg-dim" style={{ left: "50%" }} />
+              <div className={`absolute top-0 h-2 rounded ${n >= 0 ? "bg-good" : "bg-bad"}`} style={n >= 0 ? { left: "50%", width: w } : { right: "50%", width: w }} />
+            </div>
+            <span className={`font-mono ${n >= 0 ? "text-good" : "text-bad"}`}>{format(n)}</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export function Sparkline({ points, height = 60 }: { points: number[]; height?: number }) {
   if (points.length < 2) return <Empty>Need at least two snapshots to chart.</Empty>;
   const min = Math.min(...points);

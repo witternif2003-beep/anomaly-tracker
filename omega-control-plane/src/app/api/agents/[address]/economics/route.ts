@@ -2,13 +2,11 @@ import { normalizeAddress } from "@/lib/address";
 import { getAgent, getPolicy, latestSnapshot } from "@/lib/agents";
 import { db } from "@/lib/db";
 import { handle, json } from "@/lib/http";
+import { PNL_METHOD, pnlFromAggregates } from "@/lib/pnl";
 
 type Row = Record<string, unknown>;
 const num = (v: unknown) => (typeof v === "number" ? v : Number(v ?? 0) || 0);
 
-const REVENUE_TYPES = new Set(["transfer_in"]);
-const FUNDING_TYPES = new Set(["credit_purchase", "topup"]);
-const COST_TYPES = new Set(["inference", "x402_payment", "transfer_out"]);
 
 export const GET = handle(async (_req: Request, ctx: RouteContext<"/api/agents/[address]/economics">) => {
   const sql = await db();
@@ -20,14 +18,8 @@ export const GET = handle(async (_req: Request, ctx: RouteContext<"/api/agents/[
   const totals = (snap?.payload.aggregates.inference_totals ?? [])[0] as Row | undefined;
   const txTotals = (snap?.payload.aggregates.transactions_by_type ?? []) as Row[];
 
-  const sumType = (set: Set<string>) =>
-    txTotals.filter((r) => set.has(String(r.type))).reduce((s, r) => s + Math.abs(num(r.total_cents)), 0);
-  const revenueCents = sumType(REVENUE_TYPES);
-  const fundingCents = sumType(FUNDING_TYPES);
-  const ledgerCostCents = sumType(COST_TYPES);
-  const inferenceCostCents = num(totals?.cost_cents);
+  const { revenueCents, fundingCents, ledgerCostCents, inferenceCostCents, costCents } = pnlFromAggregates(txTotals, totals);
   const turns = snap?.payload.turnCount ?? 0;
-  const costCents = Math.max(ledgerCostCents, inferenceCostCents);
 
   const history = await sql`
     SELECT id, captured_at, credits_cents, survival_tier, turn_count FROM snapshots
@@ -39,8 +31,7 @@ export const GET = handle(async (_req: Request, ctx: RouteContext<"/api/agents/[
   return json({
     snapshotId: snap?.id ?? null,
     capturedAt: snap?.captured_at ?? null,
-    method:
-      "revenue = sum(transactions.type='transfer_in'); cost = max(sum of inference/x402_payment/transfer_out ledger rows, sum(inference_costs.cost_cents)); funding (topups, credit purchases) is shown separately and is not revenue.",
+    method: PNL_METHOD,
     sources: ["state.db transactions (aggregated)", "state.db inference_costs (aggregated)", "control-plane snapshots + agent_commands"],
     pnl: {
       revenueCents,
