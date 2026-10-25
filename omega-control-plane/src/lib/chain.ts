@@ -22,6 +22,10 @@ const reputationAbi = parseAbi([
   "function getSummary(uint256 agentId, address[] clientAddresses, string tag1, string tag2) view returns (uint64 count, int128 summaryValue, uint8 summaryValueDecimals)",
 ]);
 
+export async function readUsdcUnits(address: Address): Promise<bigint> {
+  return await baseClient().readContract({ address: CONTRACTS.usdc, abi: erc20, functionName: "balanceOf", args: [address] });
+}
+
 const makeClient = () => createPublicClient({ chain: base, transport: http(env.baseRpcUrl, { timeout: 8000, retryCount: 1 }) });
 let client: ReturnType<typeof makeClient> | undefined;
 export function baseClient(): ReturnType<typeof makeClient> {

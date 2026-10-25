@@ -5,6 +5,8 @@ import { buildCommandMessage, parseCommandMessage, snapshotMessage } from "../sr
 import { canonicalJson, sha256Hex } from "../src/lib/hash";
 import { signToken, verifyToken } from "../src/lib/session";
 import { verifySignedSnapshot } from "../src/lib/snapshot";
+import { getAddress } from "viem";
+import { isPayoutAmount, PAYOUT_WALLET, usdcUnits } from "../src/lib/payout";
 import { survivalTier } from "../src/lib/survival";
 
 const SECRET = "x".repeat(40);
@@ -54,6 +56,25 @@ describe("command messages", () => {
   it("survives newlines in soul content", () => {
     const s = { ...env, type: "soul_update" as const, payload: { content: "# Soul\nline 2\n" } };
     expect(parseCommandMessage(buildCommandMessage(s))).toEqual(s);
+  });
+});
+
+describe("payout", () => {
+  it("wallet is the operator-supplied address, checksummed", () => {
+    expect(PAYOUT_WALLET).toBe(getAddress("0x4d11f9f5bb127d4c2e971c2e62b93caf957b7f0d"));
+  });
+  it("validates amounts", () => {
+    for (const ok of [0.01, 1, 12.5, 1000.99]) expect(isPayoutAmount(ok)).toBe(true);
+    for (const bad of [0, -1, 0.001, NaN, Infinity, "5", 2_000_000]) expect(isPayoutAmount(bad)).toBe(false);
+  });
+  it("converts to USDC units exactly", () => {
+    expect(usdcUnits(0.29)).toBe(290_000n);
+    expect(usdcUnits(12.5)).toBe(12_500_000n);
+    expect(usdcUnits(100)).toBe(100_000_000n);
+  });
+  it("round-trips a payout command", () => {
+    const env = { agent: PAYOUT_WALLET, type: "payout" as const, payload: { amountUsd: 1.5, to: PAYOUT_WALLET }, nonce: "n", issuedAt: "2026-10-25T00:00:00.000Z" };
+    expect(parseCommandMessage(buildCommandMessage(env))).toEqual(env);
   });
 });
 

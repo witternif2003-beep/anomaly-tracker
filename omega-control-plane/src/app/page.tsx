@@ -62,7 +62,7 @@ export default function FleetPage() {
               <div className="flex items-center gap-2">
                 <span className="truncate font-semibold">{a.name ?? "unnamed agent"}</span>
                 <span className="ml-auto">
-                  <TierBadge tier={a.survival_tier} />
+                  <TierBadge tier={a.survival_tier} hasSnapshot={!!a.last_snapshot_at} />
                 </span>
               </div>
               <div className="mt-1 font-mono text-xs text-dim">{a.address}</div>

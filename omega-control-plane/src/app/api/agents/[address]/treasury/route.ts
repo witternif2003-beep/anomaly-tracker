@@ -3,6 +3,7 @@ import { normalizeAddress } from "@/lib/address";
 import { getAgent, getPolicy, requireCreator } from "@/lib/agents";
 import { appendAudit } from "@/lib/audit";
 import { db } from "@/lib/db";
+import { PAYOUT_WALLET } from "@/lib/payout";
 import { HttpError } from "@/lib/env";
 import { clientIp, handle, json, readJson } from "@/lib/http";
 import { requireUser } from "@/lib/session";
@@ -10,7 +11,13 @@ import { requireUser } from "@/lib/session";
 export const GET = handle(async (_req: Request, ctx: RouteContext<"/api/agents/[address]/treasury">) => {
   const sql = await db();
   const agent = await getAgent(sql, normalizeAddress((await ctx.params).address));
-  return json({ policy: await getPolicy(sql, agent.address) });
+  const payouts = await sql`
+    SELECT id, status, payload, created_by, created_at, updated_at, result FROM agent_commands
+    WHERE agent_address = ${agent.address} AND type = 'payout' ORDER BY id DESC LIMIT 50`;
+  const inflightUsd = payouts
+    .filter((p) => p.status === "pending" || p.status === "delivered")
+    .reduce((s, p) => s + Number((p.payload as { amountUsd?: number }).amountUsd ?? 0), 0);
+  return json({ policy: await getPolicy(sql, agent.address), payout: { wallet: PAYOUT_WALLET, inflightUsd, history: payouts } });
 });
 
 const Body = z.object({

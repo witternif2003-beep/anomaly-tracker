@@ -7,9 +7,11 @@
  *
  * With --apply it also pulls creator-signed commands, re-verifies the creator signature locally
  * against automaton.json creatorAddress, and executes them with the automaton's own code
- * (conway/topup.js topupCredits via x402; soul/tools.js updateSoul), then posts a signed ack.
+ * (conway/topup.js topupCredits via x402; soul/tools.js updateSoul; payouts as a USDC transfer on Base
+ * to the fixed PAYOUT_WALLET only), then posts a signed ack.
  *
  *   npx tsx agent/omega-sync.mts --url https://<control-plane> [--dir ~/.automaton] [--interval 60] [--apply --automaton-dist <path/to/automaton/dist>]
+ *     [--keep-alive [--keep-alive-usd 5] [--keep-alive-daily-cap 25]]   # auto-topup from the agent's own USDC when credits < 50c
  */
 import fs from "node:fs";
 import os from "node:os";
@@ -18,10 +20,33 @@ import { createRequire } from "node:module";
 import { pathToFileURL } from "node:url";
 import { parseArgs } from "node:util";
 import { DatabaseSync } from "node:sqlite";
-import { getAddress, verifyMessage, type Hex } from "viem";
+import { createPublicClient, createWalletClient, getAddress, http, isAddress, parseAbi, verifyMessage, type Hex } from "viem";
+import { base } from "viem/chains";
 import { privateKeyToAccount, type PrivateKeyAccount } from "viem/accounts";
 import { ackMessage, parseCommandMessage, pullMessage, snapshotMessage } from "../src/lib/command-message.ts";
 import { sha256Hex } from "../src/lib/hash.ts";
+import { isPayoutAmount, PAYOUT_WALLET, USDC_BASE, usdcUnits } from "../src/lib/payout.ts";
+
+const ERC20 = parseAbi(["function balanceOf(address) view returns (uint256)", "function transfer(address to, uint256 amount) returns (bool)"]);
+
+/** USDC transfer on Base from the agent wallet to the fixed payout wallet. Never any other destination. */
+export async function sendPayout(account: PrivateKeyAccount, payload: Record<string, unknown>) {
+  const to = String(payload.to);
+  if (!isAddress(to) || getAddress(to) !== PAYOUT_WALLET) return { status: "rejected" as const, result: { reason: `destination ${to} is not the fixed payout wallet ${PAYOUT_WALLET}` } };
+  if (!isPayoutAmount(payload.amountUsd)) return { status: "rejected" as const, result: { reason: "invalid amountUsd" } };
+  const units = usdcUnits(payload.amountUsd);
+  const transport = http(process.env.BASE_RPC_URL || "https://mainnet.base.org");
+  const pub = createPublicClient({ chain: base, transport });
+  const balance = await pub.readContract({ address: USDC_BASE, abi: ERC20, functionName: "balanceOf", args: [account.address] });
+  if (balance < units) return { status: "failed" as const, result: { error: "insufficient USDC on Base", balanceUnits: String(balance), amountUsd: payload.amountUsd } };
+  const wallet = createWalletClient({ account, chain: base, transport });
+  const hash = await wallet.writeContract({ address: USDC_BASE, abi: ERC20, functionName: "transfer", args: [PAYOUT_WALLET, units] });
+  const receipt = await pub.waitForTransactionReceipt({ hash });
+  return {
+    status: receipt.status === "success" ? ("applied" as const) : ("failed" as const),
+    result: { txHash: hash, blockNumber: String(receipt.blockNumber), to: PAYOUT_WALLET, amountUsd: payload.amountUsd, explorer: `https://basescan.org/tx/${hash}` },
+  };
+}
 
 const VERSION = "1.0.0";
 const ROW_LIMIT = 50;
@@ -235,9 +260,44 @@ async function post(url: string, body: unknown, headers: Record<string, string> 
 
 interface PulledCommand {
   id: string;
-  type: "topup" | "soul_update";
+  type: "topup" | "soul_update" | "payout";
   message: string;
   creator_signature: Hex;
+}
+
+async function execute(
+  env: NonNullable<ReturnType<typeof parseCommandMessage>>,
+  c: PulledCommand,
+  account: PrivateKeyAccount,
+  config: AutomatonConfig,
+  dir: string,
+  dist: string,
+  creator: string | null,
+): Promise<{ status: "applied" | "failed" | "rejected"; result: Record<string, unknown> }> {
+  let status: "applied" | "failed" | "rejected" = "rejected";
+  let result: Record<string, unknown> = {};
+  if (env.type === "payout") {
+    return await sendPayout(account, env.payload);
+  } else if (env.type === "topup") {
+    const { topupCredits } = await import(pathToFileURL(path.join(dist, "conway/topup.js")).href);
+    const r = await topupCredits(config.conwayApiUrl || "https://api.conway.tech", account, Number(env.payload.amountUsd));
+    status = r.success ? "applied" : "failed";
+    result = r;
+  } else if (env.type === "soul_update") {
+    const require = createRequire(path.join(dist, "index.js"));
+    const Database = require("better-sqlite3");
+    const { parseSoulMd } = await import(pathToFileURL(path.join(dist, "soul/model.js")).href);
+    const { updateSoul } = await import(pathToFileURL(path.join(dist, "soul/tools.js")).href);
+    const db = new Database(loadLocal(dir).dbPath);
+    try {
+      const r = await updateSoul(db, parseSoulMd(String(env.payload.content)), "human", `omega control plane command ${c.id} signed by ${creator}`, path.join(dir, "SOUL.md"));
+      status = r.success ? "applied" : "failed";
+      result = r;
+    } finally {
+      db.close();
+    }
+  }
+  return { status, result };
 }
 
 async function applyCommands(baseUrl: string, account: PrivateKeyAccount, config: AutomatonConfig, dir: string, dist: string) {
@@ -254,23 +314,12 @@ async function applyCommands(baseUrl: string, account: PrivateKeyAccount, config
     const sigOk = !!creator && (await verifyMessage({ address: creator, message: c.message, signature: c.creator_signature }).catch(() => false));
     if (!env || !sigOk || getAddress(env.agent) !== account.address || env.type !== c.type) {
       result = { reason: "local verification failed: creator signature / agent / type mismatch" };
-    } else if (env.type === "topup") {
-      const { topupCredits } = await import(pathToFileURL(path.join(dist, "conway/topup.js")).href);
-      const r = await topupCredits(config.conwayApiUrl || "https://api.conway.tech", account, Number(env.payload.amountUsd));
-      status = r.success ? "applied" : "failed";
-      result = r;
-    } else if (env.type === "soul_update") {
-      const require = createRequire(path.join(dist, "index.js"));
-      const Database = require("better-sqlite3");
-      const { parseSoulMd } = await import(pathToFileURL(path.join(dist, "soul/model.js")).href);
-      const { updateSoul } = await import(pathToFileURL(path.join(dist, "soul/tools.js")).href);
-      const db = new Database(loadLocal(dir).dbPath);
+    } else {
       try {
-        const r = await updateSoul(db, parseSoulMd(String(env.payload.content)), "human", `omega control plane command ${c.id} signed by ${creator}`, path.join(dir, "SOUL.md"));
-        status = r.success ? "applied" : "failed";
-        result = r;
-      } finally {
-        db.close();
+        ({ status, result } = await execute(env, c, account, config, dir, dist, creator));
+      } catch (e) {
+        status = "failed";
+        result = { error: e instanceof Error ? e.message.slice(0, 500) : String(e) };
       }
     }
     const ackPayload = JSON.stringify({ commandId: String(c.id), status, result, at: new Date().toISOString() });
@@ -278,6 +327,28 @@ async function applyCommands(baseUrl: string, account: PrivateKeyAccount, config
     const ack = await post(`${baseUrl}/api/agents/${account.address}/commands/${c.id}`, { payload: ackPayload, signature: ackSig });
     console.log(`[omega-sync] command ${c.id} ${c.type}: ${status} (ack HTTP ${ack.status})`);
   }
+}
+
+const KEEP_ALIVE_TIERS = [5, 25, 100, 500, 1000, 2500];
+const LOW_COMPUTE_BELOW_CENTS = 50; // automaton SURVIVAL_THRESHOLDS.normal: below this the agent is low_compute
+
+/**
+ * Local survival guard: when credits fall below the normal tier, buy one Conway credit topup
+ * from the agent's own USDC (automaton topupCredits via x402), at most dailyCapUsd per 24 h.
+ * Attempts are logged to <dir>/omega-keepalive.json. Cannot help once the wallet has no USDC.
+ */
+export async function keepAlive(dir: string, config: AutomatonConfig, account: PrivateKeyAccount, creditsCents: number | null, amountUsd: number, dailyCapUsd: number, dist: string) {
+  if (creditsCents == null) return console.log("[omega-sync] keep-alive: credits unknown, skipped");
+  if (creditsCents >= LOW_COMPUTE_BELOW_CENTS) return;
+  const logPath = path.join(dir, "omega-keepalive.json");
+  const log: { at: string; amountUsd: number; success: boolean; error?: string }[] = fs.existsSync(logPath) ? JSON.parse(fs.readFileSync(logPath, "utf8")) : [];
+  const spent = log.filter((e) => Date.now() - Date.parse(e.at) < 86_400_000).reduce((t, e) => t + e.amountUsd, 0);
+  if (spent + amountUsd > dailyCapUsd) return console.log(`[omega-sync] keep-alive: credits ${creditsCents}c but 24 h cap $${dailyCapUsd} reached ($${spent} attempted)`);
+  const { topupCredits } = await import(pathToFileURL(path.join(dist, "conway/topup.js")).href);
+  const r = (await topupCredits(config.conwayApiUrl || "https://api.conway.tech", account, amountUsd)) as { success: boolean; error?: string };
+  log.push({ at: new Date().toISOString(), amountUsd, success: r.success, error: r.error });
+  fs.writeFileSync(logPath, JSON.stringify(log.slice(-200), null, 2));
+  console.log(`[omega-sync] keep-alive: credits ${creditsCents}c -> topup $${amountUsd}: ${r.success ? "ok" : `failed ${r.error ?? ""}`}`);
 }
 
 async function main() {
@@ -289,12 +360,18 @@ async function main() {
       apply: { type: "boolean", default: false },
       "automaton-dist": { type: "string" },
       "dry-run": { type: "boolean", default: false },
+      "keep-alive": { type: "boolean", default: false },
+      "keep-alive-usd": { type: "string", default: "5" },
+      "keep-alive-daily-cap": { type: "string", default: "25" },
     },
   });
   const dir = expandHome(values.dir!);
   const baseUrl = (values.url ?? process.env.OMEGA_URL ?? "").replace(/\/$/, "");
   if (!baseUrl && !values["dry-run"]) throw new Error("--url (or OMEGA_URL) is required");
-  if (values.apply && !values["automaton-dist"]) throw new Error("--apply needs --automaton-dist <path to @conway/automaton dist>");
+  if ((values.apply || values["keep-alive"]) && !values["automaton-dist"]) throw new Error("--apply / --keep-alive need --automaton-dist <path to @conway/automaton dist>");
+  const keepAliveUsd = Number(values["keep-alive-usd"]);
+  const keepAliveCap = Number(values["keep-alive-daily-cap"]);
+  if (values["keep-alive"] && !KEEP_ALIVE_TIERS.includes(keepAliveUsd)) throw new Error(`--keep-alive-usd must be one of ${KEEP_ALIVE_TIERS.join(", ")}`);
   const { config, account, dbPath } = loadLocal(dir);
 
   const once = async () => {
@@ -307,6 +384,7 @@ async function main() {
     const r = await post(`${baseUrl}/api/agents/${account.address}/snapshots`, signed);
     console.log(`[omega-sync] ${new Date().toISOString()} snapshot ${signed.payload.length} bytes -> HTTP ${r.status} ${r.body.slice(0, 200)}`);
     if (values.apply) await applyCommands(baseUrl, account, config, dir, expandHome(values["automaton-dist"]!));
+    if (values["keep-alive"]) await keepAlive(dir, config, account, snap.creditsCents, keepAliveUsd, keepAliveCap, expandHome(values["automaton-dist"]!));
   };
 
   await once();

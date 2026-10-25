@@ -4,6 +4,7 @@ import { useMe } from "@/components/auth";
 import { Card, ErrorBox, RowsTable, Stat } from "@/components/ui";
 import { api, useApi, when } from "@/lib/client";
 import { buildCommandMessage } from "@/lib/command-message";
+import { isPayoutAmount, PAYOUT_WALLET } from "@/lib/payout";
 import { TOPUP_TIERS_USD } from "@/lib/survival";
 import { connect } from "@/lib/wallet";
 import { useAgentAddress } from "../use-agent";
@@ -20,12 +21,15 @@ export default function Treasury() {
   const address = useAgentAddress();
   const { address: me } = useMe();
   const status = useApi<{ agent?: { creator_address: string | null }; onchain: { usdcBalance: { value?: string; source: string } } }>(`/api/agents/${address}/status`);
-  const pol = useApi<{ policy: Policy }>(`/api/agents/${address}/treasury`);
+  const pol = useApi<{ policy: Policy; payout: { wallet: string; inflightUsd: number; history: Record<string, unknown>[] } }>(`/api/agents/${address}/treasury`);
   const econ = useApi<{ topups: Record<string, unknown>[] }>(`/api/agents/${address}/economics`);
   const [edit, setP] = useState<{ base: Policy; value: Policy } | null>(null);
   const [amount, setAmount] = useState<number>(5);
   const [err, setErr] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
+  const [payoutAmount, setPayoutAmount] = useState("");
+  const [payoutErr, setPayoutErr] = useState<string | null>(null);
+  const [payoutMsg, setPayoutMsg] = useState<string | null>(null);
   const p = edit && edit.base === pol.data?.policy ? edit.value : (pol.data?.policy ?? null);
   const creator = status.data?.agent?.creator_address;
   const isCreator = !!me && !!creator && me.toLowerCase() === creator.toLowerCase();
@@ -59,6 +63,26 @@ export default function Treasury() {
     }
   };
 
+  const usdc = status.data?.onchain.usdcBalance.value;
+  const surplus = usdc != null && p ? Math.max(0, Number(usdc) - Number(p.surplus_threshold_usd) - (pol.data?.payout.inflightUsd ?? 0)) : null;
+
+  const requestPayout = async () => {
+    setPayoutErr(null);
+    setPayoutMsg(null);
+    const amountUsd = Number(payoutAmount);
+    if (!isPayoutAmount(amountUsd)) return setPayoutErr("Enter a positive USD amount with at most 2 decimals.");
+    try {
+      const w = await connect();
+      const message = buildCommandMessage({ agent: address, type: "payout", payload: { amountUsd, to: PAYOUT_WALLET }, nonce: crypto.randomUUID(), issuedAt: new Date().toISOString() });
+      const signature = await w.sign(message);
+      const r = await api<{ commandId: string; note: string }>(`/api/agents/${address}/payout`, { method: "POST", body: JSON.stringify({ message, signature }) });
+      setPayoutMsg(`Command #${r.commandId} queued. ${r.note}`);
+      pol.reload();
+    } catch (e) {
+      setPayoutErr((e as Error).message.split("\n")[0]);
+    }
+  };
+
   const num = (k: keyof Policy) => (
     <label className="block text-xs text-dim">
       {k}
@@ -77,7 +101,7 @@ export default function Treasury() {
     <div className="space-y-4">
       <ErrorBox error={status.error ?? pol.error} />
       <div className="rounded-md border border-line bg-panel p-3 text-xs text-dim">
-        The control plane holds no keys and moves no funds. A topup is a request signed by the creator wallet, checked against the policy below, and executed by the agent with its own wallet
+        The control plane holds no keys and moves no funds. A topup or payout is a request signed by the creator wallet, checked against the policy below, and executed by the agent with its own wallet
         (automaton <span className="font-mono">topupCredits()</span> → x402 <span className="font-mono">/pay/&#123;usd&#125;/&#123;address&#125;</span>) when it next runs <span className="font-mono">omega-sync --apply</span>.
       </div>
       <Card title="Treasury policy" source={p?.updated_at ? `updated by ${p.updated_by} ${when(p.updated_at)}` : "defaults (not yet saved)"}>
@@ -113,6 +137,45 @@ export default function Treasury() {
         )}
         {msg && <p className="mt-2 text-xs text-good">{msg}</p>}
         <ErrorBox error={err} />
+      </Card>
+      <Card title="Payout to fixed wallet" source="USDC transfer on Base (ERC-20 transfer) signed and sent by the agent wallet">
+        <div className="mb-3 rounded border border-line bg-bg p-2">
+          <div className="text-[11px] uppercase tracking-wide text-dim">Payout wallet (hard-coded)</div>
+          <a href={`https://basescan.org/address/${PAYOUT_WALLET}`} target="_blank" rel="noreferrer" className="break-all font-mono text-sm text-accent">
+            {PAYOUT_WALLET}
+          </a>
+        </div>
+        <div className="mb-3 grid grid-cols-2 gap-2">
+          <Stat label="Available surplus" value={surplus == null ? "—" : `$${surplus.toFixed(2)}`} hint={`USDC − $${p?.surplus_threshold_usd ?? "—"} reserve − $${pol.data?.payout.inflightUsd ?? 0} in flight`} />
+          <Stat label="Reserve kept" value={`$${p?.surplus_threshold_usd ?? "—"}`} hint="surplus_threshold_usd" />
+        </div>
+        {isCreator ? (
+          <div className="flex flex-wrap items-end gap-2">
+            <label className="block text-xs text-dim">
+              amount (USD)
+              <input
+                inputMode="decimal"
+                value={payoutAmount}
+                onChange={(e) => setPayoutAmount(e.target.value.trim())}
+                placeholder="0.00"
+                className="mt-1 w-32 rounded border border-line bg-bg px-2 py-1.5 font-mono text-fg"
+              />
+            </label>
+            <button onClick={requestPayout} className="rounded bg-accent px-4 py-2 text-sm font-semibold text-bg">
+              Sign payout request
+            </button>
+          </div>
+        ) : (
+          <p className="text-xs text-dim">Only the creator wallet ({creator ?? "unknown until first snapshot"}) can request payouts.</p>
+        )}
+        <p className="mt-2 text-[11px] text-dim">
+          The server rejects any destination other than this wallet and any amount above the surplus. The agent re-checks both before sending, and pays Base gas in ETH from its own wallet.
+        </p>
+        {payoutMsg && <p className="mt-2 text-xs text-good">{payoutMsg}</p>}
+        <ErrorBox error={payoutErr} />
+      </Card>
+      <Card title="Payout history" source="control-plane agent_commands type=payout">
+        <RowsTable rows={pol.data?.payout.history} columns={["id", "status", "payload", "created_by", "created_at", "updated_at", "result"]} empty="No payout requests." />
       </Card>
       <Card title="Topup history" source="control-plane agent_commands type=topup">
         <RowsTable rows={econ.data?.topups} columns={["id", "status", "payload", "created_by", "created_at", "updated_at", "result"]} empty="No topup requests." />

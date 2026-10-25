@@ -42,7 +42,7 @@ const status = await call(`/api/agents/${agent.address}/status`);
 if (!status.snapshot) throw new Error("no snapshot after sync");
 for (const p of ["economics", "orchestration", "memory", "soul", "treasury", "snapshots"]) await call(`/api/agents/${agent.address}/${p}`);
 
-const cmd = (type: "topup" | "soul_update", payload: Record<string, unknown>) =>
+const cmd = (type: "topup" | "soul_update" | "payout", payload: Record<string, unknown>) =>
   buildCommandMessage({ agent: agent.address, type, payload, nonce: crypto.randomUUID(), issuedAt: new Date().toISOString() });
 const bad = cmd("topup", { amountUsd: 7 });
 await call(`/api/agents/${agent.address}/topup`, { method: "POST", body: JSON.stringify({ message: bad, signature: await creator.signMessage({ message: bad }) }) }, [400]);
@@ -56,6 +56,11 @@ await call(`/api/agents/${agent.address}/topup`, { method: "POST", body: JSON.st
 await call(`/api/agents/${agent.address}/topup`, { method: "POST", body: JSON.stringify({ message: top, signature: topSig }) }, [409]);
 const soul = cmd("soul_update", { content: `# e2e-local-test\n\n## Core Purpose\nEnd-to-end test of the omega control plane soul update path (${new Date().toISOString()}).\n` });
 await call(`/api/agents/${agent.address}/soul`, { method: "PUT", body: JSON.stringify({ message: soul, signature: await creator.signMessage({ message: soul }) }) });
+const PAYOUT = "0x4D11f9f5bB127D4c2e971c2e62b93CAF957b7F0d";
+const elsewhere = cmd("payout", { amountUsd: 1, to: creator.address });
+await call(`/api/agents/${agent.address}/payout`, { method: "POST", body: JSON.stringify({ message: elsewhere, signature: await creator.signMessage({ message: elsewhere }) }) }, [400]);
+const noSurplus = cmd("payout", { amountUsd: 1, to: PAYOUT });
+await call(`/api/agents/${agent.address}/payout`, { method: "POST", body: JSON.stringify({ message: noSurplus, signature: await creator.signMessage({ message: noSurplus }) }) }, [403]);
 await call(`/api/agents/${agent.address}/commands`, {}, [401]);
 
 sync("--apply", "--automaton-dist", dist);

@@ -7,6 +7,7 @@ Next.js 16 + Postgres dashboard for [Conway-Research/automaton](https://github.c
 - **Orchestration** – `goals` + `task_graph` as dependency levels; `orchestrator.last_tick`.
 - **Memory** – event stream, knowledge store and the memory tiers.
 - **Telemetry** – server-sent events, tool calls, policy decisions.
+- **Payout** – USDC on Base to the fixed payout wallet `0x4D11f9f5bB127D4c2e971c2e62b93CAF957b7F0d` (`src/lib/payout.ts`) only, never more than the balance above the treasury reserve; sent by the agent wallet.
 - **Soul / Treasury** – creator-signed (EIP-191) commands checked against treasury policy; the agent executes them with its own wallet and code. The control plane holds no keys and never moves funds.
 - **Audit** – append-only SHA-256 hash chain (Postgres trigger blocks UPDATE/DELETE), verified on every read.
 - `/api/metrics` – Prometheus.
@@ -30,7 +31,7 @@ npx tsx agent/omega-sync.mts --url https://<control-plane> --interval 60 \
   [--apply --automaton-dist "$(npm root -g)/@conway/automaton/dist"]
 ```
 
-`state.db` is opened read-only. `--apply` executes queued commands with the automaton's own `topupCredits()` / `updateSoul()` after re-checking the creator signature locally.
+`state.db` is opened read-only. `--keep-alive` buys a Conway credit topup (default $5, max $25 per 24 h) from the agent's own USDC whenever credits drop below 50¢; it cannot help once the wallet is empty. `--apply` executes queued commands with the automaton's own `topupCredits()` / `updateSoul()` (payouts: ERC-20 `transfer` to `PAYOUT_WALLET`; the agent needs Base ETH for gas) after re-checking the creator signature locally.
 
 ## Test
 

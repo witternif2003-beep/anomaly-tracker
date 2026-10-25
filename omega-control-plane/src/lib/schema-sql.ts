@@ -44,7 +44,7 @@ CREATE TABLE IF NOT EXISTS treasury_policies (
 CREATE TABLE IF NOT EXISTS agent_commands (
   id BIGSERIAL PRIMARY KEY,
   agent_address TEXT NOT NULL REFERENCES agents(address) ON DELETE CASCADE,
-  type TEXT NOT NULL CHECK (type IN ('topup','soul_update')),
+  type TEXT NOT NULL CHECK (type IN ('topup','soul_update','payout')),
   payload JSONB NOT NULL,
   message TEXT NOT NULL,
   creator_signature TEXT NOT NULL,
@@ -55,6 +55,8 @@ CREATE TABLE IF NOT EXISTS agent_commands (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS idx_commands_agent ON agent_commands(agent_address, status);
+ALTER TABLE agent_commands DROP CONSTRAINT IF EXISTS agent_commands_type_check;
+ALTER TABLE agent_commands ADD CONSTRAINT agent_commands_type_check CHECK (type IN ('topup','soul_update','payout'));
 
 CREATE TABLE IF NOT EXISTS audit_log (
   seq BIGSERIAL PRIMARY KEY,

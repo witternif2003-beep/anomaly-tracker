@@ -43,8 +43,8 @@ const TIER_TONE: Record<string, string> = {
   dead: "border-bad bg-bad/20 text-bad",
 };
 
-export function TierBadge({ tier }: { tier?: string | null }) {
-  if (!tier) return <span className="rounded border border-line px-2 py-0.5 font-mono text-[11px] text-dim">no snapshot</span>;
+export function TierBadge({ tier, hasSnapshot = true }: { tier?: string | null; hasSnapshot?: boolean }) {
+  if (!tier) return <span className="rounded border border-line px-2 py-0.5 font-mono text-[11px] text-dim">{hasSnapshot ? "tier n/a (no credits reading)" : "no snapshot"}</span>;
   return <span className={`rounded border px-2 py-0.5 font-mono text-[11px] ${TIER_TONE[tier] ?? "border-line text-dim"}`}>{tier}</span>;
 }
 

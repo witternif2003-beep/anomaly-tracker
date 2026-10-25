@@ -1,5 +1,5 @@
 // Shared by browser and server: the exact text a creator signs for a command.
-export type CommandType = "topup" | "soul_update";
+export type CommandType = "topup" | "soul_update" | "payout";
 
 export interface CommandEnvelope {
   agent: string;
@@ -39,7 +39,7 @@ export function parseCommandMessage(message: string): CommandEnvelope | null {
   const nonce = field(4, "nonce");
   const issuedAt = field(5, "issuedAt");
   if (!agent || !type || !payloadRaw || !nonce || !issuedAt) return null;
-  if (type !== "topup" && type !== "soul_update") return null;
+  if (type !== "topup" && type !== "soul_update" && type !== "payout") return null;
   try {
     const payload = JSON.parse(payloadRaw);
     if (!payload || typeof payload !== "object" || Array.isArray(payload)) return null;

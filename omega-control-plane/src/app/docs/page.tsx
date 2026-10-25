@@ -1,4 +1,5 @@
 import { Card } from "@/components/ui";
+import { PAYOUT_WALLET } from "@/lib/payout";
 
 const Code = ({ children }: { children: string }) => <pre className="overflow-x-auto rounded bg-bg p-3 font-mono text-xs">{children}</pre>;
 
@@ -19,11 +20,21 @@ npx tsx agent/omega-sync.mts --url https://<this-host> --interval 60`}</Code>
       </Card>
       <Card title="3 · (optional) let the agent execute creator-signed commands">
         <p className="mb-2 text-sm text-dim">
-          With <span className="font-mono">--apply</span> the script pulls commands (topup, soul_update), re-verifies the creator signature locally against automaton.json creatorAddress, executes them with the automaton&apos;s own code
-          (<span className="font-mono">conway/topup.js</span>, <span className="font-mono">soul/tools.js</span>) and posts a signed result.
+          With <span className="font-mono">--apply</span> the script pulls commands (topup, soul_update, payout), re-verifies the creator signature locally against automaton.json creatorAddress, executes them with the automaton&apos;s own code
+          (<span className="font-mono">conway/topup.js</span>, <span className="font-mono">soul/tools.js</span>) and posts a signed result. Payouts are a USDC transfer on Base from the agent wallet to the
+          fixed payout wallet <span className="break-all font-mono">{PAYOUT_WALLET}</span>; any other destination is refused by both the server and the agent.
         </p>
         <Code>{`npx tsx agent/omega-sync.mts --url https://<this-host> --interval 60 \\
   --apply --automaton-dist "$(npm root -g)/@conway/automaton/dist"`}</Code>
+      </Card>
+      <Card title="4 · (optional) keep-alive">
+        <p className="mb-2 text-sm text-dim">
+          With <span className="font-mono">--keep-alive</span>, when credits fall below 50¢ (below the automaton&apos;s normal tier) the script buys one Conway credit topup from the agent&apos;s own USDC via x402, at most
+          the daily cap. Attempts are logged to <span className="font-mono">~/.automaton/omega-keepalive.json</span>. It cannot keep an agent alive once its wallet has no USDC.
+        </p>
+        <Code>{`npx tsx agent/omega-sync.mts --url https://<this-host> --interval 60 \\
+  --keep-alive --keep-alive-usd 5 --keep-alive-daily-cap 25 \\
+  --automaton-dist "$(npm root -g)/@conway/automaton/dist"`}</Code>
       </Card>
       <Card title="Endpoints">
         <Code>{`GET  /api/health                     server + database status

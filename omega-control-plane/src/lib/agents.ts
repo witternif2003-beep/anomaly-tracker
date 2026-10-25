@@ -4,6 +4,8 @@ import { sameAddress } from "./address";
 import { parseCommandMessage, pullMessage, type CommandEnvelope } from "./command-message";
 import { HttpError } from "./env";
 import type { SnapshotPayload } from "./snapshot";
+import { readUsdcUnits } from "./chain";
+import { isPayoutAmount, PAYOUT_WALLET, usdcUnits } from "./payout";
 import { TOPUP_TIERS_USD } from "./survival";
 
 export interface AgentRow {
@@ -104,6 +106,27 @@ export async function validateCommand(
         AND status NOT IN ('failed','rejected') AND created_at > now() - interval '24 hours'`;
     if (Number(total) + amount > policy.daily_topup_cap_usd) {
       throw new HttpError(403, `treasury policy: 24 h topup cap $${policy.daily_topup_cap_usd} (already $${Number(total)})`);
+    }
+  } else if (env.type === "payout") {
+    const keys = Object.keys(env.payload).sort().join(",");
+    if (keys !== "amountUsd,to" || !sameAddress(String(env.payload.to), PAYOUT_WALLET)) {
+      throw new HttpError(400, `payouts can only go to the fixed payout wallet ${PAYOUT_WALLET}`);
+    }
+    if (!isPayoutAmount(env.payload.amountUsd)) throw new HttpError(400, "amountUsd must be a positive USD amount with at most 2 decimals");
+    const policy = await getPolicy(sql, agent.address);
+    const balance = await readUsdcUnits(agent.address as Hex).catch(() => {
+      throw new HttpError(502, "could not read the agent's USDC balance on Base");
+    });
+    const [{ inflight }] = await sql<{ inflight: string | null }[]>`
+      SELECT COALESCE(SUM((payload->>'amountUsd')::numeric), 0) AS inflight FROM agent_commands
+      WHERE agent_address = ${agent.address} AND type = 'payout' AND status IN ('pending','delivered')`;
+    const surplus = balance - usdcUnits(policy.surplus_threshold_usd) - usdcUnits(Number(inflight));
+    if (usdcUnits(env.payload.amountUsd) > surplus) {
+      const fmt = (u: bigint) => (Number(u) / 1e6).toFixed(2);
+      throw new HttpError(
+        403,
+        `treasury policy: payout must leave the $${policy.surplus_threshold_usd} reserve; available surplus is $${surplus > 0n ? fmt(surplus) : "0.00"} (balance $${fmt(balance)}, in flight $${Number(inflight)})`,
+      );
     }
   } else if (env.type === "soul_update") {
     const content = env.payload.content;
