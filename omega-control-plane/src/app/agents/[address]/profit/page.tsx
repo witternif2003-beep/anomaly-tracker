@@ -115,7 +115,27 @@ export default function ProfitLive() {
             <Stat label="Gate status" value={v.gateStatus} tone={v.gateStatus === "PASS" ? "good" : "warn"} />
             <Stat label="MinTRL (95%)" value={v.minTrl == null || !Number.isFinite(v.minTrl) ? "+∞" : v.minTrl.toFixed(1)} hint="daily obs needed" />
           </div>
-          <RowsTable rows={v.gates as unknown as Record<string, unknown>[]} columns={["gate", "threshold", "value", "status", "reason"]} />
+          <div className="hidden md:block">
+            <RowsTable rows={v.gates as unknown as Record<string, unknown>[]} columns={["gate", "threshold", "value", "status", "reason"]} />
+          </div>
+          <ul className="space-y-2 md:hidden">
+            {v.gates.map((g) => (
+              <li key={g.gate} className="rounded border border-line p-2 text-xs">
+                <div className="flex items-start justify-between gap-2">
+                  <span className="font-medium">{g.gate}</span>
+                  <span className={`font-mono ${GATE_TONE[g.status]}`}>{g.status}</span>
+                </div>
+                <dl className="mt-1 grid grid-cols-[5rem_1fr] gap-x-2 gap-y-0.5 font-mono text-dim">
+                  <dt>threshold</dt>
+                  <dd className="break-words text-fg">{String(g.threshold)}</dd>
+                  <dt>value</dt>
+                  <dd className="break-words text-fg">{String(g.value)}</dd>
+                  <dt>reason</dt>
+                  <dd className="break-words">{String(g.reason)}</dd>
+                </dl>
+              </li>
+            ))}
+          </ul>
           <div className="mt-2 flex flex-wrap gap-3 text-[11px]">
             {v.gates.map((g) => (
               <span key={g.gate} className={GATE_TONE[g.status]}>
