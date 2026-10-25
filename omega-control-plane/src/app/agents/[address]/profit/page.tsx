@@ -81,7 +81,7 @@ export default function ProfitLive() {
             </div>
           </Card>
           <Card title="Operator target vs realised" source={`DAILY_TARGET_USD = ${DAILY_TARGET_USD} (src/lib/pnl.ts) — operator goal for comparison, not a forecast or guarantee`}>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
               <Stat label="Target / day" value={usd(targetCents)} hint="goal, not a projection" />
               <Stat label="Realised pace / day" value={per24 == null ? "—" : usd(per24)} tone={tone(per24)} hint="net / hour × 24 (measured, not projected forward)" />
               <Stat label="Gap" value={per24 == null ? "—" : usd(per24 - targetCents)} tone={per24 == null ? undefined : per24 >= targetCents ? "good" : "bad"} />

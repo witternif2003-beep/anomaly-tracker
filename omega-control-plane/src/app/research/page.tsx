@@ -25,7 +25,7 @@ function Cite({ k }: { k: Key }) {
     </span>
   );
 }
-const F = ({ children }: { children: React.ReactNode }) => <span className="font-mono text-[12px] text-fg">{children}</span>;
+const F = ({ children }: { children: React.ReactNode }) => <span className="break-all font-mono text-[12px] text-fg">{children}</span>;
 const P = ({ children }: { children: React.ReactNode }) => <p className="mb-2 text-sm leading-relaxed text-dim">{children}</p>;
 
 const EVIDENCE: [string, string, React.ReactNode][] = [
@@ -102,7 +102,7 @@ export default function Research() {
 
       <Card title="6 · Evidence table">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
+          <table className="w-full table-fixed break-words text-left text-xs">
             <thead className="text-dim">
               <tr>
                 <th className="py-1 pr-2">claim</th>

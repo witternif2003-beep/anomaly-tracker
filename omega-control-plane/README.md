@@ -10,7 +10,8 @@ Next.js 16 + Postgres dashboard for [Conway-Research/automaton](https://github.c
 - **Payout** – USDC on Base to the fixed payout wallet `0x4D11f9f5bB127D4c2e971c2e62b93CAF957b7F0d` (`src/lib/payout.ts`) only, never more than the balance above the treasury reserve; sent by the agent wallet.
 - **Soul / Treasury** – creator-signed (EIP-191) commands checked against treasury policy; the agent executes them with its own wallet and code. The control plane holds no keys and never moves funds.
 - **Audit** – append-only SHA-256 hash chain (Postgres trigger blocks UPDATE/DELETE), verified on every read.
-- `/api/metrics` – Prometheus.
+- `/api/metrics` – Prometheus: per-agent credits, turns, snapshot age, survival tier, realised net/revenue/cost, net and burn per hour, credit runway, track-record days, PSR and edge-gate status. `docker compose --profile observability up` adds Prometheus with alert rules (runway < 24 h, stale snapshot, 6 h of falling net, critical tier).
+- Sign-in: Phantom's EVM provider (`window.phantom.ethereum`) is used first, then any injected wallet. In a browser with no wallet (e.g. iPhone Safari), the sign-in button offers "Open in Phantom", which reopens the page in Phantom's in-app browser.
 
 ## Run
 

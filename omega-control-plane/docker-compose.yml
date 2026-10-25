@@ -26,13 +26,36 @@ services:
     configs:
       - source: prometheus
         target: /etc/prometheus/prometheus.yml
+      - source: prometheus_rules
+        target: /etc/prometheus/omega-alerts.yml
     ports: ["9090:9090"]
 configs:
   prometheus:
     content: |
+      rule_files: [/etc/prometheus/omega-alerts.yml]
       scrape_configs:
         - job_name: omega
           metrics_path: /api/metrics
           static_configs: [{ targets: ["app:3000"] }]
+  prometheus_rules:
+    content: |
+      groups:
+        - name: omega
+          rules:
+            - alert: OmegaAgentRunwayLow
+              expr: omega_agent_credit_runway_hours < 24
+              for: 10m
+              annotations: { summary: "{{ $$labels.address }} has under 24 h of Conway credits at current burn" }
+            - alert: OmegaAgentSnapshotStale
+              expr: omega_agent_snapshot_age_seconds > 900
+              for: 5m
+              annotations: { summary: "{{ $$labels.address }} has not synced a signed snapshot for 15 min" }
+            - alert: OmegaAgentLosingMoney
+              expr: omega_agent_net_cents_per_hour < 0
+              for: 6h
+              annotations: { summary: "{{ $$labels.address }} net P&L has fallen for 6 h" }
+            - alert: OmegaAgentCriticalTier
+              expr: omega_agent_survival_tier{tier=~"critical|dead"} == 1
+              annotations: { summary: "{{ $$labels.address }} is in survival tier {{ $$labels.tier }}" }
 volumes:
   pgdata:
