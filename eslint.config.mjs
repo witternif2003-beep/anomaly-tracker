@@ -14,6 +14,7 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     "node_modules/**",
     "vendor/**",
+    "omega-control-plane/**",
   ]),
   js.configs.recommended,
   ...tseslint.configs.recommended,
