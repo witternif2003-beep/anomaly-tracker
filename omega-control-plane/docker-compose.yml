@@ -1,0 +1,38 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: omega
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+      POSTGRES_DB: omega
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "omega"]
+      interval: 5s
+      retries: 20
+  app:
+    build: .
+    depends_on:
+      postgres: { condition: service_healthy }
+    environment:
+      DATABASE_URL: postgres://omega:${POSTGRES_PASSWORD}@postgres:5432/omega
+      SESSION_SECRET: ${SESSION_SECRET:?set SESSION_SECRET (>= 32 chars)}
+      BASE_RPC_URL: ${BASE_RPC_URL:-https://mainnet.base.org}
+    ports: ["3000:3000"]
+  prometheus:
+    image: prom/prometheus:v2.53.0
+    profiles: [observability]
+    command: ["--config.file=/etc/prometheus/prometheus.yml"]
+    configs:
+      - source: prometheus
+        target: /etc/prometheus/prometheus.yml
+    ports: ["9090:9090"]
+configs:
+  prometheus:
+    content: |
+      scrape_configs:
+        - job_name: omega
+          metrics_path: /api/metrics
+          static_configs: [{ targets: ["app:3000"] }]
+volumes:
+  pgdata:
