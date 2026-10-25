@@ -19,6 +19,7 @@ export function sql(): Sql {
     const local = /@(localhost|127\.0\.0\.1|postgres)(:|\/)/.test(env.databaseUrl);
     globalForDb.__omegaSql = postgres(env.databaseUrl, {
       max: 5,
+      prepare: false,
       idle_timeout: 20,
       ssl: local ? false : "require",
       onnotice: () => {},
