@@ -1,0 +1,28 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg: #0b0e14;
+  --color-panel: #111827;
+  --color-line: #1c2633;
+  --color-fg: #ffffff;
+  --color-dim: #8b98a8;
+  --color-accent: #00ffff;
+  --color-good: #3ddc97;
+  --color-warn: #c2850c;
+  --color-bad: #f45d79;
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+html,
+body {
+  background: var(--color-bg);
+  color: var(--color-fg);
+  font-family: var(--font-sans);
+}
+
+input,
+textarea,
+select {
+  font-size: 16px; /* prevents iOS zoom on focus */
+}

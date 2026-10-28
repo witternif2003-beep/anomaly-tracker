@@ -14,6 +14,7 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     "node_modules/**",
     "vendor/**",
+    "omega-ops/**",
   ]),
   js.configs.recommended,
   ...tseslint.configs.recommended,
