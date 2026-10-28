@@ -353,3 +353,19 @@ export async function auditHead(sql: postgres.Sql): Promise<string> {
 }
 
 export { mem as processMemory };
+
+/**
+ * Keeps the feed current between scheduled runs: when the newest batch is older than
+ * BATCH_STALE_MIN minutes, a page view starts one. The running-batch guard, minimum
+ * interval and spending limits in runBatch still apply.
+ */
+export async function refreshIfStale(): Promise<void> {
+  try {
+    const sql = await db();
+    const [last] = await sql<{ started_at: Date; status: string }[]>`SELECT started_at, status FROM ops_batch ORDER BY id DESC LIMIT 1`;
+    if (last && (last.status === "running" || Date.now() - new Date(last.started_at).getTime() < env.batchStaleMin * 60_000)) return;
+    await runBatch({ trigger: "freshness", actor: "system", role: "operator" });
+  } catch (e) {
+    console.error("[freshness] batch not started:", e instanceof Error ? e.message : e);
+  }
+}

@@ -15,6 +15,7 @@ export const env = {
   nvdApiKey: process.env.NVD_API_KEY ?? "",
   nvdWindowHours: Number(process.env.NVD_WINDOW_HOURS ?? 24),
   batchMinIntervalSec: Number(process.env.BATCH_MIN_INTERVAL_SEC ?? 60),
+  batchStaleMin: Number(process.env.BATCH_STALE_MIN ?? 30),
 };
 
 export function sessionSecret(): string {

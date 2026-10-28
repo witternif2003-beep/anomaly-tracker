@@ -20,6 +20,10 @@ Continuous-batch exposure register for defensive operations. Each batch reads th
 
 Exposure index = `min(100, 40·EPSS + 4·CVSS + 15 if catalogued + 5 if extortion use is known)`.
 
+## Cadence
+
+Daily scheduler run (`vercel.json`), operator "run batch now", and a freshness trigger: a Command page view starts a batch when the newest one is older than `BATCH_STALE_MIN` (default 30) minutes.
+
 ## Safeguards
 
 - Operator passphrase → HMAC-signed httpOnly session (admin). API keys (viewer/operator) stored as SHA-256 digests, revocable. Scheduler secret for `/api/cron/batch`.

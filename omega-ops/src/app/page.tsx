@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { after } from "next/server";
 import { AnomalyRecord } from "@/components/anomaly-record";
 import { AutoRefresh } from "@/components/refresh";
 import { RunBatch } from "@/components/run-batch";
@@ -7,9 +8,11 @@ import { db } from "@/lib/db";
 import { FINDING_COLUMNS, type FindingRow } from "@/lib/findings";
 import { batchLabel } from "@/lib/narrative";
 import { fmtTs, num, safe } from "@/lib/safe";
+import { refreshIfStale } from "@/lib/pipeline";
 import { balance } from "@/lib/treasury";
 
 export const dynamic = "force-dynamic";
+export const maxDuration = 60;
 
 interface BatchRow {
   id: string;
@@ -25,6 +28,7 @@ interface BatchRow {
 }
 
 export default async function Command() {
+  after(refreshIfStale);
   const { data, error } = await safe(async () => {
     const sql = await db();
     const batches = await sql<BatchRow[]>`SELECT id, started_at, status, trigger, duration_ms, new_findings, changed_findings, opened_incidents, narrative, error FROM ops_batch ORDER BY id DESC LIMIT 6`;
@@ -50,7 +54,7 @@ export default async function Command() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="font-mono text-lg font-bold tracking-wide">COMMAND · CONTINUOUS BATCH FEED</h1>
-          <p className="text-sm text-dim">Every batch reads the live sources, numbers new anomalies in sequence and seals a narrative written only from what it read.</p>
+          <p className="text-sm text-dim">A new batch starts on schedule, on operator request, or when the newest batch is over 30 minutes old. Every batch reads the live sources, numbers new anomalies in sequence and seals a narrative written only from what it read.</p>
         </div>
         <div className="flex items-center gap-2">
           <AutoRefresh seconds={30} />
