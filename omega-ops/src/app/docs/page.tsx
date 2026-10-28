@@ -14,6 +14,7 @@ const ROUTES: [string, string, string, string][] = [
   ["GET", "/api/incidents?state=", "open", "Incident desk"],
   ["PATCH", "/api/incidents/:id", "operator", "Change state, priority, assignee or note"],
   ["GET/POST", "/api/assets", "open / operator", "Authorized asset inventory"],
+  ["DELETE", "/api/assets/:id", "admin", "Remove an asset and its asset-scoped incidents (audited)"],
   ["GET", "/api/groups", "open", "Asset groups with matched anomalies and open incidents"],
   ["GET", "/api/groups/:group", "open", "One asset group: its assets and every matched anomaly with its M01–M50 block"],
   ["GET", "/api/telemetry", "open", "DAG, per-stage aggregates, batch series, runtime"],
