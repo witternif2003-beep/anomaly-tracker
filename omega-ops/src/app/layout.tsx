@@ -17,7 +17,7 @@ async function viewMode(): Promise<"mobile" | "desktop"> {
 
 export async function generateViewport(): Promise<Viewport> {
   return (await viewMode()) === "desktop"
-    ? { width: String(DESKTOP_WIDTH), themeColor: "#0b0e14" }
+    ? { width: String(DESKTOP_WIDTH), initialScale: undefined, themeColor: "#0b0e14" }
     : { width: "device-width", initialScale: 1, themeColor: "#0b0e14" };
 }
 
