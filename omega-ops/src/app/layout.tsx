@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
+import { cookies } from "next/headers";
 import Link from "next/link";
 import { AuthBar } from "@/components/auth";
+import { DESKTOP_WIDTH, VIEW_COOKIE, ViewToggle } from "@/components/view-toggle";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -8,7 +10,15 @@ export const metadata: Metadata = {
   description: "Continuous-batch exposure register, incident desk, orchestration graph, runtime telemetry and sealed audit trail.",
 };
 
-export const viewport: Viewport = { width: "device-width", initialScale: 1, themeColor: "#0b0e14" };
+async function viewMode(): Promise<"mobile" | "desktop"> {
+  return (await cookies()).get(VIEW_COOKIE)?.value === "desktop" ? "desktop" : "mobile";
+}
+
+export async function generateViewport(): Promise<Viewport> {
+  return (await viewMode()) === "desktop"
+    ? { width: String(DESKTOP_WIDTH), themeColor: "#0b0e14" }
+    : { width: "device-width", initialScale: 1, themeColor: "#0b0e14" };
+}
 
 const NAV = [
   ["/", "Command"],
@@ -23,7 +33,8 @@ const NAV = [
   ["/docs", "API"],
 ] as const;
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const view = await viewMode();
   return (
     <html lang="en" className="h-full antialiased">
       <body className="flex min-h-full flex-col">
@@ -32,7 +43,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             <Link href="/" className="font-mono text-sm font-bold tracking-widest text-accent">
               Ω OMEGA PROTOCOL
             </Link>
-            <div className="ml-auto">
+            <div className="ml-auto flex items-center gap-2">
+              <ViewToggle initial={view} />
               <AuthBar />
             </div>
             <nav className="-mx-4 flex w-full gap-3 overflow-x-auto px-4 text-sm text-dim md:mx-0 md:w-auto md:px-0">
