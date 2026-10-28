@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { ZodError } from "zod";
 import { HttpError } from "./env";
 
 export function json(data: unknown, init?: ResponseInit) {
@@ -14,6 +15,10 @@ export function handle<A extends unknown[]>(fn: (...args: A) => Promise<Response
       return await fn(...args);
     } catch (err) {
       if (err instanceof HttpError) return json({ error: err.message }, { status: err.status });
+      if (err instanceof ZodError) {
+        const detail = err.issues.map((i) => `${i.path.join(".") || "body"}: ${i.message}`).join("; ");
+        return json({ error: `invalid request — ${detail}` }, { status: 400 });
+      }
       console.error(err);
       return json({ error: "internal error" }, { status: 500 });
     }

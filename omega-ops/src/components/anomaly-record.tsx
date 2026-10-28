@@ -28,7 +28,7 @@ export function AnomalyRecord({ f, metrics, incident, compact = false }: { f: Fi
           </span>
         )}
       </header>
-      <dl className="grid gap-y-0.5 sm:grid-cols-[11rem_1fr]">
+      <dl className="grid grid-cols-1 gap-y-0.5 sm:grid-cols-[11rem_minmax(0,1fr)]">
         <dt className="text-dim">IDENTIFIER</dt>
         <dd className="break-words">{f.cve_id}</dd>
         <dt className="text-dim">ANOMALY CLASS</dt>
@@ -80,7 +80,7 @@ export function AnomalyRecord({ f, metrics, incident, compact = false }: { f: Fi
       {metrics && (
         <div className="mt-3 border-t border-line pt-3">
           <div className="mb-1 text-dim">· [50-METRIC ANOMALY BLOCK – ANOMALY {anomalyLabel(f)}]</div>
-          <div className="grid gap-x-4 gap-y-0.5 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-x-4 gap-y-0.5 sm:grid-cols-2 lg:grid-cols-3">
             {metrics.map((m) => (
               <div key={m.no} className="flex gap-2">
                 <span className="text-dim">{m.no}</span>

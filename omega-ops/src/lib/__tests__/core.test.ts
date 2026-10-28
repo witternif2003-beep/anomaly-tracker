@@ -80,3 +80,16 @@ describe("plainText", () => {
     expect(plainText(null)).toBeNull();
   });
 });
+
+describe("handle", () => {
+  it("maps schema validation failures to 400", async () => {
+    const { handle } = await import("@/lib/http");
+    const { z } = await import("zod");
+    const res = await handle(async () => {
+      z.object({ units: z.number() }).parse({ units: null });
+      return new Response("unreachable");
+    })();
+    expect(res.status).toBe(400);
+    expect((await res.json()).error).toMatch(/units/);
+  });
+});

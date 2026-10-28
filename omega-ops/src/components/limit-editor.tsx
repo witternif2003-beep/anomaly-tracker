@@ -9,7 +9,13 @@ export function LimitEditor({ batchMax, dailyMax }: { batchMax: number; dailyMax
   const [msg, setMsg] = useState<string | null>(null);
   async function save(key: "batch_max" | "daily_max") {
     setMsg(null);
-    const res = await fetch("/api/limits", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ key, units: Number(vals[key]) }) });
+    const raw = vals[key].trim();
+    const units = Number(raw);
+    if (raw === "" || !Number.isFinite(units) || units < 0 || units > 100000) {
+      setMsg(`${key} must be a number from 0 to 100000`);
+      return;
+    }
+    const res = await fetch("/api/limits", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ key, units }) });
     const data = await res.json();
     setMsg(res.ok ? `${key} saved` : (data.error ?? "update failed"));
     if (res.ok) router.refresh();
