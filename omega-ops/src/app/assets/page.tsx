@@ -9,7 +9,7 @@ export default async function Assets() {
   const { data, error } = await safe(async () => {
     const sql = await db();
     return sql`
-      SELECT a.id, a.name, a.class, a.vendor, a.product, a.criticality, a.owner,
+      SELECT a.id, a.name, a.class, a.vendor, a.product, a.criticality, a.owner, a.asset_group,
         (SELECT count(*) FROM ops_finding f WHERE lower(COALESCE(f.product,'')) = lower(COALESCE(a.product,'~')) OR lower(COALESCE(f.vendor,'')) = lower(COALESCE(a.vendor,'~'))) AS matched_anomalies
       FROM ops_asset a ORDER BY a.id DESC LIMIT 200`;
   });

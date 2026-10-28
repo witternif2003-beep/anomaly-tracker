@@ -95,6 +95,9 @@ CREATE TABLE IF NOT EXISTS ops_asset (
   created_by TEXT
 );
 
+ALTER TABLE ops_asset ADD COLUMN IF NOT EXISTS asset_group TEXT;
+CREATE INDEX IF NOT EXISTS ops_asset_group ON ops_asset (lower(asset_group));
+
 CREATE TABLE IF NOT EXISTS ops_incident (
   id BIGSERIAL PRIMARY KEY,
   cve_id TEXT NOT NULL REFERENCES ops_finding(cve_id) ON DELETE CASCADE,

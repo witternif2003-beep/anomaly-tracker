@@ -13,6 +13,7 @@ const Asset = z.object({
   product: z.string().trim().max(160).nullable().default(null),
   criticality: z.enum(["standard", "elevated", "critical"]).default("standard"),
   owner: z.string().trim().max(64).nullable().default(null),
+  group: z.string().trim().min(1).max(80).nullable().default(null),
 });
 
 export const GET = handle(async () => {
@@ -31,8 +32,8 @@ export const POST = handle(async (req: Request) => {
   const a = Asset.parse(await readJson(req));
   const sql = await db();
   const [row] = await sql`
-    INSERT INTO ops_asset (name, class, vendor, product, criticality, owner, created_by)
-    VALUES (${a.name}, ${a.class}, ${a.vendor}, ${a.product}, ${a.criticality}, ${a.owner}, ${p.actor}) RETURNING *`;
+    INSERT INTO ops_asset (name, class, vendor, product, criticality, owner, asset_group, created_by)
+    VALUES (${a.name}, ${a.class}, ${a.vendor}, ${a.product}, ${a.criticality}, ${a.owner}, ${a.group}, ${p.actor}) RETURNING *`;
   await appendAudit(sql, { actor: p.actor, role: p.role, action: "asset.created", subject: `asset:${row.id}`, details: a, ipAddress: clientIp(req) });
   return json({ asset: row }, { status: 201 });
 });

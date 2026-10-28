@@ -1,4 +1,5 @@
 import type postgres from "postgres";
+import { assetMatch } from "./groups";
 import { appendAudit, GENESIS_HASH } from "./audit";
 import { db } from "./db";
 import { env, HttpError } from "./env";
@@ -264,7 +265,15 @@ export async function runBatch(opts: { trigger: string; actor: string; role: str
         WHERE f.last_seen_batch = ${batchId} AND f.exposure_score >= ${INCIDENT_THRESHOLD}
         ON CONFLICT (cve_id, asset_id) DO NOTHING
         RETURNING id`;
-      return { value: rows.length, rowsOut: rows.length };
+      const scoped = await sql<{ id: string }[]>`
+        INSERT INTO ops_incident (cve_id, asset_id, opened_batch, priority)
+        SELECT f.cve_id, a.id, ${batchId},
+               CASE WHEN f.exposure_score >= 85 THEN 'p1' WHEN f.exposure_score >= 72 THEN 'p2' ELSE 'p3' END
+        FROM ops_finding f JOIN ops_asset a ON ${assetMatch(sql)}
+        WHERE f.last_seen_batch = ${batchId} AND f.exposure_score >= ${INCIDENT_THRESHOLD} AND a.asset_group IS NOT NULL
+        ON CONFLICT (cve_id, asset_id) DO NOTHING
+        RETURNING id`;
+      return { value: rows.length + scoped.length, rowsOut: rows.length + scoped.length };
     });
 
     const narrative = await stages.run("narrate", async () => {
