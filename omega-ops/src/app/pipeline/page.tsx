@@ -28,7 +28,7 @@ export default async function Pipeline() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-mono text-lg font-bold">ORCHESTRATION GRAPH</h1>
-          <p className="text-sm text-dim">The nine-stage batch DAG, coloured by the most recent run{data?.last ? ` (${batchLabel(data.last.id)})` : ""}.</p>
+          <p className="text-sm text-dim">The ten-stage batch DAG, coloured by the most recent run{data?.last ? ` (${batchLabel(data.last.id)})` : ""}.</p>
         </div>
         <AutoRefresh seconds={15} />
       </div>

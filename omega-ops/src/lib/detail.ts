@@ -1,10 +1,11 @@
+import { type Attribution, attributionFor } from "./attack";
 import { db } from "./db";
 import { HttpError } from "./env";
 import { FINDING_COLUMNS, type FindingRow } from "./findings";
 import { metricBlock, type Metric } from "./metrics";
 import { auditHead } from "./pipeline";
 
-export async function anomalyDetail(cve: string): Promise<{ anomaly: FindingRow; metrics: Metric[]; incident: { id: string; state: string; priority: string; opened_at: Date } | null }> {
+export async function anomalyDetail(cve: string): Promise<{ anomaly: FindingRow; metrics: Metric[]; incident: { id: string; state: string; priority: string; opened_at: Date } | null; attribution: Attribution }> {
   const sql = await db();
   const [row] = await sql.unsafe<FindingRow[]>(`SELECT ${FINDING_COLUMNS} FROM ops_finding WHERE cve_id = $1 OR anomaly_no::text = $1`, [cve.toUpperCase()]);
   if (!row) throw new HttpError(404, "no such anomaly");
@@ -38,5 +39,5 @@ export async function anomalyDetail(cve: string): Promise<{ anomaly: FindingRow;
     incidentOpenedAt: incident?.opened_at ?? null,
     observedAt: new Date().toISOString(),
   });
-  return { anomaly: row, metrics, incident: incident ?? null };
+  return { anomaly: row, metrics, incident: incident ?? null, attribution: await attributionFor(sql, row.cve_id) };
 }

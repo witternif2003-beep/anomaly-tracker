@@ -52,7 +52,7 @@ export default async function Incidents() {
             <p className="mt-1 text-dim">INC-{i.id} · opened {fmtTs(i.opened_at)} · batch {i.opened_batch ?? "—"} · asset {i.asset_name ?? "unscoped"} · assignee {i.assignee ?? "—"}</p>
             {records.has(i.cve_id) && (
               <div className="mt-3">
-                <AnomalyRecord f={records.get(i.cve_id)!.anomaly} metrics={records.get(i.cve_id)!.metrics} incident={{ state: i.state, priority: i.priority }} />
+                <AnomalyRecord f={records.get(i.cve_id)!.anomaly} metrics={records.get(i.cve_id)!.metrics} incident={{ state: i.state, priority: i.priority }} attribution={records.get(i.cve_id)!.attribution} />
               </div>
             )}
           </li>

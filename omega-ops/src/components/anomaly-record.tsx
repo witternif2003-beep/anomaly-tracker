@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { anomalyLabel, classOf, codename, type FindingRow, plainText } from "@/lib/findings";
+import { ATTACK_SOURCE, type Attribution } from "@/lib/attack";
 import type { Metric } from "@/lib/metrics";
 
 const SRC_TONE: Record<Metric["source"], string> = {
@@ -13,7 +14,7 @@ const SRC_TONE: Record<Metric["source"], string> = {
 const d = (v: string | Date | null) => (v ? String(v instanceof Date ? v.toISOString() : v).slice(0, 10) : "—");
 
 /** One anomaly in the fixed record layout used across every batch. */
-export function AnomalyRecord({ f, metrics, incident, compact = false }: { f: FindingRow; metrics?: Metric[]; incident?: { state: string; priority: string } | null; compact?: boolean }) {
+export function AnomalyRecord({ f, metrics, incident, attribution, compact = false }: { f: FindingRow; metrics?: Metric[]; incident?: { state: string; priority: string } | null; attribution?: Attribution; compact?: boolean }) {
   const ransomware = f.ransomware?.toLowerCase() === "known";
   return (
     <article className="rounded-lg border border-line bg-panel p-4 font-mono text-[12px] leading-relaxed">
@@ -62,6 +63,44 @@ export function AnomalyRecord({ f, metrics, incident, compact = false }: { f: Fi
                 ? `Severity ${Number(f.cvss).toFixed(1)} with active exploitation catalogued.`
                 : "Active exploitation catalogued; no further distinguishing signal in the sources."}
         </dd>
+        {attribution && (
+          <>
+            <dt className="text-dim">ESPIONAGE ATTRIBUTION</dt>
+            <dd className="break-words">
+              {attribution.links.length ? (
+                <ol className="space-y-1.5">
+                  {attribution.links.map((l, n) => (
+                    <li key={l.actor_id}>
+                      ({n + 1}){" "}
+                      <a className="text-accent hover:underline" href={l.actor_url} target="_blank" rel="noreferrer">
+                        {l.actor_name} · {l.actor_id}
+                      </a>{" "}
+                      <span className="text-dim">ATT&amp;CK {l.actor_kind}</span>. {l.statement} <span className="text-dim">Basis: {l.espionage_note}</span>
+                      {l.citations.length > 0 && (
+                        <span className="block text-[11px] text-dim">
+                          cited by ATT&amp;CK:{" "}
+                          {l.citations.slice(0, 4).map((c, k) => (
+                            <span key={c.url}>
+                              {k > 0 && " · "}
+                              <a className="text-accent hover:underline break-all" href={c.url} target="_blank" rel="noreferrer">
+                                {c.name}
+                              </a>
+                            </span>
+                          ))}
+                        </span>
+                      )}
+                    </li>
+                  ))}
+                </ol>
+              ) : (
+                <span className="text-dim">No group or campaign that MITRE ATT&amp;CK{attribution.version ? ` v${attribution.version}` : ""} describes as an espionage actor is recorded exploiting this CVE.</span>
+              )}
+              <span className="block text-[11px] text-dim">
+                Attribution as published by MITRE ATT&amp;CK{attribution.version ? ` v${attribution.version}` : ""}, not an OMEGA finding. {ATTACK_SOURCE.notice}
+              </span>
+            </dd>
+          </>
+        )}
         <dt className="text-dim">SOURCE OF RECORD</dt>
         <dd className="break-all">
           <a className="text-accent hover:underline" href={`https://nvd.nist.gov/vuln/detail/${f.cve_id}`} target="_blank" rel="noreferrer">

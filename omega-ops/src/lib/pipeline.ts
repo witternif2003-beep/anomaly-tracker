@@ -1,5 +1,6 @@
 import type postgres from "postgres";
 import { assetMatch } from "./groups";
+import { ATTACK_REFRESH_HOURS, attackMeta, refreshAttack } from "./attack";
 import { appendAudit, GENESIS_HASH } from "./audit";
 import { db } from "./db";
 import { env, HttpError } from "./env";
@@ -7,13 +8,14 @@ import { FINDING_COLUMNS, type FindingRow } from "./findings";
 import { canonicalJson, sha256Hex } from "./hash";
 import { buildNarrative } from "./narrative";
 import { exposureScore, fetchEpss, fetchKev, fetchNvdByIds, fetchNvdWindow, type KevEntry, type NvdMetric } from "./sources";
-import { assertWithinLimits, costOf, recordSpend } from "./treasury";
+import { assertWithinLimits, balance, costOf, recordSpend } from "./treasury";
 
 /** Static shape of the ingestion graph; stage rows carry each run's measurements. */
 export const DAG: { name: string; dependsOn: string[]; detail: string }[] = [
   { name: "catalog_fetch", dependsOn: [], detail: "Read the exploited-vulnerability catalog" },
   { name: "window_fetch", dependsOn: [], detail: "Read records modified inside the change window" },
-  { name: "correlate", dependsOn: ["catalog_fetch", "window_fetch"], detail: "Select this batch's candidate anomalies" },
+  { name: "attribute", dependsOn: ["catalog_fetch"], detail: "Link catalogued CVEs to espionage-described ATT&CK groups and campaigns" },
+  { name: "correlate", dependsOn: ["catalog_fetch", "window_fetch", "attribute"], detail: "Select this batch's candidate anomalies" },
   { name: "enrich", dependsOn: ["correlate"], detail: "Attach severity scoring to candidates" },
   { name: "predict", dependsOn: ["enrich"], detail: "Attach exploit prediction to candidates" },
   { name: "persist", dependsOn: ["predict"], detail: "Number and upsert anomaly records" },
@@ -26,6 +28,7 @@ export const INCIDENT_THRESHOLD = 60;
 const MAX_CANDIDATES = 60;
 const MAX_BY_ID_LOOKUPS = 5;
 const RECENT_CATALOG_DAYS = 30;
+const ATTACK_ESTIMATE_BYTES = 56 * 1_048_576;
 
 const mb = (bytes: number) => Math.round((bytes / 1_048_576) * 100) / 100;
 
@@ -131,6 +134,34 @@ export async function runBatch(opts: { trigger: string; actor: string; role: str
       }
     });
 
+    const attributed = await stages.run("attribute", async () => {
+      const meta = await attackMeta(sql);
+      const stale = !meta || Date.now() - new Date(meta.fetched_at).getTime() > ATTACK_REFRESH_HOURS * 3_600_000;
+      let warning: string | undefined;
+      let readBytes = 0;
+      let requests = 0;
+      if (stale) {
+        const b = await balance(sql);
+        const estimate = costOf(ATTACK_ESTIMATE_BYTES) - 2;
+        if (estimate > b.dailyRemaining || estimate > b.available) {
+          warning = `reference refresh deferred: needs ~${estimate.toFixed(2)} simulated units, ${b.dailyRemaining.toFixed(2)} left today`;
+        } else {
+          requests = 1;
+          try {
+            const r = await refreshAttack(sql);
+            readBytes = r.bytes;
+            await recordSpend(sql, batchId, Math.round((r.bytes / 1_048_576) * 100) / 100, `reference refresh: MITRE ATT&CK v${r.version ?? "?"} (${r.links} CVE links)`, opts.actor);
+          } catch (e) {
+            warning = `reference refresh failed, using stored links: ${e instanceof Error ? e.message : String(e)}`;
+          }
+        }
+      }
+      const rows = await sql<{ cve_id: string }[]>`SELECT DISTINCT cve_id FROM ops_attribution`;
+      const set = new Set(rows.map((r) => r.cve_id));
+      const inCatalog = catalog.vulnerabilities.filter((e) => set.has(e.cveID)).length;
+      return { value: set, rowsIn: rows.length, rowsOut: inCatalog, bytes: readBytes || undefined, requests, warning };
+    });
+
     const candidates = await stages.run("correlate", async () => {
       const cutoff = Date.now() - RECENT_CATALOG_DAYS * 86_400_000;
       const seen = await sql<{ cve_id: string }[]>`SELECT cve_id FROM ops_finding`;
@@ -140,7 +171,7 @@ export async function runBatch(opts: { trigger: string; actor: string; role: str
         const inWindow = window.metrics.has(e.cveID);
         const fresh = Number.isFinite(addedAt) && addedAt >= cutoff;
         const unseen = !known.has(e.cveID);
-        const weight = (unseen ? 4 : 0) + (fresh ? 3 : 0) + (inWindow ? 2 : 0);
+        const weight = (unseen ? 4 : 0) + (fresh ? 3 : 0) + (inWindow ? 2 : 0) + (attributed.has(e.cveID) && unseen ? 3 : 0);
         return { entry: e, weight, addedAt };
       });
       const picked = scored
@@ -283,6 +314,13 @@ export async function runBatch(opts: { trigger: string; actor: string; role: str
       );
       const scoredCount = await sql<{ n: string }[]>`SELECT count(*) AS n FROM ops_finding WHERE last_seen_batch = ${batchId} AND cvss IS NOT NULL`;
       const predictedCount = await sql<{ n: string }[]>`SELECT count(*) AS n FROM ops_finding WHERE last_seen_batch = ${batchId} AND epss IS NOT NULL`;
+      const espionage = await sql.unsafe<(FindingRow & { actors: string[] })[]>(
+        `SELECT ${FINDING_COLUMNS.split(",").map((c) => `f.${c.trim()}`).join(", ")}, array_agg(a.actor_name || ' (' || a.actor_id || ')' ORDER BY a.actor_id) AS actors
+         FROM ops_finding f JOIN ops_attribution a ON a.cve_id = f.cve_id WHERE f.last_seen_batch = $1
+         GROUP BY f.cve_id ORDER BY f.anomaly_no`,
+        [batchId],
+      );
+      const attackVersion = (await attackMeta(sql))?.version ?? null;
       const text = buildNarrative({
         id: batchId,
         startedAt: new Date(Date.now() - (performance.now() - t0)),
@@ -303,6 +341,8 @@ export async function runBatch(opts: { trigger: string; actor: string; role: str
         costUnits: costOf(bytes),
         sourceBytes: bytes,
         top: Array.from(top),
+        espionage: Array.from(espionage),
+        attackVersion,
       });
       return { value: text, rowsOut: top.length };
     });

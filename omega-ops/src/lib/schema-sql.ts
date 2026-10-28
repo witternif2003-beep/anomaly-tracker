@@ -98,6 +98,28 @@ CREATE TABLE IF NOT EXISTS ops_asset (
 ALTER TABLE ops_asset ADD COLUMN IF NOT EXISTS asset_group TEXT;
 CREATE INDEX IF NOT EXISTS ops_asset_group ON ops_asset (lower(asset_group));
 
+CREATE TABLE IF NOT EXISTS ops_reference (
+  source TEXT PRIMARY KEY,
+  version TEXT,
+  modified TEXT,
+  fetched_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  link_count INTEGER NOT NULL DEFAULT 0,
+  bytes BIGINT
+);
+
+CREATE TABLE IF NOT EXISTS ops_attribution (
+  cve_id TEXT NOT NULL,
+  actor_id TEXT NOT NULL,
+  actor_name TEXT NOT NULL,
+  actor_kind TEXT NOT NULL,
+  actor_url TEXT NOT NULL,
+  espionage_note TEXT NOT NULL,
+  statement TEXT NOT NULL,
+  citations JSONB NOT NULL DEFAULT '[]',
+  attack_version TEXT,
+  PRIMARY KEY (cve_id, actor_id)
+);
+
 CREATE TABLE IF NOT EXISTS ops_incident (
   id BIGSERIAL PRIMARY KEY,
   cve_id TEXT NOT NULL REFERENCES ops_finding(cve_id) ON DELETE CASCADE,

@@ -4,13 +4,14 @@ Continuous-batch exposure register for defensive operations. Each batch reads th
 
 ## Batch graph
 
-`catalog_fetch` + `window_fetch` → `correlate` → `enrich` → `predict` → `persist` → `incidents` → `narrate` → `settle`
+`catalog_fetch` → `attribute`; `catalog_fetch` + `window_fetch` + `attribute` → `correlate` → `enrich` → `predict` → `persist` → `incidents` → `narrate` → `settle`
 
 | Stage | Reads / writes |
 | --- | --- |
 | catalog_fetch | Exploited-vulnerability catalog JSON (cisa.gov) |
 | window_fetch | Newest 100 CVE records modified in the last `NVD_WINDOW_HOURS` (nvd.nist.gov CVE API 2.0); degrades, not fails, if the API is slow |
-| correlate | Up to 60 candidates: unseen, catalogued in the last 30 days, or modified in the window |
+| attribute | CVE links to groups and campaigns that MITRE ATT&CK describes as espionage actors (attack-stix-data Enterprise bundle, refreshed at most every 24 h; ~55 MB, charged as its own simulated-ledger line against the daily limit) |
+| correlate | Up to 60 candidates: unseen, catalogued in the last 30 days, modified in the window, or unseen with an espionage attribution |
 | enrich | Severity from the window, plus up to 5 direct record lookups per batch |
 | predict | 30-day exploitation probability and percentile (api.first.org EPSS) |
 | persist | Upsert into `ops_finding` with raw source payloads and a record digest |
@@ -39,3 +40,10 @@ npm install
 npm run dev                  # schema is applied on first database access
 npm run lint && npm run typecheck && npm test && npm run build
 ```
+
+## Espionage attribution
+
+Each full anomaly record carries an ESPIONAGE ATTRIBUTION row. It lists only ATT&CK groups and campaigns whose own ATT&CK description (or the group a campaign is attributed to) calls them espionage actors, and only where an ATT&CK relationship or description names the CVE. Each entry shows the ATT&CK statement, its cited reports, and the ATT&CK page. OMEGA adds no attribution of its own; a record with no ATT&CK link says so.
+
+MITRE ATT&CK® content: © 2026 The MITRE Corporation. This work is reproduced and distributed with the permission of The MITRE Corporation. Licence: https://attack.mitre.org/resources/legal-and-branding/terms-of-use/
+

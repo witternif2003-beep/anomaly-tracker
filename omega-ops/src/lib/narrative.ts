@@ -47,6 +47,8 @@ export function buildNarrative(batch: {
   costUnits: number;
   sourceBytes: number;
   top: FindingRow[];
+  espionage?: (FindingRow & { actors: string[] })[];
+  attackVersion?: string | null;
 }): string {
   const lines: string[] = [];
   lines.push(`OMEGA PROTOCOL — CONTINUOUS BATCH B-${String(batch.id).padStart(6, "0")}`);
@@ -56,6 +58,12 @@ export function buildNarrative(batch: {
   );
   lines.push(
     `BATCH RESULT: ${batch.newFindings} anomalies entered the register, ${batch.changedFindings} existing anomalies changed, ${batch.scored} carry a severity score, ${batch.predicted} carry an exploit prediction, ${batch.openedIncidents} incidents opened. Batch charged ${batch.costUnits} simulated compute units.`,
+  );
+  const esp = batch.espionage ?? [];
+  lines.push(
+    esp.length
+      ? `ESPIONAGE ATTRIBUTION: ${esp.length} of this batch's anomalies are linked by MITRE ATT&CK v${batch.attackVersion ?? "—"} to groups or campaigns it describes as espionage actors — ${esp.map((f) => `${anomalyLabel(f)} ${f.cve_id} (${f.actors.join(", ")})`).join("; ")}.`
+      : `ESPIONAGE ATTRIBUTION: no anomaly in this batch is linked by MITRE ATT&CK v${batch.attackVersion ?? "—"} to a group or campaign it describes as an espionage actor.`,
   );
   if (!batch.top.length) {
     lines.push("NO ANOMALY MET THE EXPOSURE THRESHOLD IN THIS BATCH.");

@@ -42,7 +42,7 @@ export default async function Group({ params }: PageProps<"/groups/[group]">) {
           {data.records.map((r) => (
             <div key={r.anomaly.cve_id}>
               <p className="mb-1 font-mono text-[11px] text-dim">matched assets: {data.matched.find((m) => m.cve_id === r.anomaly.cve_id)?.matched_assets.join(", ")}</p>
-              <AnomalyRecord f={r.anomaly} metrics={r.metrics} incident={r.incident} />
+              <AnomalyRecord f={r.anomaly} metrics={r.metrics} incident={r.incident} attribution={r.attribution} />
             </div>
           ))}
         </>

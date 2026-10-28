@@ -22,7 +22,7 @@ export default async function AnomalyPage({ params }: PageProps<"/anomalies/[cve
   return (
     <div className="space-y-4">
       <ErrorBox error={error} />
-      {data && <AnomalyRecord f={data.anomaly} metrics={data.metrics} incident={data.incident} />}
+      {data && <AnomalyRecord f={data.anomaly} metrics={data.metrics} incident={data.incident} attribution={data.attribution} />}
     </div>
   );
 }
