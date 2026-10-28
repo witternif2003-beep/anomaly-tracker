@@ -78,3 +78,14 @@ export function classOf(f: Pick<FindingRow, "cwes" | "title">): string {
   for (const [re, label] of pairs) if (re.test(t)) return label;
   return f.cwes[0] ?? "Unclassified";
 }
+
+const ENTITIES: Record<string, string> = { nbsp: " ", amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", "#39": "'" };
+
+/** Source descriptions sometimes carry literal HTML entities; render them as plain text. */
+export function plainText(s: string | null): string | null {
+  if (!s) return s;
+  return s
+    .replace(/&(nbsp|amp|lt|gt|quot|apos|#39);/g, (_, k: string) => ENTITIES[k])
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}

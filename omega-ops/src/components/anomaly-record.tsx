@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { anomalyLabel, classOf, codename, type FindingRow } from "@/lib/findings";
+import { anomalyLabel, classOf, codename, type FindingRow, plainText } from "@/lib/findings";
 import type { Metric } from "@/lib/metrics";
 
 const SRC_TONE: Record<Metric["source"], string> = {
@@ -49,7 +49,7 @@ export function AnomalyRecord({ f, metrics, incident, compact = false }: { f: Fi
         {!compact && (
           <>
             <dt className="text-dim">SUMMARY</dt>
-            <dd className="break-words text-dim">{f.summary ?? "—"}</dd>
+            <dd className="break-words text-dim">{plainText(f.summary) ?? "—"}</dd>
           </>
         )}
         <dt className="text-dim">Ω ANOMALY</dt>

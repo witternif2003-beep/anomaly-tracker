@@ -72,3 +72,11 @@ describe("narrative and treasury", () => {
     expect(costOf(1_048_576 * 3)).toBe(5);
   });
 });
+
+describe("plainText", () => {
+  it("decodes literal entities from source descriptions", async () => {
+    const { plainText } = await import("@/lib/findings");
+    expect(plainText("root access.&nbsp; This &amp; that &lt;x&gt;")).toBe("root access. This & that <x>");
+    expect(plainText(null)).toBeNull();
+  });
+});
