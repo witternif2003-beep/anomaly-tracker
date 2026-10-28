@@ -2,7 +2,8 @@ import type { Metadata, Viewport } from "next";
 import { cookies } from "next/headers";
 import Link from "next/link";
 import { AuthBar } from "@/components/auth";
-import { DESKTOP_WIDTH, VIEW_COOKIE, ViewToggle } from "@/components/view-toggle";
+import { ViewToggle } from "@/components/view-toggle";
+import { DESKTOP_WIDTH, VIEW_COOKIE } from "@/lib/view";
 import "./globals.css";
 
 export const metadata: Metadata = {

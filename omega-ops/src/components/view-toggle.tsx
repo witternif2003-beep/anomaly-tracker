@@ -1,9 +1,7 @@
 "use client";
 
 import { useState } from "react";
-
-export const VIEW_COOKIE = "omega_view";
-export const DESKTOP_WIDTH = 1280;
+import { DESKTOP_WIDTH, VIEW_COOKIE } from "@/lib/view";
 
 /** Pins the layout to mobile or desktop width; the choice survives refreshes and navigation. */
 export function ViewToggle({ initial }: { initial: "mobile" | "desktop" }) {
