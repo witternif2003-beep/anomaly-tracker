@@ -57,7 +57,7 @@ export function AnomalyRecord({ f, metrics, incident, compact = false }: { f: Fi
           {ransomware
             ? "Extortion campaign use is recorded against this entry."
             : f.epss_percentile !== null && Number(f.epss_percentile) >= 0.99
-              ? `Predicted exploitation sits in the top ${(100 - Number(f.epss_percentile) * 100).toFixed(2)}% of all scored records.`
+              ? `Predicted exploitation ranks at percentile ${(Number(f.epss_percentile) * 100).toFixed(2)} of all scored records.`
               : f.cvss !== null && Number(f.cvss) >= 9
                 ? `Severity ${Number(f.cvss).toFixed(1)} with active exploitation catalogued.`
                 : "Active exploitation catalogued; no further distinguishing signal in the sources."}
