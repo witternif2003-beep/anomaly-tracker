@@ -1,0 +1,20 @@
+@import "tailwindcss";
+
+@theme {
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+}
+
+html,
+body {
+  background: #020617;
+  color: #10b981;
+}
+
+body {
+  -webkit-text-size-adjust: 100%;
+}
+
+pre {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
