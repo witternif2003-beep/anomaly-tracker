@@ -1,0 +1,56 @@
+# Self-hosted stack from the spec: Postgres + Redis + FastAPI gateway + Celery worker + Next.js dashboard.
+services:
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-synapse}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: synapse_node
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-synapse} -d synapse_node"]
+      interval: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      retries: 10
+
+  api:
+    build: ./backend
+    command: uvicorn main:app --host 0.0.0.0 --port 8000
+    ports: ["8000:8000"]
+    environment: &backend_env
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-synapse}:${POSTGRES_PASSWORD}@db:5432/synapse_node
+      REDIS_URL: redis://redis:6379/0
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+      DEEPSEEK_MODEL: ${DEEPSEEK_MODEL:-deepseek-flash}
+      BATCH_INTERVAL_SEC: ${BATCH_INTERVAL_SEC:-60}
+      OPERATOR_TOKEN: ${OPERATOR_TOKEN:-}
+    depends_on:
+      db: { condition: service_healthy }
+      redis: { condition: service_healthy }
+
+  worker:
+    build: ./backend
+    command: celery -A worker.celery_app worker --loglevel=info --concurrency=2
+    environment: *backend_env
+    depends_on:
+      api: { condition: service_started }
+
+  frontend:
+    build: .
+    ports: ["3000:3000"]
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-synapse}:${POSTGRES_PASSWORD}@db:5432/synapse_node
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+      OPERATOR_PASSPHRASE: ${OPERATOR_PASSPHRASE:-}
+      SESSION_SECRET: ${SESSION_SECRET:-}
+    depends_on:
+      db: { condition: service_healthy }
+
+volumes:
+  pgdata:
